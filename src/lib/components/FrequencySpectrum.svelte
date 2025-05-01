@@ -1,114 +1,93 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
   import { spectrum } from '$lib/audio/engine';
-  import { browser } from '$app/environment';
+  import VisualizerCanvas from './base/VisualizerCanvas.svelte';
+  import { visualizerTheme } from '$lib/theme';
+  import { onMount } from 'svelte';
   
-  // Runes setup
-  let canvas: HTMLCanvasElement;
+  // References to base component values - same structure as Oscilloscope
+  let visualizer: VisualizerCanvas;
   let ctx: CanvasRenderingContext2D;
-  let width = $state(500);
-  let height = $state(200);
+  let width = $state(0);
+  let height = $state(0);
+  let isReady = $state(false);
   
   // Styling parameters
-  const barColor = '#3498db';
-  const bgColor = '#111111';
+  const barColor = visualizerTheme.visualizations.spectrum;
   const barWidth = 2;
   const barGap = 1;
   
   function drawSpectrum(data: Uint8Array) {
+    if (!visualizer?.isInitialized || !ctx) {
+      return;
+    }
+    
+    // Get latest context and dimensions
+    ctx = visualizer.getContext();
     if (!ctx) return;
     
-    // Clear the canvas
-    ctx.fillStyle = bgColor;
-    ctx.fillRect(0, 0, width, height);
-    
-    // Calculate the width of each bar to fit the canvas
-    const numBars = Math.min(width / (barWidth + barGap), data.length);
-    const step = Math.floor(data.length / numBars);
-    
-    // Draw frequency bars
-    ctx.fillStyle = barColor;
-    
-    for (let i = 0; i < numBars; i++) {
-      const dataIndex = i * step;
-      const value = data[dataIndex] / 255.0; // Normalize to 0-1
-      const barHeight = value * height;
+    try {
+      const dims = visualizer.getDimensions();
+      width = dims.width;
+      height = dims.height;
       
-      const x = i * (barWidth + barGap);
-      const y = height - barHeight;
+      // Clear the canvas
+      visualizer.clearCanvas();
       
-      ctx.fillRect(x, y, barWidth, barHeight);
+      // Calculate the width of each bar to fit the canvas
+      const numBars = Math.min(Math.floor(width / (barWidth + barGap)), data.length);
+      const step = Math.floor(data.length / numBars);
+      
+      // Draw frequency bars
+      ctx.fillStyle = barColor;
+      
+      for (let i = 0; i < numBars; i++) {
+        const dataIndex = i * step;
+        // Simple value calculation, similar to Oscilloscope approach
+        const value = data[dataIndex] / 255.0; // Normalize to 0-1
+        const barHeight = value * height;
+        
+        const x = i * (barWidth + barGap);
+        const y = height - barHeight;
+        
+        ctx.fillRect(x, y, barWidth, barHeight);
+      }
+    } catch (error) {
+      console.error('Error drawing spectrum:', error);
     }
   }
   
-  // Handle resize for responsiveness
-  function handleResize() {
-    if (!browser || !canvas) return;
-    
-    const container = canvas.parentElement;
-    if (container) {
-      width = container.clientWidth;
-      height = Math.min(200, container.clientWidth / 2);
-      
-      // Update canvas dimensions
-      canvas.width = width;
-      canvas.height = height;
-      
-      // Redraw if we have data
-      $effect(() => {
-        drawSpectrum($spectrum);
-      });
-    }
-  }
-  
+  // Only start effects after component is mounted
   onMount(() => {
-    if (!browser) return;
-    
-    ctx = canvas.getContext('2d')!;
-    handleResize();
-    
-    // Set up resize listener
-    window.addEventListener('resize', handleResize);
-    
-    // Update canvas when spectrum changes
+    // Wait for initialization before setting up effect
     $effect(() => {
-      drawSpectrum($spectrum);
+      if (isReady && ctx && $spectrum) {
+        drawSpectrum($spectrum);
+      }
     });
   });
   
-  onDestroy(() => {
-    if (!browser) return;
-    window.removeEventListener('resize', handleResize);
-  });
+  function handleReady(event: CustomEvent) {
+    console.log('Frequency Spectrum ready event received');
+    ctx = event.detail.ctx;
+    const { width: w, height: h } = visualizer.getDimensions();
+    width = w;
+    height = h;
+    isReady = true;
+  }
+  
+  function handleResize() {
+    if (isReady && $spectrum) {
+      console.log('Frequency Spectrum resize triggered');
+      drawSpectrum($spectrum);
+    }
+  }
 </script>
 
-<div class="spectrum-container">
-  <div class="canvas-wrapper">
-    <canvas bind:this={canvas} width={width} height={height}></canvas>
-  </div>
-</div>
-
-<style>
-  .spectrum-container {
-    width: 100%;
-    max-width: 800px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .canvas-wrapper {
-    width: 100%;
-    border-radius: 4px;
-    overflow: hidden;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-  }
-  
-  canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
-    background-color: #111111;
-  }
-</style> 
+<VisualizerCanvas 
+  bind:this={visualizer} 
+  on:ready={handleReady} 
+  on:resize={handleResize}
+  id="frequency-spectrum"
+>
+  <div class="text-sm opacity-70 text-center">Frequency Spectrum</div>
+</VisualizerCanvas> 

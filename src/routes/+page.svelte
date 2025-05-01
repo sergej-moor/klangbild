@@ -4,49 +4,17 @@
 	import PlayPauseControls from "$lib/components/PlayPauseControls.svelte";
 </script>
 
-<h1>Audio Visualizer</h1>
+<h1 class="text-center mb-8">Audio Visualizer</h1>
 
-<div class="container">
-	<div class="visualization-section">
+<div class="max-w-[800px] mx-auto p-4">
+    <div class="mb-8">
+		<FrequencySpectrum />
+	</div>
+	<div class="mb-8">
 		<Oscilloscope />
 	</div>
 	
-	<div class="visualization-section">
-		<FrequencySpectrum />
-	</div>
-	
-	<div class="standalone-controls">
+	<div class="mt-8 pt-4 border-t border-gray-300 text-center">
 		<PlayPauseControls />
 	</div>
 </div>
-
-<style>
-	.container {
-		max-width: 800px;
-		margin: 0 auto;
-		padding: 1rem;
-	}
-	
-	h1 {
-		text-align: center;
-		margin-bottom: 2rem;
-	}
-	
-	.visualization-section {
-		margin-bottom: 2rem;
-	}
-	
-	.standalone-controls {
-		margin-top: 2rem;
-		padding: 1rem;
-		border-top: 1px solid #ccc;
-		text-align: center;
-	}
-	
-	h2 {
-		font-size: 1.2rem;
-		margin-bottom: 1rem;
-		color: #555;
-		text-align: center;
-	}
-</style>

@@ -1,36 +1,19 @@
 <script lang="ts">
   import { isPlaying, togglePlayPause } from '$lib/audio/engine';
+  import { visualizerTheme } from '$lib/theme';
+  
+  // Get theme values for use in template
+  const buttonBg = visualizerTheme.ui.buttonBackground;
+  const buttonHover = visualizerTheme.ui.buttonHover;
+  const buttonActive = visualizerTheme.ui.buttonActive;
+  const buttonText = visualizerTheme.ui.buttonText;
 </script>
 
-<div class="controls">
-  <button class="control-button" on:click={togglePlayPause}>
+<div class="flex justify-center mt-2">
+  <button 
+    class="bg-[{buttonBg}] hover:bg-[{buttonHover}] active:bg-[{buttonActive}] text-[{buttonText}] border-none rounded py-2 px-6 text-base cursor-pointer transition-colors duration-200"
+    on:click={togglePlayPause}
+  >
     {$isPlaying ? 'Pause' : 'Play'}
   </button>
-</div>
-
-<style>
-  .controls {
-    display: flex;
-    justify-content: center;
-    margin-top: 0.5rem;
-  }
-  
-  .control-button {
-    background-color: #2a2a2a;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 0.5rem 1.5rem;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  
-  .control-button:hover {
-    background-color: #3a3a3a;
-  }
-  
-  .control-button:active {
-    background-color: #4a4a4a;
-  }
-</style> 
+</div> 

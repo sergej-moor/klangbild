@@ -14,19 +14,26 @@ let audioBuffer: AudioBuffer;
 let startTime = 0;
 let offset = 0;
 let animationId: number;
+let frameCounter = 0;
 
 export async function loadAudio() {
   if (!browser) return;
 
   if (!audioBuffer) {
-    const response = await fetch('/demo.wav');
-    const arrayBuffer = await response.arrayBuffer();
-    audioBuffer = await audioContext!.decodeAudioData(arrayBuffer);
+    try {
+      const response = await fetch('/demo.wav');
+      const arrayBuffer = await response.arrayBuffer();
+      audioBuffer = await audioContext!.decodeAudioData(arrayBuffer);
 
-    // Set up analyser
-    analyser = audioContext!.createAnalyser();
-    analyser.fftSize = 2048;
-    analyser.connect(audioContext!.destination);
+      // Set up analyser
+      analyser = audioContext!.createAnalyser();
+      analyser.fftSize = 2048;
+      analyser.connect(audioContext!.destination);
+
+      console.log('Audio loaded successfully, buffer length:', audioBuffer.length);
+    } catch (err) {
+      console.error('Error loading audio:', err);
+    }
   }
   return audioBuffer;
 }
@@ -34,37 +41,47 @@ export async function loadAudio() {
 export async function play() {
   if (!browser) return;
 
-  if (audioContext!.state === 'suspended') {
-    await audioContext!.resume();
+  try {
+    if (audioContext!.state === 'suspended') {
+      await audioContext!.resume();
+    }
+
+    await loadAudio();
+
+    // Create a new source node (can't reuse after stopping)
+    source = audioContext!.createBufferSource();
+    source.buffer = audioBuffer;
+    source.connect(analyser);
+
+    // Start playback from the offset
+    startTime = audioContext!.currentTime;
+    source.start(0, offset);
+    isPlaying.set(true);
+
+    // Start the visualization update loop
+    updateVisualization();
+    console.log('Playback started');
+  } catch (err) {
+    console.error('Error starting playback:', err);
   }
-
-  await loadAudio();
-
-  // Create a new source node (can't reuse after stopping)
-  source = audioContext!.createBufferSource();
-  source.buffer = audioBuffer;
-  source.connect(analyser);
-
-  // Start playback from the offset
-  startTime = audioContext!.currentTime;
-  source.start(0, offset);
-  isPlaying.set(true);
-
-  // Start the visualization update loop
-  updateVisualization();
 }
 
 export function pause() {
   if (!browser) return;
 
-  if (source) {
-    source.stop();
-    // Calculate the new offset for resuming later
-    offset = (offset + audioContext!.currentTime - startTime) % audioBuffer.duration;
-    isPlaying.set(false);
+  try {
+    if (source) {
+      source.stop();
+      // Calculate the new offset for resuming later
+      offset = (offset + audioContext!.currentTime - startTime) % audioBuffer.duration;
+      isPlaying.set(false);
 
-    // Stop the visualization update loop
-    cancelAnimationFrame(animationId);
+      // Stop the visualization update loop
+      cancelAnimationFrame(animationId);
+      console.log('Playback paused at offset:', offset);
+    }
+  } catch (err) {
+    console.error('Error pausing playback:', err);
   }
 }
 
@@ -82,18 +99,31 @@ export function togglePlayPause() {
 }
 
 function updateVisualization() {
-  if (!browser) return;
+  if (!browser || !analyser) return;
 
-  const waveformArray = new Float32Array(analyser.fftSize);
-  const spectrumArray = new Uint8Array(analyser.frequencyBinCount);
+  try {
+    const waveformArray = new Float32Array(analyser.fftSize);
+    const spectrumArray = new Uint8Array(analyser.frequencyBinCount);
 
-  const update = () => {
+    // Get audio data
     analyser.getFloatTimeDomainData(waveformArray);
     analyser.getByteFrequencyData(spectrumArray);
+
+    // Update the stores with new data
     waveform.set(waveformArray);
     spectrum.set(spectrumArray);
-    animationId = requestAnimationFrame(update);
-  };
 
-  update();
+    // Log data occasionally to verify it's changing
+    frameCounter++;
+    if (frameCounter % 60 === 0) {
+      // Log once every ~1 second
+      console.log('Waveform peak:', Math.max(...waveformArray.map((v) => Math.abs(v))));
+      console.log('Spectrum peak:', Math.max(...spectrumArray));
+    }
+
+    // Continue the loop
+    animationId = requestAnimationFrame(updateVisualization);
+  } catch (err) {
+    console.error('Error in visualization update:', err);
+  }
 }
