@@ -6,6 +6,9 @@
 	import Waveform from "$lib/components/Waveform.svelte";
 	import PlayPauseControls from "$lib/components/PlayPauseControls.svelte";
 	
+	// Song name - you can replace this with dynamic content if needed
+	const songName = "Demo Track";
+	
 	// Preload audio when the page loads
 	onMount(async () => {
 		console.log('Main page mounted, preloading audio...');
@@ -23,7 +26,7 @@
 	<div class="bottom-controls">
 		<Waveform compactMode={true} />
 		<div class="play-controls">
-			<PlayPauseControls />
+			<PlayPauseControls compact={true} songName={songName} />
 		</div>
 	</div>
 </div>
@@ -32,13 +35,13 @@
 	.visualizer-container {
 		display: grid;
 		grid-template-rows: 1fr auto;
-		height: 100vh;
+		
 		width: 100%;
-		max-width: 1200px;
+		
 		margin: 0 auto;
 		padding: 0.5rem 1.5rem;
 		gap: 0.5rem;
-		overflow: hidden;
+		
 		background-color: #000;
 		color: #fff;
 	}
@@ -47,7 +50,7 @@
 		display: grid;
 		grid-template-rows: 1fr 1fr;
 		gap: 0.5rem;
-		overflow: hidden;
+	
 		border: 1px solid #00ff00;
 	}
 	
@@ -59,7 +62,7 @@
 		display: grid;
 		grid-template-rows: auto auto;
 		gap: 0.25rem;
-		max-height: 60px;
+
 		border: 1px solid #00ff00;
 	}
 	
@@ -71,6 +74,6 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		height: 20px;
+
 	}
 </style>

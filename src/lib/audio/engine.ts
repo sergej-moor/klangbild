@@ -248,3 +248,14 @@ export function seekToPosition(position: number) {
     console.error('Error seeking to position:', err);
   }
 }
+
+// Add this function to get the audio duration
+export async function getAudioDuration(): Promise<number> {
+  if (!browser) return 0;
+
+  // Make sure audio is loaded first
+  await loadAudio();
+
+  if (!audioBuffer) return 0;
+  return audioBuffer.duration;
+}
