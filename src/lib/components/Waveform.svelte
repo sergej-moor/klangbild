@@ -13,7 +13,7 @@
   let canvas: HTMLCanvasElement;
   let ctx: CanvasRenderingContext2D;
   let width = $state(0);
-  let height = $state(compactMode ? 40 : sizes.defaultHeight); // Smaller height in compact mode
+  let height = $state(compactMode ? 30 : sizes.defaultHeight); // Even smaller in compact mode
   let isReady = $state(false);
   let progress = $state(0); // Track progress locally
   

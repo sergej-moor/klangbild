@@ -172,39 +172,44 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    padding: 4px;
+    gap: 2px;
+    padding: 2px;
     color: #fff;
+    font-size: 10px;
+    overflow: hidden;
   }
   
   .player-controls.compact {
     flex-direction: row;
     align-items: center;
-    padding: 4px 0;
-    gap: 8px;
+    padding: 2px 0;
+    gap: 4px;
+    height: 24px;
   }
   
   .compact-progress {
     display: flex;
     flex: 1;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
+    height: 100%;
+    overflow: hidden;
   }
   
   .time {
-    font-size: 10px;
+    font-size: 9px;
     color: #00ff00;
     white-space: nowrap;
-    min-width: 80px; /* Ensure time has minimum width */
+    min-width: 70px; /* Slightly smaller */
   }
   
   .song-name {
-    font-size: 10px;
+    font-size: 9px;
     color: #00ff00;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 120px;
+    max-width: 100px;
   }
   
   .time-display {
@@ -219,7 +224,7 @@
   .progress-container {
     flex: 1;
     position: relative;
-    height: 16px;
+    height: 12px; /* Smaller height */
     display: flex;
     align-items: center;
   }
@@ -227,7 +232,7 @@
   .progress-slider {
     position: absolute;
     width: 100%;
-    height: 16px;
+    height: 12px; /* Match container */
     opacity: 0;
     cursor: pointer;
     z-index: 10;
@@ -236,11 +241,11 @@
   
   .progress-bar {
     width: 100%;
-    height: 4px;
+    height: 3px; /* Thinner bar */
     background-color: #333;
-    border-radius: 2px;
+    border-radius: 1px;
     overflow: hidden;
-    position: relative; /* Ensure proper stacking */
+    position: relative;
   }
   
   .progress-fill {
@@ -249,7 +254,7 @@
     top: 0;
     height: 100%;
     background-color: #00ff00;
-    border-radius: 2px;
+    border-radius: 1px;
     transition: width 0.1s;
   }
   
@@ -258,9 +263,9 @@
     border: 1px solid #00ff00;
     color: #00ff00;
     border-radius: 50%;
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
+    width: 22px; /* Smaller button */
+    height: 22px;
+    min-width: 22px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -270,9 +275,9 @@
   }
   
   .compact .play-button {
-    width: 24px;
-    height: 24px;
-    min-width: 24px;
+    width: 20px; /* Even smaller in compact mode */
+    height: 20px;
+    min-width: 20px;
   }
   
   .play-button:hover {
