@@ -99,32 +99,36 @@
     // Clear the canvas
     clearCanvas();
     
-    // Calculate how many bars we can fit
-    const totalBarWidth = barWidth + barGap;
-    const numBars = Math.min(Math.floor(width / totalBarWidth), data.length);
+    // Ensure we're using the entire data array
+    if (!data || data.length === 0) return;
     
-    // Calculate scaling and sampling
-    // Use a smaller vertical scale in compact mode
-    const verticalScale = height * (compactMode ? 0.6 : 0.4); 
-    const step = Math.ceil(data.length / numBars);
+    // Calculate how many bars we can fit (use available width)
+    const totalBarWidth = barWidth + barGap;
+    const maxBars = Math.floor(width / totalBarWidth);
+    
+    // Calculate step size based on data length to ensure the entire waveform fits
+    const step = data.length / maxBars;
     
     // Calculate the bar index at which the progress marker should appear
-    const progressBarIndex = Math.floor(numBars * currentProgress);
+    const progressBarIndex = Math.floor(maxBars * currentProgress);
+    
+    // Calculate vertical scaling factor
+    const verticalScale = height * (compactMode ? 0.6 : 0.4);
     
     // Draw the bars
-    for (let i = 0; i < numBars; i++) {
-      // Sample data (average or max of a segment if downsampling needed)
-      const dataIndex = i * step;
-      let value = 0;
+    for (let i = 0; i < maxBars; i++) {
+      // Get data index for this bar (ensuring we use the full data range)
+      const startIdx = Math.floor(i * step);
+      const endIdx = Math.min(Math.floor((i + 1) * step), data.length);
       
-      // Get max value for this segment
-      const segmentEnd = Math.min(dataIndex + step, data.length);
-      for (let j = dataIndex; j < segmentEnd; j++) {
-        value = Math.max(value, data[j]);
+      // Find maximum amplitude in this segment
+      let maxValue = 0;
+      for (let j = startIdx; j < endIdx; j++) {
+        maxValue = Math.max(maxValue, Math.abs(data[j]));
       }
       
-      // Calculate bar height based on value (0.0-1.0)
-      const barHeight = Math.max(1, value * verticalScale); // Ensure at least 1px height
+      // Calculate bar height based on value
+      const barHeight = Math.max(1, maxValue * verticalScale); // Ensure at least 1px height
       
       // Calculate position
       const x = i * totalBarWidth;
@@ -162,7 +166,7 @@
     // Mark as ready
     isReady = true;
     
-    // Start animation
+    // Load audio if needed and start animation
     startProgressAnimation();
   });
   
