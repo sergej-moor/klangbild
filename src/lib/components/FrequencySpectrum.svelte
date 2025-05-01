@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { browser } from '$app/environment';
-  import { spectrum, isPlaying } from '$lib/audio/engine';
+  import { spectrum, isPlaying, sampleRate } from '$lib/audio/engine';
   import { visualizerTheme } from '$lib/theme';
   import VisualizerCanvas from './base/VisualizerCanvas.svelte';
   
@@ -29,32 +29,16 @@
   const barWidth = 2;
   const barGap = 1;
   
+  // Frequency scaling
+  const freqScalingPower = 3.0; // Controls logarithmic curve (higher = more emphasis on low frequencies)
+  const minFreqPercent = 0.001; // Start from very low frequencies
+  
   // Draw the frequency spectrum
   function drawSpectrum() {
     if (!ctx || !isCanvasReady) return;
     
     // Clear the canvas
     ctx.clearRect(0, 0, width, height);
-    
-    // If in debug mode, draw debug info
-    if (debug) {
-      ctx.fillStyle = `${debugColor}20`;
-      ctx.fillRect(0, 0, width, height);
-      
-      // Draw crosshair to show center
-      ctx.strokeStyle = `${debugColor}80`;
-      ctx.beginPath();
-      ctx.moveTo(0, height/2);
-      ctx.lineTo(width, height/2);
-      ctx.moveTo(width/2, 0);
-      ctx.lineTo(width/2, height);
-      ctx.stroke();
-      
-      // Draw text showing dimensions
-      ctx.fillStyle = debugColor;
-      ctx.font = '10px monospace';
-      ctx.fillText(`Spectrum: ${width}x${height} (scale: ${scale.toFixed(2)})`, 5, 15);
-    }
     
     // Get the current spectrum data
     const spectrumData = $spectrum;
@@ -78,14 +62,27 @@
     
     // Create points for the line
     for (let i = 0; i < width; i++) {
-      // Map canvas x position to spectrum data index
-      const dataIndex = Math.floor((i / width) * spectrumData.length);
+      const xPercent = i / width;
       
-      // Get the frequency value (0-255)
-      const value = spectrumData[dataIndex];
+      // Use scaling power variable for frequency distribution
+      const logPos = minFreqPercent + (1 - minFreqPercent) * 
+                    Math.pow(xPercent, freqScalingPower);
+      
+      // Calculate exact position in the data array (with decimal part)
+      const exactIndex = logPos * spectrumData.length;
+      
+      // Get integer part and fractional part for interpolation
+      const indexLow = Math.floor(exactIndex);
+      const indexHigh = Math.min(spectrumData.length - 1, indexLow + 1);
+      const fraction = exactIndex - indexLow;
+      
+      // Linear interpolation between two adjacent data points for smoother curve
+      const valueLow = spectrumData[indexLow];
+      const valueHigh = spectrumData[indexHigh];
+      const interpolatedValue = valueLow + fraction * (valueHigh - valueLow);
       
       // Calculate y position (scale to fit canvas height)
-      const y = height - (value / 255) * height * 0.9 * scale;
+      const y = height - (interpolatedValue / 255) * height * 0.9 * scale;
       
       // Draw the point
       if (i === 0) {
@@ -110,6 +107,63 @@
     
     ctx.fillStyle = gradient;
     ctx.fill();
+    
+    // If in debug mode, draw debug info
+    if (debug) {
+      ctx.fillStyle = `${debugColor}20`;
+      ctx.fillRect(0, 0, width, height);
+      
+      // Draw crosshair to show center
+      ctx.strokeStyle = `${debugColor}80`;
+      ctx.beginPath();
+      ctx.moveTo(0, height/2);
+      ctx.lineTo(width, height/2);
+      ctx.moveTo(width/2, 0);
+      ctx.lineTo(width/2, height);
+      ctx.stroke();
+      
+      // Draw text showing dimensions
+      ctx.fillStyle = debugColor;
+      ctx.font = '10px monospace';
+      ctx.fillText(`Spectrum: ${width}x${height} (scale: ${scale.toFixed(2)})`, 5, 15);
+      
+      // Use imported sample rate instead of hardcoded value
+      const actualSampleRate = $sampleRate || 44100; // Fallback to 44100 if not available
+      const nyquist = actualSampleRate / 2;
+      const freqMarkers = [20, 100, 500, 1000, 5000, 10000, 20000]; // Hz
+      
+      ctx.fillStyle = debugColor;
+      ctx.font = '9px monospace';
+      
+      freqMarkers.forEach(freq => {
+        // Convert frequency to position
+        const freqPercent = freq / nyquist;
+        
+        // Ensure frequency percent is at least minFreqPercent to avoid negative values
+        const adjustedFreqPercent = Math.max(freqPercent, minFreqPercent);
+        
+        // Apply inverse using the same scaling power variable
+        // For frequencies below minFreqPercent, we'll just position them at the beginning
+        let xPercent;
+        if (freqPercent < minFreqPercent) {
+          // For frequencies below our minimum, place them proportionally at the start
+          xPercent = (freqPercent / minFreqPercent) * 0.02; // First 2% of the display
+        } else {
+          xPercent = Math.pow(
+            (adjustedFreqPercent - minFreqPercent) / (1 - minFreqPercent),
+            1 / freqScalingPower
+          );
+        }
+        
+        const x = Math.floor(xPercent * width);
+        
+        if (x >= 0 && x < width) {
+          // Draw marker and label
+          ctx.fillRect(x, height - 30, 1, 10);
+          ctx.fillText(freq >= 1000 ? `${freq/1000}k` : `${freq}`, x - 8, height - 15);
+        }
+      });
+    }
   }
   
   // Start the animation loop

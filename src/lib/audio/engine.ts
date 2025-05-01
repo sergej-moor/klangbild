@@ -9,6 +9,9 @@ export const spectrum = writable<Uint8Array>(new Uint8Array(1024));
 export const isPlaying = writable(false);
 export const fullWaveform = writable<Float32Array>(new Float32Array(0));
 export const playbackPosition = writable(0); // 0 to 1 indicating position in track
+export const sampleRate = writable<number>(
+  browser && audioContext ? audioContext.sampleRate : 44100
+);
 
 let analyser: AnalyserNode;
 let source: AudioBufferSourceNode;
@@ -52,9 +55,13 @@ export async function loadAudio() {
       const arrayBuffer = await response.arrayBuffer();
       audioBuffer = await audioContext!.decodeAudioData(arrayBuffer);
 
+      // Update the sample rate store with the actual audio buffer sample rate
+      sampleRate.set(audioBuffer.sampleRate);
+      console.log('Audio sample rate:', audioBuffer.sampleRate);
+
       // Set up analyser
       analyser = audioContext!.createAnalyser();
-      analyser.fftSize = 2048;
+      analyser.fftSize = 8192;
       analyser.connect(audioContext!.destination);
 
       // Generate and store full waveform data
