@@ -92,5 +92,5 @@
   on:resize={handleResize}
   id="oscilloscope"
 >
-  <div class="text-sm opacity-70 text-center">Oscilloscope</div>
+
 </VisualizerCanvas>

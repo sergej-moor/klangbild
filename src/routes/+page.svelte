@@ -14,20 +14,63 @@
 	});
 </script>
 
-<h1 class="text-center mb-8">Audio Visualizer</h1>
-
-<div class="max-w-[800px] mx-auto p-4">
-    <div class="mb-8">
-		<Waveform />
-	</div>
-    <div class="mb-8">
-		<FrequencySpectrum />
-	</div>
-	<div class="mb-8">
-		<Oscilloscope />
+<div class="visualizer-container">
+	<div class="main-visualizers">
+		<FrequencySpectrum fullHeight={true} />
+		<Oscilloscope fullHeight={true} />
 	</div>
 	
-	<div class="mt-8 pt-4 border-t border-gray-300 text-center">
-		<PlayPauseControls />
+	<div class="bottom-controls">
+		<Waveform compactMode={true} />
+		<div class="play-controls">
+			<PlayPauseControls />
+		</div>
 	</div>
 </div>
+
+<style>
+	.visualizer-container {
+		display: grid;
+		grid-template-rows: 1fr auto;
+		height: 100vh;
+		width: 100%;
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 0.5rem 1.5rem;
+		gap: 0.5rem;
+		overflow: hidden;
+		background-color: #000;
+		color: #fff;
+	}
+	
+	.main-visualizers {
+		display: grid;
+		grid-template-rows: 1fr 1fr;
+		gap: 0.5rem;
+		overflow: hidden;
+		border: 1px solid #00ff00;
+	}
+	
+	.main-visualizers > :global(*) {
+		border: 1px solid #00ff00;
+	}
+	
+	.bottom-controls {
+		display: grid;
+		grid-template-rows: auto auto;
+		gap: 0.25rem;
+		max-height: 60px;
+		border: 1px solid #00ff00;
+	}
+	
+	.bottom-controls > :global(*) {
+		border: 1px solid #00ff00;
+	}
+	
+	.play-controls {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		height: 20px;
+	}
+</style>

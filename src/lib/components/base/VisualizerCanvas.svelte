@@ -5,9 +5,10 @@
   
   // Props using Svelte 5 runes syntax
   const { 
-    bgColor = visualizerTheme.background.primary,
+    bgColor = 'transparent',
     canvasHeight = sizes.defaultHeight,
-    id = 'visualizer-' + Math.random().toString(36).substring(2, 9)
+    id = 'visualizer-' + Math.random().toString(36).substring(2, 9),
+    fullHeight = false // Add new prop to control height behavior
   } = $props();
   
   // Internal state
@@ -30,7 +31,14 @@
     const container = canvas.parentElement;
     if (container) {
       width = container.clientWidth;
-      height = Math.min(canvasHeight, container.clientWidth / 2);
+      
+      // Allow the component to use the full available height
+      if (fullHeight) {
+        height = container.clientHeight || canvasHeight;
+      } else {
+        // For non-full height mode, still limit height but more responsive
+        height = Math.min(canvasHeight, container.clientWidth / 2);
+      }
       
       // Update canvas dimensions
       canvas.width = width;
@@ -43,8 +51,15 @@
   
   function clearCanvas() {
     if (!ctx) return;
-    ctx.fillStyle = bgColor;
-    ctx.fillRect(0, 0, width, height);
+    
+    if (bgColor === 'transparent') {
+      // For transparent background, clear with clearRect
+      ctx.clearRect(0, 0, width, height);
+    } else {
+      // For colored background, use fillRect
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, width, height);
+    }
   }
   
   onMount(() => {
@@ -94,8 +109,8 @@
   export { clearCanvas, isInitialized };
 </script>
 
-<div class="w-full max-w-[800px] mx-auto flex flex-col gap-2" {id}>
-  <div class="w-full rounded-md overflow-hidden shadow-md">
+<div class="w-full h-full mx-auto flex flex-col gap-2" {id}>
+  <div class="w-full h-full rounded-md overflow-hidden">
     <canvas bind:this={canvas} width={width} height={height} class="block w-full h-full"></canvas>
   </div>
   <slot />

@@ -4,11 +4,16 @@
   import { fullWaveform, loadAudio, playbackPosition, isPlaying, seekToPosition } from '$lib/audio/engine';
   import { visualizerTheme, sizes } from '$lib/theme';
   
+  // Props
+  const { 
+    compactMode = false 
+  } = $props();
+  
   // Canvas references and state
   let canvas: HTMLCanvasElement;
   let ctx: CanvasRenderingContext2D;
   let width = $state(0);
-  let height = $state(sizes.defaultHeight);
+  let height = $state(compactMode ? 40 : sizes.defaultHeight); // Smaller height in compact mode
   let isReady = $state(false);
   let progress = $state(0); // Track progress locally
   
@@ -16,11 +21,11 @@
   let animationId: number;
   
   // Styling parameters for bars
-  const bgColor = visualizerTheme.background.primary;
+  const bgColor = 'transparent'; // Change to transparent
   const waveformColor = visualizerTheme.visualizations.waveform || '#6366f1'; // Unplayed portion
   const progressColor = visualizerTheme.visualizations.progress || '#f43f5e'; // Played portion
-  const barWidth = 2; // Width of each bar
-  const barGap = 1;   // Gap between bars
+  const barWidth = compactMode ? 1 : 2; // Thinner bars in compact mode
+  const barGap = compactMode ? 0 : 1; // Smaller gap in compact mode
   
   // Handle resize for responsiveness
   function handleResize() {
@@ -29,7 +34,13 @@
     const container = canvas.parentElement;
     if (container) {
       width = container.clientWidth;
-      height = Math.min(sizes.defaultHeight, container.clientWidth / 2);
+      
+      // In compact mode, use a much smaller fixed height
+      if (compactMode) {
+        height = 40; // Fixed small height for compact mode
+      } else {
+        height = Math.min(sizes.defaultHeight, container.clientWidth / 2);
+      }
       
       // Update canvas dimensions
       canvas.width = width;
@@ -45,8 +56,9 @@
   // Clear the canvas
   function clearCanvas() {
     if (!ctx) return;
-    ctx.fillStyle = bgColor;
-    ctx.fillRect(0, 0, width, height);
+    
+    // For transparent background, use clearRect instead of fillRect
+    ctx.clearRect(0, 0, width, height);
   }
   
   // Setup continuous animation for progress updates
@@ -92,7 +104,8 @@
     const numBars = Math.min(Math.floor(width / totalBarWidth), data.length);
     
     // Calculate scaling and sampling
-    const verticalScale = height * 0.4; // 40% of height (above and below center)
+    // Use a smaller vertical scale in compact mode
+    const verticalScale = height * (compactMode ? 0.6 : 0.4); 
     const step = Math.ceil(data.length / numBars);
     
     // Calculate the bar index at which the progress marker should appear
@@ -170,12 +183,13 @@
   });
 </script>
 
-<div class="w-full max-w-[800px] mx-auto flex flex-col gap-2" id="full-waveform">
-  <div class="w-full rounded-md overflow-hidden shadow-md">
+<div class="w-full h-full mx-auto flex flex-col {compactMode ? 'gap-0' : 'gap-2'}" id="full-waveform">
+  <div class="w-full rounded-md overflow-hidden">
     <canvas bind:this={canvas} width={width} height={height} class="block w-full h-full"></canvas>
   </div>
-  <div class="text-sm opacity-70 text-center">
-     ({Math.round(progress * 100)}%) 
-  
-  </div>
+  {#if !compactMode}
+    <div class="text-sm opacity-70 text-center">
+       ({Math.round(progress * 100)}%) 
+    </div>
+  {/if}
 </div> 

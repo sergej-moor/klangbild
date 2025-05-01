@@ -89,5 +89,5 @@
   on:resize={handleResize}
   id="frequency-spectrum"
 >
-  <div class="text-sm opacity-70 text-center">Frequency Spectrum</div>
+  
 </VisualizerCanvas> 
