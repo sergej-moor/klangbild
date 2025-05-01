@@ -53,7 +53,7 @@
     }
     
     // Get the current waveform data
-    const waveformData = $waveform;
+    let waveformData = $waveform;
     if (!waveformData || waveformData.length === 0) {
       if (debug) {
         ctx.fillStyle = debugColor;
@@ -61,6 +61,20 @@
         ctx.fillText('No waveform data', width / 2 - 60, height / 2);
       }
       return;
+    }
+    
+    // Downsample the waveform data to simulate a smaller FFT size (1024)
+    // This makes the oscilloscope more responsive and focused
+    const targetSize = 1024;
+    if (waveformData.length > targetSize) {
+      const downsampled = new Float32Array(targetSize);
+      const step = Math.floor(waveformData.length / targetSize);
+      
+      for (let i = 0; i < targetSize; i++) {
+        downsampled[i] = waveformData[i * step];
+      }
+      
+      waveformData = downsampled;
     }
     
     // Setup line style
@@ -78,25 +92,26 @@
     // Auto-scale amplitude based on available height and current scale factor
     const scaleFactor = (height * 0.8) / 2 * scale;
     
-    // Plot each point in the waveform
-    const step = Math.max(1, Math.ceil(waveformData.length / width));
+    // Always stretch the waveform to fill the entire canvas width
+    // by adjusting the step size based on the available data points
+    const step = waveformData.length / width;
     
+    // Plot each point in the waveform
     for (let i = 0; i < width; i++) {
-      const dataIndex = Math.min(waveformData.length - 1, i * step);
+      // Calculate the data index for this x position
+      const dataIndex = Math.min(waveformData.length - 1, Math.floor(i * step));
       
-      if (dataIndex >= 0) {
-        // Get the waveform value (-1.0 to 1.0)
-        const value = waveformData[dataIndex];
-        
-        // Calculate y position (invert and scale)
-        const y = centerY - (value * scaleFactor);
-        
-        // Plot the point
-        if (i === 0) {
-          ctx.moveTo(i, y);
-        } else {
-          ctx.lineTo(i, y);
-        }
+      // Get the waveform value (-1.0 to 1.0)
+      const value = waveformData[dataIndex];
+      
+      // Calculate y position (invert and scale)
+      const y = centerY - (value * scaleFactor);
+      
+      // Plot the point
+      if (i === 0) {
+        ctx.moveTo(i, y);
+      } else {
+        ctx.lineTo(i, y);
       }
     }
     
