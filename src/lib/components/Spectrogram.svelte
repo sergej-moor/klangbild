@@ -128,7 +128,7 @@
     if (debug) {
       // Semi-transparent border to show canvas boundaries
       ctx.strokeStyle = 'rgba(0, 255, 0, 0.5)';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = visualizerTheme.visualizations.waveform.lineWidth;
       ctx.strokeRect(0, 0, width, height);
       
       // Black background for text to ensure visibility

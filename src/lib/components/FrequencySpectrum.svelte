@@ -52,7 +52,7 @@
     }
     
     // Setup line style
-    ctx.lineWidth = 2;
+    ctx.lineWidth = visualizerTheme.visualizations.waveform.lineWidth;
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
     ctx.strokeStyle = peakColor;

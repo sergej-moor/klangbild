@@ -52,7 +52,7 @@ export const visualizerTheme = {
   visualizations: {
     waveform: {
       lineColor: palette.colors.primary,
-      lineWidth: 2,
+      lineWidth: 1,
     },
 
     spectrum: {

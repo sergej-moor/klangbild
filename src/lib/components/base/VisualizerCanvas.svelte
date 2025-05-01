@@ -9,7 +9,8 @@
     canvasHeight = sizes.defaultHeight,
     id = 'visualizer-' + Math.random().toString(36).substring(2, 9),
     fullHeight = false,
-    scaleToFit = true
+    scaleToFit = true,
+    pixelRatio = 2 // Added pixel ratio with default of 2x resolution
   } = $props();
   
   // Canvas reference and state
@@ -18,6 +19,8 @@
   let width = $state(0);
   let height = $state(0);
   let scale = $state(1);
+  let displayWidth = $state(0);
+  let displayHeight = $state(0);
   
   // Create an event dispatcher for communication with parent
   const dispatch = createEventDispatcher();
@@ -28,26 +31,43 @@
     
     const container = canvas.parentElement;
     if (container) {
-      width = container.clientWidth;
+      // Set display dimensions (CSS size)
+      displayWidth = container.clientWidth;
       
       // Allow the component to use the full available height
       if (fullHeight) {
-        height = container.clientHeight;
+        displayHeight = container.clientHeight;
       } else {
         // For non-full height mode, be more responsive to available space
-        height = Math.min(canvasHeight, Math.max(50, container.clientHeight));
+        displayHeight = Math.min(canvasHeight, Math.max(50, container.clientHeight));
       }
       
+      // Set actual canvas dimensions (with higher resolution)
+      width = displayWidth * pixelRatio;
+      height = displayHeight * pixelRatio;
+      
       // Calculate scale factor based on height
-      // This helps visualizations scale appropriately
-      scale = height / sizes.defaultHeight;
+      scale = displayHeight / sizes.defaultHeight;
       
       // Update canvas dimensions
       canvas.width = width;
       canvas.height = height;
       
+      // Set CSS dimensions
+      canvas.style.width = `${displayWidth}px`;
+      canvas.style.height = `${displayHeight}px`;
+      
+      // Scale the context to account for the higher resolution
+      ctx.scale(pixelRatio, pixelRatio);
+      
       // Notify parent component about resize and scale
-      dispatch('resize', { width, height, ctx, scale });
+      dispatch('resize', { 
+        width: displayWidth, 
+        height: displayHeight, 
+        ctx, 
+        scale,
+        pixelRatio
+      });
     }
   }
   
@@ -57,11 +77,11 @@
     
     if (bgColor === 'transparent') {
       // For transparent background, clear with clearRect
-      ctx.clearRect(0, 0, width, height);
+      ctx.clearRect(0, 0, displayWidth, displayHeight);
     } else {
       // For colored background, use fillRect
       ctx.fillStyle = bgColor;
-      ctx.fillRect(0, 0, width, height);
+      ctx.fillRect(0, 0, displayWidth, displayHeight);
     }
   }
   
@@ -69,13 +89,20 @@
   function initCanvas() {
     if (!browser || !canvas) return;
     
-    ctx = canvas.getContext('2d')!;
+    ctx = canvas.getContext('2d', { alpha: bgColor === 'transparent' })!;
     
     // Initial sizing
     handleResize();
     
     // Notify parent that canvas is ready
-    dispatch('ready', { canvas, ctx, width, height, scale });
+    dispatch('ready', { 
+      canvas, 
+      ctx, 
+      width: displayWidth, 
+      height: displayHeight, 
+      scale,
+      pixelRatio
+    });
   }
   
   // Lifecycle hooks
@@ -100,14 +127,14 @@
       console.warn(`${id} - getDimensions called before initialization`);
       return { width: 0, height: 0 };
     }
-    return { width, height };
+    return { width: displayWidth, height: displayHeight };
   }
   
   export { clearCanvas, scale };
 </script>
 
 <div class="canvas-container" {id} style="--border-color: {visualizerTheme.colors.primary}">
-  <canvas bind:this={canvas} width={width} height={height} class="visualization-canvas"></canvas>
+  <canvas bind:this={canvas} class="visualization-canvas"></canvas>
   <slot />
 </div>
 
