@@ -51,18 +51,15 @@
       return;
     }
     
-    // Setup line style
-    ctx.lineWidth = visualizerTheme.visualizations.waveform.lineWidth;
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = peakColor;
+    // Calculate how many points to draw
+    const pointCount = width;
     
-    // Begin the path for the line
-    ctx.beginPath();
+    // Array to store the calculated y positions and amplitude values
+    const points: {x: number, y: number, amplitude: number}[] = [];
     
-    // Create points for the line
-    for (let i = 0; i < width; i++) {
-      const xPercent = i / width;
+    // Calculate all points first
+    for (let i = 0; i < pointCount; i++) {
+      const xPercent = i / pointCount;
       
       // Use scaling power variable for frequency distribution
       const logPos = minFreqPercent + (1 - minFreqPercent) * 
@@ -81,39 +78,67 @@
       const valueHigh = spectrumData[indexHigh];
       const interpolatedValue = valueLow + fraction * (valueHigh - valueLow);
       
-      // Calculate y position (scale to fit canvas height)
-      const y = height - (interpolatedValue / 255) * height * 0.9 * scale;
+      // Calculate normalized amplitude (0-1)
+      const amplitude = interpolatedValue / 255;
       
-      // Draw the point
+      // Calculate y position (scale to fit canvas height)
+      const y = height - amplitude * height * 0.9 * scale;
+      
+      // Store the point
+      points.push({x: i, y, amplitude});
+    }
+    
+    // First fill the area under the curve with frequency-based coloring
+    for (let i = 0; i < points.length; i++) {
+      const {x, y, amplitude} = points[i];
+      
+      // Skip if we're at the right edge
+      if (i >= points.length - 1) continue;
+      
+      // Get the next point
+      const nextPoint = points[i + 1];
+      
+      // Calculate the width of this segment (usually 1 pixel)
+      const segmentWidth = nextPoint.x - x;
+      
+      // Use amplitude to determine color intensity
+      // Higher amplitude = more of the primary color
+      const primaryColor = visualizerTheme.colors.primary;
+      
+      // Apply a curve to make the effect more pronounced
+      const colorIntensity = Math.pow(amplitude, 1.2);
+      
+      // Create solid color with intensity-based alpha
+      // Convert colorIntensity (0-1) to hex alpha (00-FF)
+      const alphaHex = Math.floor(colorIntensity * 255).toString(16).padStart(2, '0');
+      const fillColor = `${primaryColor}${alphaHex}`;
+      
+      // Fill this vertical slice with a solid color
+      ctx.fillStyle = fillColor;
+      ctx.fillRect(x, y, segmentWidth, height - y);
+    }
+    
+    // Now draw the line on top for crisp definition
+    ctx.lineWidth = visualizerTheme.visualizations.waveform.lineWidth;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = peakColor;
+    
+    ctx.beginPath();
+    
+    // Draw the line connecting all points
+    for (let i = 0; i < points.length; i++) {
+      const {x, y} = points[i];
+      
       if (i === 0) {
-        ctx.moveTo(i, y);
+        ctx.moveTo(x, y);
       } else {
-        ctx.lineTo(i, y);
+        ctx.lineTo(x, y);
       }
     }
     
     // Stroke the line
     ctx.stroke();
-    
-    // Fill area under the line with amplitude-based gradient
-    ctx.lineTo(width, height);
-    ctx.lineTo(0, height);
-    ctx.closePath();
-    
-    // Create gradient based on theme colors
-    const gradient = ctx.createLinearGradient(0, 0, 0, height);
-    
-    // Use primary color at the top (high amplitudes)
-    gradient.addColorStop(0, visualizerTheme.colors.primary);
-    
-    // Use secondary color in the middle for smooth transition
-    gradient.addColorStop(0.5, `${visualizerTheme.colors.primary}90`); 
-    
-    // Use lowIntensity color at the bottom (low amplitudes)
-    gradient.addColorStop(1, visualizerTheme.visualizations.spectrogram.lowIntensity);
-    
-    ctx.fillStyle = gradient;
-    ctx.fill();
     
     // If in debug mode, draw debug info
     if (debug) {
