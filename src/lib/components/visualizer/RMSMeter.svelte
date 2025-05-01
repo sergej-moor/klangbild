@@ -1,9 +1,8 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
-  import { browser } from '$app/environment';
   import { rmsLevels, isPlaying, calculateLevels } from '$lib/audio/engine';
   import { theme } from '$lib/theme';
-  import VisualizerCanvas from './base/VisualizerCanvas.svelte';
+  import BaseVisualizer from './BaseVisualizer.svelte';
+  import { linearToDb, dbToPosition } from '$lib/utils/visualizerUtils';
   
   // Props
   const { 
@@ -13,66 +12,42 @@
     debug = false
   } = $props();
   
-  // Canvas and context
-  let canvas: HTMLCanvasElement;
+  // References to canvas context
   let ctx: CanvasRenderingContext2D;
-  let width = $state(0);
-  let height = $state(0);
-  let scale = $state(1);
-  let animationId: number;
-  let isCanvasReady = $state(false);
+  let width = 0;
+  let height = 0;
+  let scale = 1;
   
   // Theme colors
-  const rmsColor = theme.primary;
-  const debugColor = theme.energy.high;
   const backgroundColor = 'rgba(0, 0, 0, 0.1)';
   
-  // Level thresholds and colors based on energy levels
+  // Level thresholds for markers
   const LEVEL_THRESHOLDS = [
-    { dB: 0, color: theme.energy.high },     // 0 dB (clip) - Red
-    { dB: -3, color: theme.energy.high },    // -3 dB - Red
-    { dB: -6, color: theme.energy.mid },     // -6 dB - Yellow
-    { dB: -12, color: theme.energy.mid },    // -12 dB - Yellow
-    { dB: -24, color: theme.energy.low },    // -24 dB - Blue
-    { dB: -48, color: theme.energy.low }     // -48 dB - Blue
+    { dB: 0 },     // 0 dB (clip)
+    { dB: -3 },    // -3 dB 
+    { dB: -6 },    // -6 dB
+    { dB: -12 },   // -12 dB
+    { dB: -24 },   // -24 dB
+    { dB: -48 }    // -48 dB
   ];
   
   // Add headroom above 0 dB and minimum displayable dB level
   const HEADROOM_DB = 6; // 6 dB of headroom above 0 dB
   const MIN_DB = -60;
   
-  // Convert a linear amplitude (0-1) to dB
-  function linearToDb(value: number): number {
-    // Avoid log(0) errors
-    if (value < 0.0000001) return MIN_DB;
-    
-    // Convert to dB = 20 * log10(value)
-    return 20 * Math.log10(value);
+  // Handle ready event from BaseVisualizer
+  function handleReady(event) {
+    ({ ctx, width, height, scale } = event.detail);
   }
   
-  // Convert dB to a display position (0-1)
-  function dbToPosition(db: number): number {
-    // Clamp to MIN_DB
-    db = Math.max(db, MIN_DB);
-    
-    // Scale to 0-1 range, accounting for headroom
-    // Map from (MIN_DB to HEADROOM_DB) to (0 to 1)
-    return (db - MIN_DB) / (HEADROOM_DB - MIN_DB);
+  // Handle resize event from BaseVisualizer
+  function handleResize(event) {
+    ({ width, height, scale } = event.detail);
   }
   
-  // Get color based on dB level
-  function getColorForLevel(db: number): string {
-    for (let i = 0; i < LEVEL_THRESHOLDS.length - 1; i++) {
-      if (db >= LEVEL_THRESHOLDS[i].dB) {
-        return LEVEL_THRESHOLDS[i].color;
-      }
-    }
-    return LEVEL_THRESHOLDS[LEVEL_THRESHOLDS.length - 1].color;
-  }
-  
-  // Draw the meter
+  // Draw the meter - this will be called by BaseVisualizer
   function drawMeter() {
-    if (!ctx || !isCanvasReady) return;
+    if (!ctx) return;
     
     // Make sure to update the levels
     if ($isPlaying) {
@@ -113,7 +88,7 @@
       // Draw RMS levels
       if (stereo) {
         // Left channel RMS
-        const rmsLeftHeight = (height - padding * 2) * dbToPosition(rmsLeftDb);
+        const rmsLeftHeight = (height - padding * 2) * dbToPosition(rmsLeftDb, MIN_DB, HEADROOM_DB);
         const rmsLeftY = height - padding - rmsLeftHeight;
         
         // Create gradient for RMS using only low and high energy colors
@@ -130,7 +105,7 @@
         ctx.fillRect(padding, rmsLeftY, meterWidth, rmsLeftHeight);
         
         // Right channel RMS
-        const rmsRightHeight = (height - padding * 2) * dbToPosition(rmsRightDb);
+        const rmsRightHeight = (height - padding * 2) * dbToPosition(rmsRightDb, MIN_DB, HEADROOM_DB);
         const rmsRightY = height - padding - rmsRightHeight;
         
         // Create gradient for RMS using only low and high energy colors
@@ -147,7 +122,7 @@
         ctx.fillRect(padding * 2 + meterWidth, rmsRightY, meterWidth, rmsRightHeight);
       } else {
         // Mono channel RMS
-        const rmsHeight = (height - padding * 2) * dbToPosition(rmsLeftDb);
+        const rmsHeight = (height - padding * 2) * dbToPosition(rmsLeftDb, MIN_DB, HEADROOM_DB);
         const rmsY = height - padding - rmsHeight;
         
         // Create gradient for RMS using only low and high energy colors
@@ -164,12 +139,12 @@
         ctx.fillRect(padding, rmsY, meterWidth, rmsHeight);
       }
       
-      // Draw level markings (after filling the bars)
+      // Draw level markings
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
       ctx.lineWidth = 1;
       
       // Add a marker for 0 dB and headroom
-      const zeroDbY = padding + (height - padding * 2) * (1 - (0 - MIN_DB) / (HEADROOM_DB - MIN_DB));
+      const zeroDbY = height - padding - (height - padding * 2) * dbToPosition(0, MIN_DB, HEADROOM_DB);
       ctx.beginPath();
       ctx.moveTo(padding, zeroDbY);
       ctx.lineTo(width - padding, zeroDbY);
@@ -178,7 +153,7 @@
       // Add a "0 dB" label in slightly bolder/different style
       ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
       ctx.font = 'bold 9px sans-serif';
-      ctx.fillText(`0dB`, width - padding - 30, zeroDbY - 2);
+      ctx.fillText(`0dB`, width - padding - 25, zeroDbY - 5);
       
       // Draw the rest of the level markings
       ctx.font = '9px sans-serif';
@@ -188,7 +163,7 @@
         // Skip 0 dB as we've already drawn it
         if (threshold.dB === 0) return;
         
-        const y = padding + (height - padding * 2) * (1 - dbToPosition(threshold.dB));
+        const y = height - padding - (height - padding * 2) * dbToPosition(threshold.dB, MIN_DB, HEADROOM_DB);
         
         ctx.beginPath();
         ctx.moveTo(padding, y);
@@ -196,11 +171,11 @@
         ctx.stroke();
         
         // Add dB labels
-        ctx.fillText(`${threshold.dB}dB`, width - padding - 30, y - 2);
+        ctx.fillText(`${threshold.dB}dB`, width - padding - 25, y - 5);
       });
     } else {
-      // Horizontal meters
-      const padding = Math.max(1, Math.floor(height * 0.02));
+      // Draw horizontal meters
+      const padding = Math.max(1, Math.floor(height * 0.05)); // Minimal padding
       
       // Calculate meter heights based on stereo/mono
       const meterHeight = stereo ? (height - padding * 2 - padding) / 2 : height - padding * 2;
@@ -209,10 +184,10 @@
       ctx.fillStyle = backgroundColor;
       
       if (stereo) {
-        // Top channel (left) background
+        // Left channel background
         ctx.fillRect(padding, padding, width - padding * 2, meterHeight);
         
-        // Bottom channel (right) background
+        // Right channel background
         ctx.fillRect(padding, padding * 2 + meterHeight, width - padding * 2, meterHeight);
       } else {
         // Mono background
@@ -222,7 +197,7 @@
       // Draw RMS levels
       if (stereo) {
         // Left channel RMS
-        const rmsLeftWidth = (width - padding * 2) * dbToPosition(rmsLeftDb);
+        const rmsLeftWidth = (width - padding * 2) * dbToPosition(rmsLeftDb, MIN_DB, HEADROOM_DB);
         
         // Create gradient for RMS using only low and high energy colors
         const rmsGradientLeft = ctx.createLinearGradient(
@@ -238,7 +213,7 @@
         ctx.fillRect(padding, padding, rmsLeftWidth, meterHeight);
         
         // Right channel RMS
-        const rmsRightWidth = (width - padding * 2) * dbToPosition(rmsRightDb);
+        const rmsRightWidth = (width - padding * 2) * dbToPosition(rmsRightDb, MIN_DB, HEADROOM_DB);
         
         // Create gradient for RMS using only low and high energy colors
         const rmsGradientRight = ctx.createLinearGradient(
@@ -254,7 +229,7 @@
         ctx.fillRect(padding, padding * 2 + meterHeight, rmsRightWidth, meterHeight);
       } else {
         // Mono channel RMS
-        const rmsWidth = (width - padding * 2) * dbToPosition(rmsLeftDb);
+        const rmsWidth = (width - padding * 2) * dbToPosition(rmsLeftDb, MIN_DB, HEADROOM_DB);
         
         // Create gradient for RMS using only low and high energy colors
         const rmsGradient = ctx.createLinearGradient(
@@ -275,7 +250,7 @@
       ctx.lineWidth = 1;
       
       // Add a marker for 0 dB and headroom
-      const zeroDbX = padding + (width - padding * 2) * dbToPosition(0);
+      const zeroDbX = padding + (width - padding * 2) * dbToPosition(0, MIN_DB, HEADROOM_DB);
       ctx.beginPath();
       ctx.moveTo(zeroDbX, padding);
       ctx.lineTo(zeroDbX, height - padding);
@@ -294,7 +269,7 @@
         // Skip 0 dB as we've already drawn it
         if (threshold.dB === 0) return;
         
-        const x = padding + (width - padding * 2) * dbToPosition(threshold.dB);
+        const x = padding + (width - padding * 2) * dbToPosition(threshold.dB, MIN_DB, HEADROOM_DB);
         
         ctx.beginPath();
         ctx.moveTo(x, padding);
@@ -305,64 +280,16 @@
         ctx.fillText(`${threshold.dB}dB`, x - 10, height - padding + 12);
       });
     }
-    
-    // Draw debug information if enabled
-    if (debug) {
-      ctx.fillStyle = `${debugColor}80`;
-      ctx.font = '10px monospace';
-      ctx.fillText(`RMS L: ${rmsLeftDb.toFixed(1)}dB R: ${rmsRightDb.toFixed(1)}dB`, 5, 15);
-    }
   }
-  
-  // Start the animation loop
-  function startAnimation() {
-    if (animationId) cancelAnimationFrame(animationId);
-    
-    function animate() {
-      drawMeter();
-      animationId = requestAnimationFrame(animate);
-    }
-    
-    animationId = requestAnimationFrame(animate);
-  }
-  
-  // Handle canvas resize
-  function handleResize(event: CustomEvent) {
-    width = event.detail.width;
-    height = event.detail.height;
-    scale = event.detail.scale || 1;
-    
-    // Redraw with new dimensions
-    drawMeter();
-  }
-  
-  // Handle canvas ready
-  function handleCanvasReady(event: CustomEvent) {
-    canvas = event.detail.canvas;
-    ctx = event.detail.ctx;
-    width = event.detail.width;
-    height = event.detail.height;
-    scale = event.detail.scale || 1;
-    isCanvasReady = true;
-    
-    // Start animation once canvas is ready
-    startAnimation();
-  }
-  
-  // Clean up on destroy
-  onDestroy(() => {
-    if (browser && animationId) {
-      cancelAnimationFrame(animationId);
-    }
-  });
 </script>
 
-<VisualizerCanvas
-  on:ready={handleCanvasReady}
+<BaseVisualizer 
+  on:ready={handleReady}
   on:resize={handleResize}
-  fullHeight={fullHeight}
-  scaleToFit={true}
+  {fullHeight}
+  {debug}
   id="peak-meter"
+  draw={drawMeter}
 />
 
 <style>

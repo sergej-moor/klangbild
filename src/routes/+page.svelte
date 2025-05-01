@@ -2,13 +2,13 @@
 	import { onMount } from 'svelte';
 	import { loadAudio } from '$lib/audio/engine';
 	import { theme } from '$lib/theme';
-	import Oscilloscope from "$lib/components/Oscilloscope.svelte";
-	import FrequencySpectrum from "$lib/components/FrequencySpectrum.svelte";
-	import Spectrogram from "$lib/components/Spectrogram.svelte";
+	import Oscilloscope from "$lib/components/visualizer/Oscilloscope.svelte";
+	import FrequencySpectrum from "$lib/components/visualizer/FrequencySpectrum.svelte";
+	import Spectrogram from "$lib/components/visualizer/Spectrogram.svelte";
 	import Waveform from "$lib/components/Waveform.svelte";
 	import PlayPauseControls from "$lib/components/PlayPauseControls.svelte";
 	
-	import RmsMeter from '$lib/components/RMSMeter.svelte';
+	import RmsMeter from '$lib/components/visualizer/RMSMeter.svelte';
 	
 	// Song name - you can replace this with dynamic content if needed
 	const songName = "Demo Track";
