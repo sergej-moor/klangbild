@@ -3,6 +3,7 @@
 	import { loadAudio } from '$lib/audio/engine';
 	import Oscilloscope from "$lib/components/Oscilloscope.svelte";
 	import FrequencySpectrum from "$lib/components/FrequencySpectrum.svelte";
+	import Spectrogram from "$lib/components/Spectrogram.svelte";
 	import Waveform from "$lib/components/Waveform.svelte";
 	import PlayPauseControls from "$lib/components/PlayPauseControls.svelte";
 	
@@ -20,6 +21,7 @@
 <div class="visualizer-container">
 	<div class="main-visualizers">
 		<FrequencySpectrum fullHeight={true} />
+		<Spectrogram fullHeight={true} />
 		<Oscilloscope fullHeight={true} />
 	</div>
 	
@@ -48,7 +50,7 @@
 	
 	.main-visualizers {
 		display: grid;
-		grid-template-rows: 1fr 1fr;
+		grid-template-rows: 1fr 1fr 1fr;
 		gap: 0.5rem;
 	
 		border: 1px solid #00ff00;

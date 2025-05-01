@@ -8,7 +8,7 @@
     bgColor = 'transparent',
     canvasHeight = sizes.defaultHeight,
     id = 'visualizer-' + Math.random().toString(36).substring(2, 9),
-    fullHeight = false // Add new prop to control height behavior
+    fullHeight = false // Ensure this is correctly typed
   } = $props();
   
   // Internal state
