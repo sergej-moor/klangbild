@@ -32,6 +32,16 @@
   // Number of history frames to keep
   const historyLength = 200;
   
+  // Watch isPlaying state to start/stop animation
+  $effect(() => {
+    if ($isPlaying) {
+      startAnimation();
+    } else if (animationId) {
+      cancelAnimationFrame(animationId);
+      animationId = undefined;
+    }
+  });
+  
   // Color gradient for intensity representation
   function getColor(value: number): string {
     // Use the theme colors to create a gradient based on value
@@ -139,22 +149,6 @@
       ctx.fillStyle = 'rgba(0, 255, 0, 1)';
       ctx.font = '10px monospace';
       ctx.fillText(`Spectrogram: ${width}x${height} (scale: ${scale.toFixed(2)})`, 5, 15);
-      
-      // If no data, show a message
-      if (spectrogramData.length === 0) {
-        // Background for the message
-        const noDataMsg = 'No spectrogram data';
-        const textMetrics = ctx.measureText(noDataMsg);
-        const msgWidth = textMetrics.width + 20;
-        
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(width/2 - msgWidth/2, height/2 - 10, msgWidth, 20);
-        
-        // Text message
-        ctx.fillStyle = 'rgba(0, 255, 0, 1)';
-        ctx.font = '12px sans-serif';
-        ctx.fillText(noDataMsg, width/2 - textMetrics.width/2, height/2 + 5);
-      }
     }
   }
   
@@ -190,8 +184,10 @@
         }
       }
       
-      // Continue animation
-      animationId = requestAnimationFrame(animate);
+      // Only continue animation if still playing
+      if ($isPlaying) {
+        animationId = requestAnimationFrame(animate);
+      }
     }
     
     animationId = requestAnimationFrame(animate);
@@ -206,8 +202,13 @@
     scale = event.detail.scale; // Get scale factor
     isCanvasReady = true;
     
-    // Start animation
-    startAnimation();
+    // Only start animation if playing
+    if ($isPlaying) {
+      startAnimation();
+    } else {
+      // Just draw once to show initial state
+      drawSpectrogram();
+    }
   }
   
   // Handle resize event
