@@ -13,6 +13,27 @@ export const sampleRate = writable<number>(
   browser && audioContext ? audioContext.sampleRate : 44100
 );
 
+// Add these new stores for peak and RMS values
+export const peakLevels = writable<{ left: number; right: number }>({ left: 0, right: 0 });
+export const rmsLevels = writable<{ left: number; right: number }>({ left: 0, right: 0 });
+
+// Constants for level calculations
+const RMS_DECAY = 0.9; // Slower decay for RMS (smoothing)
+const PEAK_DECAY = 0.95; // Decay factor for peak levels
+const PEAK_HOLD_TIME = 1000; // Hold peak for 1 second (in ms)
+
+// Add a calibration factor to ensure proper peak readings
+const PEAK_CALIBRATION = 0.8; // Adjust this value based on your audio material
+
+// Add these variables to store previous values
+let prevRMSLeft = 0;
+let prevRMSRight = 0;
+let peakLeftValue = 0;
+let peakRightValue = 0;
+let peakLeftHoldTime = 0;
+let peakRightHoldTime = 0;
+let lastUpdateTime = 0;
+
 let analyser: AnalyserNode;
 let source: AudioBufferSourceNode;
 let audioBuffer: AudioBuffer;
@@ -265,4 +286,84 @@ export async function getAudioDuration(): Promise<number> {
 
   if (!audioBuffer) return 0;
   return audioBuffer.duration;
+}
+
+// Add this function to calculate levels
+export function calculateLevels() {
+  if (!browser || !audioContext || !analyser) return;
+
+  // Get the current waveform data
+  const bufferLength = analyser.fftSize;
+  const timeData = new Float32Array(bufferLength);
+  analyser.getFloatTimeDomainData(timeData);
+
+  // Split data for left and right channels if stereo
+  // For now we'll just use the same data for both channels
+  // In a real stereo implementation, you'd split the data
+
+  // Calculate RMS (Root Mean Square) - average power
+  let sumSquaresLeft = 0;
+  let sumSquaresRight = 0;
+
+  for (let i = 0; i < bufferLength; i++) {
+    const sample = timeData[i];
+    sumSquaresLeft += sample * sample;
+    sumSquaresRight += sample * sample; // Same as left for now
+  }
+
+  // Calculate the RMS values
+  let rmsLeft = Math.sqrt(sumSquaresLeft / bufferLength);
+  let rmsRight = Math.sqrt(sumSquaresRight / bufferLength);
+
+  // Apply calibration factor to ensure proper level readings
+  rmsLeft /= PEAK_CALIBRATION;
+  rmsRight /= PEAK_CALIBRATION;
+
+  // Apply smoothing to RMS values
+  rmsLeft = rmsLeft * (1 - RMS_DECAY) + prevRMSLeft * RMS_DECAY;
+  rmsRight = rmsRight * (1 - RMS_DECAY) + prevRMSRight * RMS_DECAY;
+
+  // Store current values for next calculation
+  prevRMSLeft = rmsLeft;
+  prevRMSRight = rmsRight;
+
+  // Calculate peak values
+  const now = performance.now();
+  const deltaTime = now - lastUpdateTime;
+  lastUpdateTime = now;
+
+  // Find current peak values
+  let currentPeakLeft = 0;
+  let currentPeakRight = 0;
+
+  for (let i = 0; i < bufferLength; i++) {
+    const absValue = Math.abs(timeData[i]);
+    currentPeakLeft = Math.max(currentPeakLeft, absValue);
+    currentPeakRight = Math.max(currentPeakRight, absValue); // Same as left for now
+  }
+
+  // Apply calibration to peak values
+  currentPeakLeft /= PEAK_CALIBRATION;
+  currentPeakRight /= PEAK_CALIBRATION;
+
+  // Update peak hold times
+  if (currentPeakLeft >= peakLeftValue) {
+    peakLeftValue = currentPeakLeft;
+    peakLeftHoldTime = now;
+  } else if (now - peakLeftHoldTime > PEAK_HOLD_TIME) {
+    // Apply decay after hold time
+    peakLeftValue = Math.max(currentPeakLeft, peakLeftValue * PEAK_DECAY);
+  }
+
+  if (currentPeakRight >= peakRightValue) {
+    peakRightValue = currentPeakRight;
+    peakRightHoldTime = now;
+  } else if (now - peakRightHoldTime > PEAK_HOLD_TIME) {
+    // Apply decay after hold time
+    peakRightValue = Math.max(currentPeakRight, peakRightValue * PEAK_DECAY);
+  }
+
+  // Update the stores
+  peakLevels.set({ left: peakLeftValue, right: peakRightValue });
+  rmsLevels.set({ left: rmsLeft, right: rmsRight });
 }

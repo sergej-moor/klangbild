@@ -8,6 +8,8 @@
 	import Waveform from "$lib/components/Waveform.svelte";
 	import PlayPauseControls from "$lib/components/PlayPauseControls.svelte";
 	
+	import RmsMeter from '$lib/components/RMSMeter.svelte';
+	
 	// Song name - you can replace this with dynamic content if needed
 	const songName = "Demo Track";
 	
@@ -24,9 +26,14 @@
 
 <div class="visualizer-container">
 	<div class="main-visualizers">
-		<FrequencySpectrum fullHeight={true} debug={debug} />
-		<Spectrogram fullHeight={true} debug={debug} />
-		<Oscilloscope fullHeight={true} debug={debug} />
+		<div class="peak-meter-container">
+			<RmsMeter fullHeight={true} debug={debug} />
+		</div>
+		<div class="main-viz-grid">
+			<FrequencySpectrum fullHeight={true} debug={debug} />
+			<Spectrogram fullHeight={true} debug={debug} />
+			<Oscilloscope fullHeight={true} debug={debug} />
+		</div>
 	</div>
 	
 	<div class="bottom-controls">
@@ -69,12 +76,27 @@
 	
 	.main-visualizers {
 		display: grid;
-		grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+		grid-template-columns: 0.2fr 1.8fr; /* 10% width for peak meter, 90% for other visualizers */
 		gap: 0.25rem;
 		overflow: hidden;
 	}
 	
-	.main-visualizers > :global(*) {
+	.peak-meter-container {
+		border: 1px solid var(--primary-color);
+		height: 100%; /* Take full height */
+		min-height: 0;
+		overflow: hidden;
+	}
+	
+	.main-viz-grid {
+		display: grid;
+		grid-template-rows: 1fr 1fr 1fr; /* Three equal rows */
+		gap: 0.25rem;
+		overflow: hidden;
+		height: 100%;
+	}
+	
+	.main-viz-grid > :global(*) {
 		border: 1px solid var(--primary-color);
 		min-height: 0;
 		max-height: 29vh; /* Ensure each visualizer doesn't exceed its allocated space */
