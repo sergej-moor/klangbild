@@ -13,7 +13,7 @@
   let canvas: HTMLCanvasElement;
   let ctx: CanvasRenderingContext2D;
   let width = $state(0);
-  let height = $state(compactMode ? 30 : sizes.defaultHeight); // Even smaller in compact mode
+  let height = $state( sizes.defaultHeight); // Even smaller in compact mode
   let isReady = $state(false);
   let progress = $state(0); // Track progress locally
   
@@ -188,9 +188,5 @@
   <div class="w-full rounded-md overflow-hidden">
     <canvas bind:this={canvas} width={width} height={height} class="block w-full h-full"></canvas>
   </div>
-  {#if !compactMode}
-    <div class="text-sm opacity-70 text-center">
-      ({Math.round(progress * 100)}%) 
-    </div>
-  {/if}
+
 </div> 

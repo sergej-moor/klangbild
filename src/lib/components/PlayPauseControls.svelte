@@ -164,7 +164,8 @@
     flex-direction: column;
     align-items: center;
     gap: 2px;
-    padding: 2px;
+    
+    
     color: #ffffff;
     font-size: 10px;
     overflow: hidden;
@@ -184,6 +185,8 @@
     align-items: center;
     gap: 4px;
     height: 100%;
+    padding: 12px;
+   
     overflow: hidden;
   }
   

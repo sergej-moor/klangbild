@@ -41,6 +41,8 @@
 			<Spectrogram />
 			<Oscilloscope />
 		</div>
+      
+        
 	</div>
 	
 	<!-- Display debug mode indicator if debug is on -->
@@ -51,7 +53,7 @@
 	{/if}
 	
 	<div class="bottom-controls">
-		<Waveform compactMode={true} />
+		<Waveform   />
 		<div class="play-controls">
 			<PlayPauseControls compact={true} songName={songName} />
 		</div>
@@ -63,7 +65,7 @@
 	
 	.visualizer-container {
 		display: grid;
-		grid-template-rows: 88vh auto; /* Allocate 88% to visualizers, rest to controls */
+		grid-template-rows: 60vh auto; /* Allocate 88% to visualizers, rest to controls */
 		height: 100vh;
 		width: 100%;
 		max-width: 100vw;
@@ -105,7 +107,7 @@
 		display: grid;
 		grid-template-rows: 1fr auto;
 		gap: 0.25rem;
-		max-height: 10vh;
+		max-height: 40vh;
 		overflow: hidden; /* Prevent overflow */
 	}
 	
@@ -119,8 +121,10 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		height: 24px; /* Fixed height */
+	 /* Fixed height */
 		overflow: hidden;
+        padding: 12px;
+
 	}
 	
 	.debug-indicator {
