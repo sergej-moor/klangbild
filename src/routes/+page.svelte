@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { loadAudio, isPlaying } from '$lib/audio/engine';
+	import { loadAudio } from '$lib/audio/index';
+	import { isPlaying } from '$lib/audio/stores';
 	import { theme } from '$lib/theme';
 	import { debugMode } from '$lib/stores/debug';
 	import Oscilloscope from "$lib/components/visualizer/Oscilloscope.svelte";
@@ -17,7 +18,7 @@
 	// Preload audio when the page loads
 	onMount(async () => {
 		console.log('Main page mounted, preloading audio...');
-		await loadAudio();
+		await loadAudio('/demo.wav');
 		console.log('Audio preloaded in main page');
 	});
 

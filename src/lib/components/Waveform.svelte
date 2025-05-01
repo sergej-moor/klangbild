@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { browser } from '$app/environment';
-  import { fullWaveform, loadAudio, playbackPosition, isPlaying, seekToPosition } from '$lib/audio/engine';
+  import { audioBuffer, playbackPosition, isPlaying } from '$lib/audio/stores';
+  import { seekToPosition } from '$lib/audio/controls';
   import { theme, sizes } from '$lib/theme';
   
   // Props
@@ -13,7 +14,7 @@
   let canvas: HTMLCanvasElement;
   let ctx: CanvasRenderingContext2D;
   let width = $state(0);
-  let height = $state( sizes.defaultHeight); // Even smaller in compact mode
+  let height = $state(sizes.defaultHeight);
   let isReady = $state(false);
   let progress = $state(0); // Track progress locally
   
@@ -21,11 +22,14 @@
   let animationId: number;
   
   // Styling parameters for bars
-  const bgColor = 'transparent'; // Keep transparent
-  const waveformColor = theme.secondary; // Use secondary color for unplayed portion
-  const progressColor = theme.primary; // Use primary color for played portion
-  const barWidth = compactMode ? 1 : 2; // Thinner bars in compact mode
-  const barGap = compactMode ? 0 : 1; // Smaller gap in compact mode
+  const bgColor = 'transparent';
+  const waveformColor = theme.secondary;
+  const progressColor = theme.primary;
+  const barWidth = compactMode ? 1 : 2;
+  const barGap = compactMode ? 0 : 1;
+  
+  // Store full waveform data (replacement for the store from engine.ts)
+  let fullWaveform = $state<Float32Array | null>(null);
   
   // Handle resize for responsiveness
   function handleResize() {
@@ -35,29 +39,54 @@
     if (container) {
       width = container.clientWidth;
       
-      // In compact mode, use a much smaller fixed height
       if (compactMode) {
-        height = 40; // Fixed small height for compact mode
+        height = 40;
       } else {
         height = Math.min(sizes.defaultHeight, container.clientWidth / 2);
       }
       
-      // Update canvas dimensions
       canvas.width = width;
       canvas.height = height;
       
-      // Redraw if data is available
-      if ($fullWaveform && $fullWaveform.length > 0) {
-        drawWaveform($fullWaveform, progress);
+      if (fullWaveform && fullWaveform.length > 0) {
+        drawWaveform(fullWaveform, progress);
       }
     }
+  }
+  
+  // Generate waveform data from audio buffer
+  function generateWaveformData() {
+    if (!$audioBuffer) return;
+    
+    // Use the first channel of audio data
+    const rawData = $audioBuffer.getChannelData(0);
+    const samples = rawData.length;
+    
+    // For very large buffers, downsample to improve performance
+    const downsampleFactor = Math.max(1, Math.floor(samples / 10000));
+    const downsampledLength = Math.floor(samples / downsampleFactor);
+    const data = new Float32Array(downsampledLength);
+    
+    // Take peak of each downsampled section
+    for (let i = 0; i < downsampledLength; i++) {
+      const start = i * downsampleFactor;
+      const end = Math.min(start + downsampleFactor, samples);
+      let max = 0;
+      
+      for (let j = start; j < end; j++) {
+        const absolute = Math.abs(rawData[j]);
+        if (absolute > max) max = absolute;
+      }
+      
+      data[i] = max;
+    }
+    
+    fullWaveform = data;
   }
   
   // Clear the canvas
   function clearCanvas() {
     if (!ctx) return;
-    
-    // For transparent background, use clearRect instead of fillRect
     ctx.clearRect(0, 0, width, height);
   }
   
@@ -66,10 +95,10 @@
     if (animationId) cancelAnimationFrame(animationId);
     
     function animate() {
-      if (isReady && ctx && $fullWaveform?.length > 0) {
+      if (isReady && ctx && fullWaveform?.length > 0) {
         // Always get the latest progress directly from the store
         progress = $playbackPosition;
-        drawWaveform($fullWaveform, progress);
+        drawWaveform(fullWaveform, progress);
       }
       animationId = requestAnimationFrame(animate);
     }
@@ -89,7 +118,7 @@
     // Convert to a position between 0 and 1
     const position = x / rect.width;
     
-    // Seek to this position
+    // Force seek regardless of playing state
     seekToPosition(position);
   }
   
@@ -149,6 +178,18 @@
     }
   }
   
+  // Watch for audio buffer changes to generate the waveform
+  $effect(() => {
+    if ($audioBuffer) {
+      generateWaveformData();
+    }
+  });
+  
+  // Watch for playback position changes
+  $effect(() => {
+    progress = $playbackPosition;
+  });
+  
   // Lifecycle hooks
   onMount(async () => {
     if (!browser) return;
@@ -163,10 +204,15 @@
     // Add click event listener to the canvas
     canvas.addEventListener('click', handleWaveformClick);
     
+    // Generate waveform data if already loaded
+    if ($audioBuffer) {
+      generateWaveformData();
+    }
+    
     // Mark as ready
     isReady = true;
     
-    // Load audio if needed and start animation
+    // Start animation
     startProgressAnimation();
   });
   
@@ -188,5 +234,25 @@
   <div class="w-full rounded-md overflow-hidden">
     <canvas bind:this={canvas} width={width} height={height} class="block w-full h-full"></canvas>
   </div>
+</div>
 
-</div> 
+<style>
+  .waveform-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    border-radius: 3px;
+  }
+  
+  .waveform-container.compact-mode {
+    height: 40px;
+  }
+  
+  .waveform-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: pointer;
+  }
+</style> 

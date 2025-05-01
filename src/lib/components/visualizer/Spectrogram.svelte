@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { spectrum, isPlaying, sampleRate } from '$lib/audio/engine';
+  import { spectrum, isPlaying, sampleRate } from '$lib/audio/stores';
   import { theme } from '$lib/theme';
   import BaseVisualizer from './BaseVisualizer.svelte';
   import { blendColors, parseColor } from '$lib/utils/visualizerUtils';

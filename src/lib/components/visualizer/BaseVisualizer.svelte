@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   import { browser } from '$app/environment';
-  import { isPlaying } from '$lib/audio/engine';
+  import { isPlaying } from '$lib/audio/stores';
   import { theme } from '$lib/theme';
   import { debugMode } from '$lib/stores/debug';
   import VisualizerCanvas from '../base/VisualizerCanvas.svelte';

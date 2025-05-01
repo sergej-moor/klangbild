@@ -1,7 +1,9 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { browser } from '$app/environment';
-  import { isPlaying, togglePlayPause, playbackPosition, seekToPosition, getAudioDuration } from '$lib/audio/engine';
+  import { isPlaying, playbackPosition, duration } from '$lib/audio/stores';
+  import { togglePlayPause, seekToPosition, getAudioDuration } from '$lib/audio/controls';
+  import { formatTime } from '$lib/audio/utils';
   import { theme } from '$lib/theme';
   
   // Props
@@ -16,14 +18,6 @@
   let isDragging = $state(false);
   let audioElement: HTMLAudioElement | null = null;
   
-  // Format time as MM:SS
-  function formatTime(seconds: number) {
-    if (!seconds || isNaN(seconds)) return "00:00";
-    const minutes = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  }
-  
   // Handle slider input
   function handleSeek(event: Event) {
     const newPosition = parseFloat((event.target as HTMLInputElement).value);
@@ -36,6 +30,8 @@
   // Handle when slider is released
   function handleSeekComplete() {
     isDragging = false;
+    
+    // Always seek to the selected position
     seekToPosition(sliderValue);
   }
   
@@ -55,7 +51,7 @@
     }
   });
   
-  // Update duration asynchronously
+  // Update duration periodically
   async function updateDuration() {
     try {
       // Get duration and handle Promise
@@ -69,8 +65,6 @@
         if (!isDragging) {
           currentTime = totalDuration * $playbackPosition;
         }
-        
-        console.log("Updated duration:", totalDuration);
       }
     } catch (error) {
       console.error("Error getting audio duration:", error);
@@ -83,11 +77,17 @@
     const audio = document.querySelector('audio');
     if (audio && !isNaN(audio.duration) && audio.duration > 0) {
       totalDuration = audio.duration;
-      console.log("Got duration directly from audio element:", totalDuration);
       return true;
     }
     return false;
   }
+  
+  // Also track the duration from the store
+  $effect(() => {
+    if ($duration > 0) {
+      totalDuration = $duration;
+    }
+  });
   
   onMount(() => {
     // Initial duration update

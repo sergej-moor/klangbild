@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { waveform } from '$lib/audio/engine';
+  import { waveform } from '$lib/audio/stores';
   import { theme } from '$lib/theme';
   import BaseVisualizer from './BaseVisualizer.svelte';
   

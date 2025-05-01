@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { rmsLevels, isPlaying, calculateLevels } from '$lib/audio/engine';
+  import { rmsLevels, isPlaying } from '$lib/audio/stores';
+  import { calculateLevels } from '$lib/audio/visualizer';
   import { theme } from '$lib/theme';
   import BaseVisualizer from './BaseVisualizer.svelte';
   import { linearToDb, dbToPosition } from '$lib/utils/visualizerUtils';
@@ -53,10 +54,23 @@
     // Clear the canvas
     ctx.clearRect(0, 0, width, height);
     
-    // Get current values and convert to mono
-    const rms = $rmsLevels;
+    // Get current values - handle both array and object formats for compatibility
+    const rmsValues = $rmsLevels;
+    let leftLevel = 0;
+    let rightLevel = 0;
+    
+    if (Array.isArray(rmsValues)) {
+      // Array format [left, right]
+      leftLevel = rmsValues[0] || 0;
+      rightLevel = rmsValues[1] || 0;
+    } else if (typeof rmsValues === 'object' && rmsValues !== null) {
+      // Object format {left, right}
+      leftLevel = rmsValues.left || 0;
+      rightLevel = rmsValues.right || 0;
+    }
+    
     // Use average of left and right for mono display
-    const monoRms = (rms.left + rms.right) / 2;
+    const monoRms = (leftLevel + rightLevel) / 2;
     
     // Convert to dB
     const rmsDb = linearToDb(monoRms);
