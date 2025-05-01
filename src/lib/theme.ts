@@ -15,7 +15,7 @@ export const theme = {
 
 // Common sizing values (keeping these as they're useful)
 export const sizes = {
-  defaultHeight: 200,
+  defaultHeight: 200, // Default height for scale calculations
   minHeight: 50,
   maxHeight: 400,
   borderWidth: 1,

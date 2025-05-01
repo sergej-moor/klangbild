@@ -1,157 +1,161 @@
 <script lang="ts">
-  import { onMount, onDestroy, createEventDispatcher } from 'svelte';
+  import { onMount, createEventDispatcher } from 'svelte';
   import { browser } from '$app/environment';
   import { theme, sizes } from '$lib/theme';
   
-  // Props using Svelte 5 runes syntax
+  // Props
   const { 
-    bgColor = theme.background,
-    canvasHeight = sizes.defaultHeight,
-    id = 'visualizer-' + Math.random().toString(36).substring(2, 9),
-    fullHeight = false,
-    scaleToFit = true,
-    pixelRatio = 2 // Added pixel ratio with default of 2x resolution
+    scaleToFit = false,
+    id = 'canvas-container'
   } = $props();
   
-  // Canvas reference and state
+  // State
+  let container: HTMLDivElement;
   let canvas: HTMLCanvasElement;
-  let ctx: CanvasRenderingContext2D;
-  let width = $state(0);
-  let height = $state(0);
-  let scale = $state(1);
-  let displayWidth = $state(0);
-  let displayHeight = $state(0);
+  let ctx: CanvasRenderingContext2D | null = null;
+  let width = 0;
+  let height = 0;
+  let deviceScale = 1; // For high DPI displays
+  let uiScale = 1; // For UI scaling calculations
+  let isReady = false;
+  let resizeObserver: ResizeObserver | null = null;
   
-  // Create an event dispatcher for communication with parent
+  // Default height for the UI scale calculation
+  const DEFAULT_HEIGHT = sizes?.defaultHeight || 300;
+  
+  // Create event dispatcher
   const dispatch = createEventDispatcher();
   
-  // Handle resize for responsiveness
-  function handleResize() {
-    if (!browser || !canvas || !ctx) return;
+  // Initialize canvas and context
+  function initCanvas() {
+    if (!browser || !container) return;
     
-    const container = canvas.parentElement;
-    if (container) {
-      // Set display dimensions (CSS size)
-      displayWidth = container.clientWidth;
+    // Get container dimensions
+    const rect = container.getBoundingClientRect();
+    width = rect.width;
+    height = rect.height;
+    
+    // Set canvas dimensions with high DPI support
+    deviceScale = window.devicePixelRatio || 1;
+    canvas.width = width * deviceScale;
+    canvas.height = height * deviceScale;
+    
+    // Scale canvas display size with CSS
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+    
+    // Calculate UI scale relative to default height
+    uiScale = height / DEFAULT_HEIGHT;
+    
+    // Get context
+    ctx = canvas.getContext('2d');
+    
+    if (ctx) {
+      // Scale the context for high DPI displays
+      ctx.scale(deviceScale, deviceScale);
       
-      // Allow the component to use the full available height
-      if (fullHeight) {
-        displayHeight = container.clientHeight;
-      } else {
-        // For non-full height mode, be more responsive to available space
-        displayHeight = Math.min(canvasHeight, Math.max(50, container.clientHeight));
-      }
-      
-      // Set actual canvas dimensions (with higher resolution)
-      width = displayWidth * pixelRatio;
-      height = displayHeight * pixelRatio;
-      
-      // Calculate scale factor based on height
-      scale = displayHeight / sizes.defaultHeight;
-      
-      // Update canvas dimensions
-      canvas.width = width;
-      canvas.height = height;
-      
-      // Set CSS dimensions
-      canvas.style.width = `${displayWidth}px`;
-      canvas.style.height = `${displayHeight}px`;
-      
-      // Scale the context to account for the higher resolution
-      ctx.scale(pixelRatio, pixelRatio);
-      
-      // Notify parent component about resize and scale
-      dispatch('resize', { 
-        width: displayWidth, 
-        height: displayHeight, 
+      // Dispatch ready event
+      isReady = true;
+      dispatch('ready', { 
+        canvas, 
         ctx, 
-        scale,
-        pixelRatio
+        width, 
+        height, 
+        scale: uiScale, 
+        deviceScale 
       });
     }
   }
   
-  // Clear the canvas
-  function clearCanvas() {
-    if (!ctx) return;
+  // Handle container resize
+  function handleResize() {
+    if (!browser || !container || !ctx) return;
     
-    if (bgColor === 'transparent') {
-      // For transparent background, clear with clearRect
-      ctx.clearRect(0, 0, displayWidth, displayHeight);
-    } else {
-      // For colored background, use fillRect
-      ctx.fillStyle = bgColor;
-      ctx.fillRect(0, 0, displayWidth, displayHeight);
-    }
-  }
-  
-  // Initialize canvas and report readiness
-  function initCanvas() {
-    if (!browser || !canvas) return;
+    // Get new dimensions
+    const rect = container.getBoundingClientRect();
+    width = rect.width;
+    height = rect.height;
     
-    ctx = canvas.getContext('2d', { alpha: bgColor === 'transparent' })!;
+    // Recalculate UI scale
+    uiScale = height / DEFAULT_HEIGHT;
     
-    // Initial sizing
-    handleResize();
+    // Resize canvas
+    canvas.width = width * deviceScale;
+    canvas.height = height * deviceScale;
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
     
-    // Notify parent that canvas is ready
-    dispatch('ready', { 
-      canvas, 
-      ctx, 
-      width: displayWidth, 
-      height: displayHeight, 
-      scale,
-      pixelRatio
+    // Reset context transform and re-apply high DPI scaling
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(deviceScale, deviceScale);
+    
+    // Dispatch resize event
+    dispatch('resize', { 
+      width, 
+      height, 
+      scale: uiScale, 
+      deviceScale 
     });
   }
   
-  // Lifecycle hooks
+  // Window resize handler for better responsiveness
+  function handleWindowResize() {
+    if (isReady) {
+      handleResize();
+    }
+  }
+  
+  // Setup on mount
   onMount(() => {
-    if (!browser) return;
+    if (browser && container) {
+      // Initialize canvas
+      initCanvas();
+      
+      // Setup resize observer for the container
+      resizeObserver = new ResizeObserver(handleResize);
+      resizeObserver.observe(container);
+      
+      // Also listen to window resize for better update frequency
+      window.addEventListener('resize', handleWindowResize);
+    }
     
-    // Initialize canvas
-    initCanvas();
-    
-    // Set up resize handler
-    window.addEventListener('resize', handleResize);
-    
-    // Clean up on component destroy
     return () => {
-      window.removeEventListener('resize', handleResize);
+      // Clean up
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+      window.removeEventListener('resize', handleWindowResize);
     };
   });
   
   // Exported functions and properties
   export function getDimensions() {
-    if (!scale) {
+    if (!uiScale) {
       console.warn(`${id} - getDimensions called before initialization`);
       return { width: 0, height: 0 };
     }
-    return { width: displayWidth, height: displayHeight };
+    return { width, height };
   }
-  
-  export { clearCanvas, scale };
 </script>
 
-<div class="canvas-container" {id} style="--border-color: {theme.primary}">
-  <canvas bind:this={canvas} class="visualization-canvas"></canvas>
+<div class="visualizer-canvas-container" bind:this={container} id={id}>
+  <canvas bind:this={canvas}></canvas>
   <slot />
 </div>
 
 <style>
-  .canvas-container {
+  .visualizer-canvas-container {
+    position: relative;
     width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
+    height: 100%; /* Always use full height */
     overflow: hidden;
-    border: 1px solid var(--border-color, #00ff00);
-    box-sizing: border-box;
   }
   
-  .visualization-canvas {
+  canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    display: block;
   }
 </style> 

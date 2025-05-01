@@ -7,7 +7,6 @@
   
   // Props that all visualizers should support
   const { 
-    fullHeight = false,
     debug = false,
     id = 'visualizer-' + Math.random().toString(36).substring(2, 9),
     draw = null // Accept the draw function from child component
@@ -19,6 +18,7 @@
   let width = $state(0);
   let height = $state(0);
   let scale = $state(1);
+  let deviceScale = $state(1);
   let animationId: number;
   let isCanvasReady = $state(false);
   
@@ -91,12 +91,14 @@
     width = event.detail.width;
     height = event.detail.height;
     scale = event.detail.scale || 1;
+    deviceScale = event.detail.deviceScale || 1;
     
     // Forward event to child components
     dispatch('resize', {
       width,
       height,
       scale,
+      deviceScale,
       ctx,
       canvas
     });
@@ -121,6 +123,7 @@
     width = event.detail.width;
     height = event.detail.height;
     scale = event.detail.scale || 1;
+    deviceScale = event.detail.deviceScale || 1;
     isCanvasReady = true;
     
     // Forward ready event to child components
@@ -129,7 +132,8 @@
       canvas,
       width,
       height,
-      scale
+      scale,
+      deviceScale
     });
     
     // Start animation if playing
@@ -173,7 +177,6 @@
 <VisualizerCanvas
   on:ready={handleCanvasReady}
   on:resize={handleResize}
-  fullHeight={fullHeight}
   scaleToFit={true}
   {id}
 >

@@ -27,12 +27,12 @@
 <div class="visualizer-container" style="background-color: {theme.background}; color: {theme.primary};">
 	<div class="main-visualizers">
 		<div class="peak-meter-container" style="border-color: {theme.primary};">
-			<RmsMeter fullHeight={true} debug={debug} />
+			<RmsMeter debug={debug} />
 		</div>
 		<div class="main-viz-grid">
-			<FrequencySpectrum fullHeight={true} debug={debug} />
-			<Spectrogram fullHeight={true} debug={debug} />
-			<Oscilloscope fullHeight={true} debug={debug} />
+			<FrequencySpectrum debug={debug} />
+			<Spectrogram debug={debug} />
+			<Oscilloscope debug={debug} />
 		</div>
 	</div>
 	

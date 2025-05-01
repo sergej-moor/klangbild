@@ -5,7 +5,6 @@
   
   // Props
   const { 
-    fullHeight = false,
     debug = false
   } = $props();
   
@@ -102,7 +101,6 @@
 <BaseVisualizer 
   on:ready={handleReady}
   on:resize={handleResize}
-  {fullHeight}
   {debug}
   id="oscilloscope"
   draw={drawOscilloscope}
