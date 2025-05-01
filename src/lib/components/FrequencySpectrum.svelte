@@ -67,33 +67,49 @@
       return;
     }
     
-    // Calculate bar width and spacing
-    const barCount = Math.min(spectrumData.length, Math.floor(width / 3));
-    const barWidth = Math.max(1, Math.floor(width / barCount) - 1);
-    const barSpacing = 1;
-    const totalBarWidth = barWidth + barSpacing;
+    // Setup line style
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = peakColor;
     
-    // Draw each bar
-    for (let i = 0; i < barCount; i++) {
+    // Begin the path for the line
+    ctx.beginPath();
+    
+    // Create points for the line
+    for (let i = 0; i < width; i++) {
+      // Map canvas x position to spectrum data index
+      const dataIndex = Math.floor((i / width) * spectrumData.length);
+      
       // Get the frequency value (0-255)
-      const value = spectrumData[i];
+      const value = spectrumData[dataIndex];
       
-      // Calculate bar height (scale to fit canvas height)
-      const barHeight = (value / 255) * height * 0.9 * scale;
+      // Calculate y position (scale to fit canvas height)
+      const y = height - (value / 255) * height * 0.9 * scale;
       
-      // Calculate position
-      const x = i * totalBarWidth;
-      const y = height - barHeight;
-      
-      // Use gradient for bars
-      const gradient = ctx.createLinearGradient(x, y, x, height);
-      gradient.addColorStop(0, peakColor);
-      gradient.addColorStop(1, barColor);
-      
-      // Draw the bar
-      ctx.fillStyle = gradient;
-      ctx.fillRect(x, y, barWidth, barHeight);
+      // Draw the point
+      if (i === 0) {
+        ctx.moveTo(i, y);
+      } else {
+        ctx.lineTo(i, y);
+      }
     }
+    
+    // Stroke the line
+    ctx.stroke();
+    
+    // Fill area under the line with gradient
+    ctx.lineTo(width, height);
+    ctx.lineTo(0, height);
+    ctx.closePath();
+    
+    // Create gradient fill
+    const gradient = ctx.createLinearGradient(0, 0, 0, height);
+    gradient.addColorStop(0, `${peakColor}80`); // Semi-transparent
+    gradient.addColorStop(1, `${barColor}10`);  // Almost transparent
+    
+    ctx.fillStyle = gradient;
+    ctx.fill();
   }
   
   // Start the animation loop
