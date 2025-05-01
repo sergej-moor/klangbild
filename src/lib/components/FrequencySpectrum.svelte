@@ -95,15 +95,22 @@
     // Stroke the line
     ctx.stroke();
     
-    // Fill area under the line with gradient
+    // Fill area under the line with amplitude-based gradient
     ctx.lineTo(width, height);
     ctx.lineTo(0, height);
     ctx.closePath();
     
-    // Create gradient fill
+    // Create gradient based on theme colors
     const gradient = ctx.createLinearGradient(0, 0, 0, height);
-    gradient.addColorStop(0, `${peakColor}80`); // Semi-transparent
-    gradient.addColorStop(1, `${barColor}10`);  // Almost transparent
+    
+    // Use primary color at the top (high amplitudes)
+    gradient.addColorStop(0, visualizerTheme.colors.primary);
+    
+    // Use secondary color in the middle for smooth transition
+    gradient.addColorStop(0.5, `${visualizerTheme.colors.primary}90`); 
+    
+    // Use lowIntensity color at the bottom (low amplitudes)
+    gradient.addColorStop(1, visualizerTheme.visualizations.spectrogram.lowIntensity);
     
     ctx.fillStyle = gradient;
     ctx.fill();
