@@ -8,10 +8,12 @@ export const visualizerTheme = {
 
   // Visualization colors
   visualizations: {
-    waveform: '#ff9900',
+    waveform: '#6366f1',
+    progress: '#f43f5e',
     spectrum: '#ff9900',
     spectrogram: '#ff9900',
     stereo: '#ff9900',
+    centerLine: '#d1d5db',
   },
 
   // UI colors
