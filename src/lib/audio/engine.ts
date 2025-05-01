@@ -213,3 +213,38 @@ function updateVisualization() {
     console.error('Error in visualization update:', err);
   }
 }
+
+// Add this function to allow seeking to a specific position in the track
+export function seekToPosition(position: number) {
+  if (!browser || !audioBuffer) return;
+
+  try {
+    // Ensure position is between 0 and 1
+    position = Math.min(1, Math.max(0, position));
+
+    // Calculate the new offset in seconds
+    offset = position * audioBuffer.duration;
+
+    // Update the playback position
+    playbackPosition.set(position);
+    console.log(`Seeking to position: ${position.toFixed(2)}, time: ${offset.toFixed(2)}s`);
+
+    // If currently playing, stop and restart from the new position
+    if (get(isPlaying)) {
+      // Stop current playback
+      if (source) {
+        source.stop();
+      }
+
+      // Start playing from new position
+      source = audioContext!.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(analyser);
+
+      startTime = audioContext!.currentTime;
+      source.start(0, offset);
+    }
+  } catch (err) {
+    console.error('Error seeking to position:', err);
+  }
+}

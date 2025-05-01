@@ -86,6 +86,11 @@
     return { width, height };
   }
   
+  // Add this method to expose the canvas element
+  export function getCanvas() {
+    return canvas;
+  }
+  
   export { clearCanvas, isInitialized };
 </script>
 
