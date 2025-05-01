@@ -3,7 +3,7 @@
   import { browser } from '$app/environment';
   import { waveform, isPlaying } from '$lib/audio/engine';
   import VisualizerCanvas from './base/VisualizerCanvas.svelte';
-  import { visualizerTheme } from '$lib/theme';
+  import { theme } from '$lib/theme';
   
   // Props
   const { 
@@ -21,9 +21,9 @@
   let isCanvasReady = $state(false);
   
   // Theme colors
-  const lineColor = visualizerTheme.colors.primary;
-  const lineWidth = visualizerTheme.visualizations.waveform.lineWidth;
-  const debugColor = visualizerTheme.colors.accent;
+  const lineColor = theme.primary;
+  const lineWidth = 1; // Simplified from theme reference
+  const debugColor = theme.energy.high;
   
   // Draw the oscilloscope waveform
   function drawOscilloscope() {

@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { browser } from '$app/environment';
   import { fullWaveform, loadAudio, playbackPosition, isPlaying, seekToPosition } from '$lib/audio/engine';
-  import { visualizerTheme, sizes } from '$lib/theme';
+  import { theme, sizes } from '$lib/theme';
   
   // Props
   const { 
@@ -20,10 +20,10 @@
   // Animation frame ID for continuous updates
   let animationId: number;
   
-  // Styling parameters for bars - Get colors from theme
-  const bgColor = 'transparent'; // Change to transparent
-  const waveformColor = visualizerTheme.colors.secondary; // Use secondary color for unplayed portion
-  const progressColor = visualizerTheme.colors.primary; // Use primary color for played portion
+  // Styling parameters for bars
+  const bgColor = 'transparent'; // Keep transparent
+  const waveformColor = theme.secondary; // Use secondary color for unplayed portion
+  const progressColor = theme.primary; // Use primary color for played portion
   const barWidth = compactMode ? 1 : 2; // Thinner bars in compact mode
   const barGap = compactMode ? 0 : 1; // Smaller gap in compact mode
   

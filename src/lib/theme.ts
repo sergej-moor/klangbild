@@ -1,87 +1,19 @@
-// Base color palette (single source of truth for all colors)
-const palette = {
+// Simplified theme with only 6 essential colors
+export const theme = {
   // Primary colors
-  colors: {
-    primary: '#00ffff', // Bright green
-    secondary: '#00cc66', // Medium green
-    tertiary: '#99ff99', // Light green
-    accent: '#33ccff', // Blue accent
-  },
+  primary: '#00ff00', // Bright green
+  secondary: '#00cc66', // Medium green
+  background: '#000000', // Black
 
-  // Other colors
-  blue: '#33ccff',
-
-  // Monochrome
-  mono: {
-    black: '#000000',
-    darkGray: '#111111',
-    mediumGray: '#333333',
-    lightGray: '#999999',
-    white: '#ffffff',
-  },
-
-  // Visualization specific
-  visualizations: {
-    spectrogram: {
-      low: '#000066',
-      mid: '#00cc00',
-      high: '#ffff00',
-    },
+  // Energy levels
+  energy: {
+    low: '#0066ff', // Blue
+    mid: '#ffff00', // Yellow
+    high: '#ff0000', // Red
   },
 };
 
-// Semantic color assignments (what colors mean in the UI)
-export const visualizerTheme = {
-  // Main color assignments
-  colors: {
-    primary: palette.colors.primary,
-    secondary: palette.colors.secondary,
-    tertiary: palette.colors.tertiary,
-    accent: palette.colors.accent,
-
-    // Background colors
-    background: palette.mono.black,
-    backgroundAlt: palette.mono.darkGray,
-
-    // Text colors
-    text: palette.mono.white,
-    textMuted: palette.mono.lightGray,
-  },
-
-  // Visualization specific settings that reference the base colors
-  visualizations: {
-    waveform: {
-      lineColor: palette.colors.primary,
-      lineWidth: 1,
-    },
-
-    spectrum: {
-      barColor: palette.colors.primary,
-      peakColor: palette.colors.secondary,
-    },
-
-    spectrogram: {
-      lowIntensity: palette.visualizations.spectrogram.low,
-      midIntensity: palette.visualizations.spectrogram.mid,
-      highIntensity: palette.visualizations.spectrogram.high,
-    },
-
-    playback: {
-      progress: palette.colors.primary,
-      background: palette.mono.mediumGray,
-    },
-  },
-
-  // UI element styling
-  ui: {
-    border: palette.colors.primary,
-    buttonBg: palette.mono.darkGray,
-    buttonHover: palette.mono.mediumGray,
-    borderRadius: '3px',
-  },
-};
-
-// Common sizing values
+// Common sizing values (keeping these as they're useful)
 export const sizes = {
   defaultHeight: 200,
   minHeight: 50,

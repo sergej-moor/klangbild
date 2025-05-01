@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { browser } from '$app/environment';
   import { spectrum, isPlaying, sampleRate } from '$lib/audio/engine';
-  import { visualizerTheme } from '$lib/theme';
+  import { theme } from '$lib/theme';
   import VisualizerCanvas from './base/VisualizerCanvas.svelte';
   
   // Props
@@ -12,10 +12,10 @@
   } = $props();
   
   // Theme colors
-  const lowColor = visualizerTheme.visualizations.spectrogram.lowIntensity;
-  const midColor = visualizerTheme.visualizations.spectrogram.midIntensity;
-  const highColor = visualizerTheme.visualizations.spectrogram.highIntensity;
-  const debugColor = visualizerTheme.colors.accent;
+  const lowColor = theme.energy.low;
+  const midColor = theme.energy.mid;
+  const highColor = theme.energy.high;
+  const debugColor = theme.energy.high;
   
   // Canvas and context
   let canvas: HTMLCanvasElement;
@@ -115,7 +115,7 @@
     if (visualIntensity < 85) {
       // Low intensity (0-85) - blend from black to low color
       const blendFactor = visualIntensity / 85;
-      return blendColors('#000000', lowColor, blendFactor);
+      return blendColors(theme.background, lowColor, blendFactor);
     } else if (visualIntensity < 170) {
       // Medium intensity (85-170) - blend from low to mid color
       const blendFactor = (visualIntensity - 85) / 85;
@@ -207,7 +207,7 @@
     if (debug) {
       // Semi-transparent border to show canvas boundaries
       ctx.strokeStyle = 'rgba(0, 255, 0, 0.5)';
-      ctx.lineWidth = visualizerTheme.visualizations.waveform.lineWidth;
+      ctx.lineWidth = 1;
       ctx.strokeRect(0, 0, width, height);
       
       // Black background for text to ensure visibility

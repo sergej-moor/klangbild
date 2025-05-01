@@ -1,11 +1,11 @@
 <script lang="ts">
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   import { browser } from '$app/environment';
-  import { visualizerTheme, sizes } from '$lib/theme';
+  import { theme, sizes } from '$lib/theme';
   
   // Props using Svelte 5 runes syntax
   const { 
-    bgColor = visualizerTheme.colors.background,
+    bgColor = theme.background,
     canvasHeight = sizes.defaultHeight,
     id = 'visualizer-' + Math.random().toString(36).substring(2, 9),
     fullHeight = false,
@@ -133,7 +133,7 @@
   export { clearCanvas, scale };
 </script>
 
-<div class="canvas-container" {id} style="--border-color: {visualizerTheme.colors.primary}">
+<div class="canvas-container" {id} style="--border-color: {theme.primary}">
   <canvas bind:this={canvas} class="visualization-canvas"></canvas>
   <slot />
 </div>

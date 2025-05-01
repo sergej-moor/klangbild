@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { browser } from '$app/environment';
   import { rmsLevels, isPlaying, calculateLevels } from '$lib/audio/engine';
-  import { visualizerTheme } from '$lib/theme';
+  import { theme } from '$lib/theme';
   import VisualizerCanvas from './base/VisualizerCanvas.svelte';
   
   // Props
@@ -23,18 +23,18 @@
   let isCanvasReady = $state(false);
   
   // Theme colors
-  const rmsColor = visualizerTheme.colors.primary;
-  const debugColor = visualizerTheme.colors.accent;
+  const rmsColor = theme.primary;
+  const debugColor = theme.energy.high;
   const backgroundColor = 'rgba(0, 0, 0, 0.1)';
   
-  // Level thresholds (in dB)
+  // Level thresholds and colors based on energy levels
   const LEVEL_THRESHOLDS = [
-    { dB: 0, color: '#FF0000' },     // 0 dB (clip) - Red
-    { dB: -3, color: '#FFAA00' },    // -3 dB - Orange
-    { dB: -6, color: '#FFFF00' },    // -6 dB - Yellow
-    { dB: -12, color: '#00FF00' },   // -12 dB - Green
-    { dB: -24, color: '#00AAFF' },   // -24 dB - Light Blue
-    { dB: -48, color: '#0000FF' }    // -48 dB - Blue
+    { dB: 0, color: theme.energy.high },     // 0 dB (clip) - Red
+    { dB: -3, color: theme.energy.high },    // -3 dB - Red
+    { dB: -6, color: theme.energy.mid },     // -6 dB - Yellow
+    { dB: -12, color: theme.energy.mid },    // -12 dB - Yellow
+    { dB: -24, color: theme.energy.low },    // -24 dB - Blue
+    { dB: -48, color: theme.energy.low }     // -48 dB - Blue
   ];
   
   // Add headroom above 0 dB and minimum displayable dB level
@@ -116,17 +116,16 @@
         const rmsLeftHeight = (height - padding * 2) * dbToPosition(rmsLeftDb);
         const rmsLeftY = height - padding - rmsLeftHeight;
         
-        // Create gradient for RMS
+        // Create gradient for RMS using energy colors
         const rmsGradientLeft = ctx.createLinearGradient(
           padding, height - padding,
           padding, padding
         );
         
-        // Add color stops based on level thresholds
-        LEVEL_THRESHOLDS.forEach(threshold => {
-          const pos = dbToPosition(threshold.dB);
-          rmsGradientLeft.addColorStop(pos, threshold.color);
-        });
+        // Add energy-based color stops
+        rmsGradientLeft.addColorStop(0, theme.energy.low);
+        rmsGradientLeft.addColorStop(0.6, theme.energy.mid);
+        rmsGradientLeft.addColorStop(0.9, theme.energy.high);
         
         ctx.fillStyle = rmsGradientLeft;
         ctx.fillRect(padding, rmsLeftY, meterWidth, rmsLeftHeight);
@@ -141,11 +140,10 @@
           padding * 2 + meterWidth, padding
         );
         
-        // Add color stops based on level thresholds
-        LEVEL_THRESHOLDS.forEach(threshold => {
-          const pos = dbToPosition(threshold.dB);
-          rmsGradientRight.addColorStop(pos, threshold.color);
-        });
+        // Add energy-based color stops
+        rmsGradientRight.addColorStop(0, theme.energy.low);
+        rmsGradientRight.addColorStop(0.6, theme.energy.mid);
+        rmsGradientRight.addColorStop(0.9, theme.energy.high);
         
         ctx.fillStyle = rmsGradientRight;
         ctx.fillRect(padding * 2 + meterWidth, rmsRightY, meterWidth, rmsRightHeight);
@@ -154,17 +152,16 @@
         const rmsHeight = (height - padding * 2) * dbToPosition(rmsLeftDb);
         const rmsY = height - padding - rmsHeight;
         
-        // Create gradient for RMS
+        // Create gradient for RMS using energy colors
         const rmsGradient = ctx.createLinearGradient(
           padding, height - padding,
           padding, padding
         );
         
-        // Add color stops based on level thresholds
-        LEVEL_THRESHOLDS.forEach(threshold => {
-          const pos = dbToPosition(threshold.dB);
-          rmsGradient.addColorStop(pos, threshold.color);
-        });
+        // Add energy-based color stops
+        rmsGradient.addColorStop(0, theme.energy.low);
+        rmsGradient.addColorStop(0.6, theme.energy.mid);
+        rmsGradient.addColorStop(0.9, theme.energy.high);
         
         ctx.fillStyle = rmsGradient;
         ctx.fillRect(padding, rmsY, meterWidth, rmsHeight);
@@ -230,17 +227,16 @@
         // Left channel RMS
         const rmsLeftWidth = (width - padding * 2) * dbToPosition(rmsLeftDb);
         
-        // Create gradient for RMS
+        // Create gradient for RMS using energy colors
         const rmsGradientLeft = ctx.createLinearGradient(
           padding, padding,
           width - padding, padding
         );
         
-        // Add color stops based on level thresholds
-        LEVEL_THRESHOLDS.forEach(threshold => {
-          const pos = dbToPosition(threshold.dB);
-          rmsGradientLeft.addColorStop(pos, threshold.color);
-        });
+        // Add energy-based color stops
+        rmsGradientLeft.addColorStop(0, theme.energy.low);
+        rmsGradientLeft.addColorStop(0.6, theme.energy.mid);
+        rmsGradientLeft.addColorStop(0.9, theme.energy.high);
         
         ctx.fillStyle = rmsGradientLeft;
         ctx.fillRect(padding, padding, rmsLeftWidth, meterHeight);
@@ -254,11 +250,10 @@
           width - padding, padding * 2 + meterHeight
         );
         
-        // Add color stops based on level thresholds
-        LEVEL_THRESHOLDS.forEach(threshold => {
-          const pos = dbToPosition(threshold.dB);
-          rmsGradientRight.addColorStop(pos, threshold.color);
-        });
+        // Add energy-based color stops 
+        rmsGradientRight.addColorStop(0, theme.energy.low);
+        rmsGradientRight.addColorStop(0.6, theme.energy.mid);
+        rmsGradientRight.addColorStop(0.9, theme.energy.high);
         
         ctx.fillStyle = rmsGradientRight;
         ctx.fillRect(padding, padding * 2 + meterHeight, rmsRightWidth, meterHeight);
@@ -266,17 +261,16 @@
         // Mono channel RMS
         const rmsWidth = (width - padding * 2) * dbToPosition(rmsLeftDb);
         
-        // Create gradient for RMS
+        // Create gradient for RMS using energy colors
         const rmsGradient = ctx.createLinearGradient(
           padding, padding,
           width - padding, padding
         );
         
-        // Add color stops based on level thresholds
-        LEVEL_THRESHOLDS.forEach(threshold => {
-          const pos = dbToPosition(threshold.dB);
-          rmsGradient.addColorStop(pos, threshold.color);
-        });
+        // Add energy-based color stops
+        rmsGradient.addColorStop(0, theme.energy.low);
+        rmsGradient.addColorStop(0.6, theme.energy.mid);
+        rmsGradient.addColorStop(0.9, theme.energy.high);
         
         ctx.fillStyle = rmsGradient;
         ctx.fillRect(padding, padding, rmsWidth, meterHeight);

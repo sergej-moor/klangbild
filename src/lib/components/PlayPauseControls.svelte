@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { browser } from '$app/environment';
   import { isPlaying, togglePlayPause, playbackPosition, seekToPosition, getAudioDuration } from '$lib/audio/engine';
-  import { visualizerTheme } from '$lib/theme';
+  import { theme } from '$lib/theme';
   
   // Props
   const { 
@@ -76,12 +76,12 @@
     }
   });
   
-  onMount(async () => {
+  onMount(() => {
     // Find the audio element
     audioElement = findAudioElement();
     
     // Get audio duration
-    duration = await getAudioDuration();
+    duration = getAudioDuration();
     console.log("Track duration loaded:", duration);
     
     // Setup an interval to force UI updates (failsafe)
@@ -108,21 +108,21 @@
         class="play-button" 
         on:click={togglePlayPause}
         aria-label={$isPlaying ? "Pause" : "Play"}
-        style="border-color: {visualizerTheme.colors.primary}; color: {visualizerTheme.colors.primary};"
+        style="border-color: {theme.primary}; color: {theme.primary};"
       >
         {#if $isPlaying}
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="6" y="4" width="4" height="16" rx="1" fill={visualizerTheme.colors.primary}/>
-            <rect x="14" y="4" width="4" height="16" rx="1" fill={visualizerTheme.colors.primary}/>
+            <rect x="6" y="4" width="4" height="16" rx="1" fill={theme.primary}/>
+            <rect x="14" y="4" width="4" height="16" rx="1" fill={theme.primary}/>
           </svg>
         {:else}
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M8 5.14V19.14C8 19.94 8.92 20.42 9.58 19.98L20.29 12.99C20.89 12.59 20.89 11.69 20.29 11.29L9.58 4.3C8.92 3.86 8 4.34 8 5.14Z" fill={visualizerTheme.colors.primary}/>
+            <path d="M8 5.14V19.14C8 19.94 8.92 20.42 9.58 19.98L20.29 12.99C20.89 12.59 20.89 11.69 20.29 11.29L9.58 4.3C8.92 3.86 8 4.34 8 5.14Z" fill={theme.primary}/>
           </svg>
         {/if}
       </button>
       
-      <div class="time" style="color: {visualizerTheme.colors.primary};">
+      <div class="time" style="color: {theme.primary};">
         {formatTime(currentTime)} / {formatTime(duration)}
       </div>
       
@@ -140,15 +140,15 @@
           on:touchstart={handleSeekStart}
           on:touchend={handleSeekComplete}
         />
-        <div class="progress-bar" style="background-color: {visualizerTheme.visualizations.playback.background};">
+        <div class="progress-bar" style="background-color: {theme.background};">
           <div 
             class="progress-fill" 
-            style="width: {progressWidth}; background-color: {visualizerTheme.colors.primary};"
+            style="width: {progressWidth}; background-color: {theme.primary};"
           ></div>
         </div>
       </div>
       
-      <div class="song-name" style="color: {visualizerTheme.colors.primary};">
+      <div class="song-name" style="color: {theme.primary};">
         {songName}
       </div>
     </div>

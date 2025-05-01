@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { browser } from '$app/environment';
   import { spectrum, isPlaying, sampleRate } from '$lib/audio/engine';
-  import { visualizerTheme } from '$lib/theme';
+  import { theme } from '$lib/theme';
   import VisualizerCanvas from './base/VisualizerCanvas.svelte';
   
   // Props
@@ -20,10 +20,8 @@
   let animationId: number;
   let isCanvasReady = $state(false);
   
-  // Theme colors
-  const barColor = visualizerTheme.colors.primary;
-  const peakColor = visualizerTheme.colors.secondary;
-  const debugColor = visualizerTheme.colors.accent;
+  // Theme colors - use energy colors for visualization
+  const debugColor = theme.energy.high;
   
   // Bar styling
   const barWidth = 2;
@@ -88,7 +86,7 @@
       points.push({x: i, y, amplitude});
     }
     
-    // First fill the area under the curve with frequency-based coloring
+    // First fill the area under the curve with energy-based coloring
     for (let i = 0; i < points.length; i++) {
       const {x, y, amplitude} = points[i];
       
@@ -101,28 +99,35 @@
       // Calculate the width of this segment (usually 1 pixel)
       const segmentWidth = nextPoint.x - x;
       
-      // Use amplitude to determine color intensity
-      // Higher amplitude = more of the primary color
-      const primaryColor = visualizerTheme.colors.primary;
+      // Create gradient for this vertical slice based on amplitude
+      // Use energy color gradient: low (blue) -> mid (yellow) -> high (red)
+      let fillColor;
+      const alpha = amplitude * 0.8 + 0.2; // Calculate alpha (0.2 to 1.0)
       
-      // Apply a curve to make the effect more pronounced
-      const colorIntensity = Math.pow(amplitude, 1.2);
+      if (amplitude < 0.3) {
+        // Low energy - blend from background to low energy color
+        const factor = amplitude / 0.3;
+        fillColor = blendColors(theme.background, theme.energy.low, factor, alpha);
+      } else if (amplitude < 0.7) {
+        // Mid energy - blend from low to mid energy color
+        const factor = (amplitude - 0.3) / 0.4;
+        fillColor = blendColors(theme.energy.low, theme.energy.mid, factor, alpha);
+      } else {
+        // High energy - blend from mid to high energy color
+        const factor = (amplitude - 0.7) / 0.3;
+        fillColor = blendColors(theme.energy.mid, theme.energy.high, factor, alpha);
+      }
       
-      // Create solid color with intensity-based alpha
-      // Convert colorIntensity (0-1) to hex alpha (00-FF)
-      const alphaHex = Math.floor(colorIntensity * 255).toString(16).padStart(2, '0');
-      const fillColor = `${primaryColor}${alphaHex}`;
-      
-      // Fill this vertical slice with a solid color
+      // Fill this vertical slice with the calculated color
       ctx.fillStyle = fillColor;
       ctx.fillRect(x, y, segmentWidth, height - y);
     }
     
     // Now draw the line on top for crisp definition
-    ctx.lineWidth = visualizerTheme.visualizations.waveform.lineWidth;
+    ctx.lineWidth = 1;
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
-    ctx.strokeStyle = peakColor;
+    ctx.strokeStyle = theme.primary;
     
     ctx.beginPath();
     
@@ -196,6 +201,35 @@
         }
       });
     }
+  }
+  
+  // Helper function to blend two hex colors with alpha
+  function blendColors(color1: string, color2: string, factor: number, alpha = 1.0): string {
+    // Parse the colors
+    const c1 = parseColor(color1);
+    const c2 = parseColor(color2);
+    
+    // Blend the RGB values
+    const r = Math.round(c1.r + factor * (c2.r - c1.r));
+    const g = Math.round(c1.g + factor * (c2.g - c1.g));
+    const b = Math.round(c1.b + factor * (c2.b - c1.b));
+    
+    // Return as RGBA string
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+  
+  // Helper to parse a hex color
+  function parseColor(color: string): {r: number, g: number, b: number} {
+    if (color.startsWith('#')) {
+      const hex = color.substring(1);
+      return {
+        r: parseInt(hex.substring(0, 2), 16),
+        g: parseInt(hex.substring(2, 4), 16),
+        b: parseInt(hex.substring(4, 6), 16)
+      };
+    }
+    // Fallback for non-hex colors
+    return {r: 0, g: 255, b: 0};
   }
   
   // Start the animation loop
