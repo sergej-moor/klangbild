@@ -3,11 +3,11 @@
   import { browser } from '$app/environment';
   import { isPlaying } from '$lib/audio/engine';
   import { theme } from '$lib/theme';
+  import { debugMode } from '$lib/stores/debug';
   import VisualizerCanvas from '../base/VisualizerCanvas.svelte';
   
   // Props that all visualizers should support
   const { 
-    debug = false,
     id = 'visualizer-' + Math.random().toString(36).substring(2, 9),
     draw = null // Accept the draw function from child component
   } = $props();
@@ -35,7 +35,7 @@
     ctx.clearRect(0, 0, width, height);
     
     // Draw debug info if enabled
-    if (debug) {
+    if ($debugMode) {
       drawDebugInfo();
     }
   }
@@ -76,7 +76,7 @@
       }
       
       // Draw debug info if enabled (after component's drawing)
-      if (debug) {
+      if ($debugMode) {
         drawDebugInfo();
       }
       
@@ -111,7 +111,7 @@
     }
     
     // Draw debug info if enabled
-    if (debug) {
+    if ($debugMode) {
       drawDebugInfo();
     }
   }
@@ -148,7 +148,7 @@
       }
       
       // Draw debug info if enabled
-      if (debug) {
+      if ($debugMode) {
         drawDebugInfo();
       }
     }

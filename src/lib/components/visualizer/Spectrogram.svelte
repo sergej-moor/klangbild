@@ -4,10 +4,8 @@
   import BaseVisualizer from './BaseVisualizer.svelte';
   import { blendColors, parseColor } from '$lib/utils/visualizerUtils';
   
-  // Props
-  const { 
-    debug = false
-  } = $props();
+  // Props - removed debug prop
+  const {} = $props();
   
   // References to canvas context
   let ctx: CanvasRenderingContext2D;
@@ -99,7 +97,7 @@
     return blendColors(theme.background, theme.energy.high, factor, 1.0);
   }
   
-  // Draw the spectrogram - this will be called by BaseVisualizer
+  // Draw function - no changes needed here as debug is handled by BaseVisualizer
   function drawSpectrogram() {
     if (!ctx) return;
     
@@ -169,7 +167,6 @@
 <BaseVisualizer 
   on:ready={handleReady}
   on:resize={handleResize}
-  {debug}
   id="spectrogram"
   draw={drawSpectrogram}
 />

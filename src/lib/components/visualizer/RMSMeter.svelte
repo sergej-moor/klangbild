@@ -4,10 +4,8 @@
   import BaseVisualizer from './BaseVisualizer.svelte';
   import { linearToDb, dbToPosition } from '$lib/utils/visualizerUtils';
   
-  // Props
-  const { 
-    debug = false
-  } = $props();
+  // Props - removed debug prop
+  const {} = $props();
   
   // References to canvas context
   let ctx: CanvasRenderingContext2D;
@@ -43,7 +41,7 @@
     ({ width, height, scale } = event.detail);
   }
   
-  // Draw the meter - this will be called by BaseVisualizer
+  // Draw function - no changes needed here as debug is handled by BaseVisualizer
   function drawMeter() {
     if (!ctx) return;
     
@@ -119,7 +117,6 @@
 <BaseVisualizer 
   on:ready={handleReady}
   on:resize={handleResize}
-  {debug}
   id="peak-meter"
   draw={drawMeter}
 />

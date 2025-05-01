@@ -4,10 +4,8 @@
   import BaseVisualizer from './BaseVisualizer.svelte';
   import { blendColors, parseColor } from '$lib/utils/visualizerUtils';
   
-  // Props
-  const { 
-    debug = false
-  } = $props();
+  // Props - removed debug prop
+  const {} = $props();
   
   // References to canvas context
   let ctx: CanvasRenderingContext2D;
@@ -130,7 +128,6 @@
 <BaseVisualizer 
   on:ready={handleReady}
   on:resize={handleResize}
-  {debug}
   id="frequency-spectrum"
   draw={drawSpectrum}
 /> 

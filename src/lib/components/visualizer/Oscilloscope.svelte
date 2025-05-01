@@ -3,10 +3,8 @@
   import { theme } from '$lib/theme';
   import BaseVisualizer from './BaseVisualizer.svelte';
   
-  // Props
-  const { 
-    debug = false
-  } = $props();
+  // Props - removed debug prop
+  const {} = $props();
   
   // References to canvas context
   let ctx: CanvasRenderingContext2D;
@@ -28,7 +26,7 @@
     ({ width, height, scale } = event.detail);
   }
   
-  // Draw the oscilloscope waveform - this will be called by BaseVisualizer
+  // Draw function - no changes needed here as debug is handled by BaseVisualizer
   function drawOscilloscope() {
     if (!ctx) return;
     
@@ -101,7 +99,6 @@
 <BaseVisualizer 
   on:ready={handleReady}
   on:resize={handleResize}
-  {debug}
   id="oscilloscope"
   draw={drawOscilloscope}
 />

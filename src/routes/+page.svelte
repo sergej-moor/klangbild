@@ -1,7 +1,8 @@
-<script>
+<script lang="ts">
 	import { onMount } from 'svelte';
-	import { loadAudio } from '$lib/audio/engine';
+	import { loadAudio, isPlaying } from '$lib/audio/engine';
 	import { theme } from '$lib/theme';
+	import { debugMode } from '$lib/stores/debug';
 	import Oscilloscope from "$lib/components/visualizer/Oscilloscope.svelte";
 	import FrequencySpectrum from "$lib/components/visualizer/FrequencySpectrum.svelte";
 	import Spectrogram from "$lib/components/visualizer/Spectrogram.svelte";
@@ -13,28 +14,41 @@
 	// Song name - you can replace this with dynamic content if needed
 	const songName = "Demo Track";
 	
-	// Debug mode toggle
-	const debug = true;
-	
 	// Preload audio when the page loads
 	onMount(async () => {
 		console.log('Main page mounted, preloading audio...');
 		await loadAudio();
 		console.log('Audio preloaded in main page');
 	});
+
+	// Add debug mode indicator
+	$effect(() => {
+		if ($debugMode) {
+			console.log('Debug mode: ON - Press O to toggle');
+		} else {
+			console.log('Debug mode: OFF - Press O to toggle');
+		}
+	});
 </script>
 
 <div class="visualizer-container" style="background-color: {theme.background}; color: {theme.primary};">
 	<div class="main-visualizers">
 		<div class="peak-meter-container" style="border-color: {theme.primary};">
-			<RmsMeter debug={debug} />
+			<RmsMeter />
 		</div>
 		<div class="main-viz-grid">
-			<FrequencySpectrum debug={debug} />
-			<Spectrogram debug={debug} />
-			<Oscilloscope debug={debug} />
+			<FrequencySpectrum />
+			<Spectrogram />
+			<Oscilloscope />
 		</div>
 	</div>
+	
+	<!-- Display debug mode indicator if debug is on -->
+	{#if $debugMode}
+		<div class="debug-indicator">
+			Debug Mode ON (Press 'O' to toggle)
+		</div>
+	{/if}
 	
 	<div class="bottom-controls">
 		<Waveform compactMode={true} />
@@ -107,5 +121,17 @@
 		align-items: center;
 		height: 24px; /* Fixed height */
 		overflow: hidden;
+	}
+	
+	.debug-indicator {
+		position: fixed;
+		bottom: 10px;
+		right: 10px;
+		background-color: rgba(0, 0, 0, 0.7);
+		color: #f42e1f;
+		padding: 5px 10px;
+		border-radius: 3px;
+		font-size: 12px;
+		z-index: 1000;
 	}
 </style>
