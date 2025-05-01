@@ -116,16 +116,15 @@
         const rmsLeftHeight = (height - padding * 2) * dbToPosition(rmsLeftDb);
         const rmsLeftY = height - padding - rmsLeftHeight;
         
-        // Create gradient for RMS using energy colors
+        // Create gradient for RMS using only low and high energy colors
         const rmsGradientLeft = ctx.createLinearGradient(
           padding, height - padding,
           padding, padding
         );
         
-        // Add energy-based color stops
-        rmsGradientLeft.addColorStop(0, theme.energy.low);
-        rmsGradientLeft.addColorStop(0.6, theme.energy.mid);
-        rmsGradientLeft.addColorStop(0.9, theme.energy.high);
+        // Add only low and high energy color stops - skip the mid color
+        rmsGradientLeft.addColorStop(0, theme.energy.low);  // Blue at bottom
+        rmsGradientLeft.addColorStop(1, theme.energy.high); // Red at top
         
         ctx.fillStyle = rmsGradientLeft;
         ctx.fillRect(padding, rmsLeftY, meterWidth, rmsLeftHeight);
@@ -134,16 +133,15 @@
         const rmsRightHeight = (height - padding * 2) * dbToPosition(rmsRightDb);
         const rmsRightY = height - padding - rmsRightHeight;
         
-        // Create gradient for RMS
+        // Create gradient for RMS using only low and high energy colors
         const rmsGradientRight = ctx.createLinearGradient(
           padding * 2 + meterWidth, height - padding,
           padding * 2 + meterWidth, padding
         );
         
-        // Add energy-based color stops
-        rmsGradientRight.addColorStop(0, theme.energy.low);
-        rmsGradientRight.addColorStop(0.6, theme.energy.mid);
-        rmsGradientRight.addColorStop(0.9, theme.energy.high);
+        // Add only low and high energy color stops - skip the mid color
+        rmsGradientRight.addColorStop(0, theme.energy.low);  // Blue at bottom
+        rmsGradientRight.addColorStop(1, theme.energy.high); // Red at top
         
         ctx.fillStyle = rmsGradientRight;
         ctx.fillRect(padding * 2 + meterWidth, rmsRightY, meterWidth, rmsRightHeight);
@@ -152,16 +150,15 @@
         const rmsHeight = (height - padding * 2) * dbToPosition(rmsLeftDb);
         const rmsY = height - padding - rmsHeight;
         
-        // Create gradient for RMS using energy colors
+        // Create gradient for RMS using only low and high energy colors
         const rmsGradient = ctx.createLinearGradient(
           padding, height - padding,
           padding, padding
         );
         
-        // Add energy-based color stops
-        rmsGradient.addColorStop(0, theme.energy.low);
-        rmsGradient.addColorStop(0.6, theme.energy.mid);
-        rmsGradient.addColorStop(0.9, theme.energy.high);
+        // Add only low and high energy color stops - skip the mid color
+        rmsGradient.addColorStop(0, theme.energy.low);  // Blue at bottom
+        rmsGradient.addColorStop(1, theme.energy.high); // Red at top
         
         ctx.fillStyle = rmsGradient;
         ctx.fillRect(padding, rmsY, meterWidth, rmsHeight);
@@ -227,16 +224,15 @@
         // Left channel RMS
         const rmsLeftWidth = (width - padding * 2) * dbToPosition(rmsLeftDb);
         
-        // Create gradient for RMS using energy colors
+        // Create gradient for RMS using only low and high energy colors
         const rmsGradientLeft = ctx.createLinearGradient(
           padding, padding,
           width - padding, padding
         );
         
-        // Add energy-based color stops
-        rmsGradientLeft.addColorStop(0, theme.energy.low);
-        rmsGradientLeft.addColorStop(0.6, theme.energy.mid);
-        rmsGradientLeft.addColorStop(0.9, theme.energy.high);
+        // Add only low and high energy color stops - skip the mid color
+        rmsGradientLeft.addColorStop(0, theme.energy.low);  // Blue at left
+        rmsGradientLeft.addColorStop(1, theme.energy.high); // Red at right
         
         ctx.fillStyle = rmsGradientLeft;
         ctx.fillRect(padding, padding, rmsLeftWidth, meterHeight);
@@ -244,16 +240,15 @@
         // Right channel RMS
         const rmsRightWidth = (width - padding * 2) * dbToPosition(rmsRightDb);
         
-        // Create gradient for RMS
+        // Create gradient for RMS using only low and high energy colors
         const rmsGradientRight = ctx.createLinearGradient(
           padding, padding * 2 + meterHeight,
           width - padding, padding * 2 + meterHeight
         );
         
-        // Add energy-based color stops 
-        rmsGradientRight.addColorStop(0, theme.energy.low);
-        rmsGradientRight.addColorStop(0.6, theme.energy.mid);
-        rmsGradientRight.addColorStop(0.9, theme.energy.high);
+        // Add only low and high energy color stops - skip the mid color
+        rmsGradientRight.addColorStop(0, theme.energy.low);  // Blue at left
+        rmsGradientRight.addColorStop(1, theme.energy.high); // Red at right
         
         ctx.fillStyle = rmsGradientRight;
         ctx.fillRect(padding, padding * 2 + meterHeight, rmsRightWidth, meterHeight);
@@ -261,16 +256,15 @@
         // Mono channel RMS
         const rmsWidth = (width - padding * 2) * dbToPosition(rmsLeftDb);
         
-        // Create gradient for RMS using energy colors
+        // Create gradient for RMS using only low and high energy colors
         const rmsGradient = ctx.createLinearGradient(
           padding, padding,
           width - padding, padding
         );
         
-        // Add energy-based color stops
-        rmsGradient.addColorStop(0, theme.energy.low);
-        rmsGradient.addColorStop(0.6, theme.energy.mid);
-        rmsGradient.addColorStop(0.9, theme.energy.high);
+        // Add only low and high energy color stops - skip the mid color
+        rmsGradient.addColorStop(0, theme.energy.low);  // Blue at left
+        rmsGradient.addColorStop(1, theme.energy.high); // Red at right
         
         ctx.fillStyle = rmsGradient;
         ctx.fillRect(padding, padding, rmsWidth, meterHeight);

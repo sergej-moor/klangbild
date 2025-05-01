@@ -24,9 +24,9 @@
 	});
 </script>
 
-<div class="visualizer-container">
+<div class="visualizer-container" style="background-color: {theme.background}; color: {theme.primary};">
 	<div class="main-visualizers">
-		<div class="peak-meter-container">
+		<div class="peak-meter-container" style="border-color: {theme.primary};">
 			<RmsMeter fullHeight={true} debug={debug} />
 		</div>
 		<div class="main-viz-grid">
@@ -45,20 +45,7 @@
 </div>
 
 <style>
-	:global(body) {
-		margin: 0;
-		padding: 0;
-		background-color: var(--bg-color);
-		color: var(--text-color);
-		font-family: sans-serif;
-	}
-	
-	:root {
-		--bg-color: #000000;
-		--text-color: #ffffff;
-		--primary-color: #00ff00;
-		--border-color: #00ff00;
-	}
+
 	
 	.visualizer-container {
 		display: grid;
@@ -69,8 +56,6 @@
 		margin: 0 auto;
 		padding: 0.25rem 0.75rem;
 		gap: 0.25rem;
-		background-color: var(--bg-color);
-		color: var(--text-color);
 		overflow: hidden;
 	}
 	
@@ -82,7 +67,7 @@
 	}
 	
 	.peak-meter-container {
-		border: 1px solid var(--primary-color);
+		border: 1px solid; /* Color set by inline style */
 		height: 100%; /* Take full height */
 		min-height: 0;
 		overflow: hidden;
@@ -97,7 +82,7 @@
 	}
 	
 	.main-viz-grid > :global(*) {
-		border: 1px solid var(--primary-color);
+		border: 1px solid; /* Color set by component */
 		min-height: 0;
 		max-height: 29vh; /* Ensure each visualizer doesn't exceed its allocated space */
 	}
@@ -111,7 +96,7 @@
 	}
 	
 	.bottom-controls > :global(*) {
-		border: 1px solid var(--primary-color);
+		border: 1px solid; /* Color set by component */
 		min-height: 0; /* Allow compressing */
 		overflow: hidden;
 	}

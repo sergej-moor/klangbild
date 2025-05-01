@@ -86,7 +86,7 @@
       points.push({x: i, y, amplitude});
     }
     
-    // First fill the area under the curve with energy-based coloring
+    // First fill the area under the curve with simplified energy-based coloring
     for (let i = 0; i < points.length; i++) {
       const {x, y, amplitude} = points[i];
       
@@ -99,24 +99,13 @@
       // Calculate the width of this segment (usually 1 pixel)
       const segmentWidth = nextPoint.x - x;
       
-      // Create gradient for this vertical slice based on amplitude
-      // Use energy color gradient: low (blue) -> mid (yellow) -> high (red)
-      let fillColor;
-      const alpha = amplitude * 0.8 + 0.2; // Calculate alpha (0.2 to 1.0)
+      // Simplify to a direct gradient from background to high energy (red)
+      // Apply a non-linear curve to make the transition more dramatic
+      const factor = Math.pow(amplitude, 1.5); // Use power curve to emphasize peaks
+      const alpha = 0.2 + (factor * 0.8); // Maintain some minimum opacity
       
-      if (amplitude < 0.3) {
-        // Low energy - blend from background to low energy color
-        const factor = amplitude / 0.3;
-        fillColor = blendColors(theme.background, theme.energy.low, factor, alpha);
-      } else if (amplitude < 0.7) {
-        // Mid energy - blend from low to mid energy color
-        const factor = (amplitude - 0.3) / 0.4;
-        fillColor = blendColors(theme.energy.low, theme.energy.mid, factor, alpha);
-      } else {
-        // High energy - blend from mid to high energy color
-        const factor = (amplitude - 0.7) / 0.3;
-        fillColor = blendColors(theme.energy.mid, theme.energy.high, factor, alpha);
-      }
+      // Create the color by blending background to high energy red
+      const fillColor = blendColors(theme.background, theme.energy.high, factor, alpha);
       
       // Fill this vertical slice with the calculated color
       ctx.fillStyle = fillColor;

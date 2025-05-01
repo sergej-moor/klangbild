@@ -1,15 +1,15 @@
 // Simplified theme with only 6 essential colors
 export const theme = {
   // Primary colors
-  primary: '#00ff00', // Bright green
-  secondary: '#00cc66', // Medium green
-  background: '#000000', // Black
+  primary: '#f42e1f', // Bright green
+  secondary: '#FFFFFF', // Medium green
+  background: '#060608', // Black
 
   // Energy levels
   energy: {
-    low: '#0066ff', // Blue
+    low: '#2f256b', // Blue
     mid: '#ffff00', // Yellow
-    high: '#ff0000', // Red
+    high: '#f42e1f', // Red
   },
 };
 

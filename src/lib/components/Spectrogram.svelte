@@ -99,32 +99,16 @@
     }
   });
   
-  // Color gradient for intensity representation
+  // Color gradient for intensity representation - simplified to background → red
   function getColor(value: number): string {
     // Use a more balanced conversion for better dynamic range
     const norm = value / 255;
     
-    // Use a gentler curve with lower exponent for better overall visibility
-    // 1.4 provides good contrast without making everything too dark
-    const adjustedNorm = Math.pow(norm, 1.4);
+    // Apply power curve to emphasize higher values
+    const factor = Math.pow(norm, 1.4);
     
-    // Apply the transformation to get the visual intensity
-    const visualIntensity = adjustedNorm * 255;
-    
-    // Use the transformed value for color mapping
-    if (visualIntensity < 85) {
-      // Low intensity (0-85) - blend from black to low color
-      const blendFactor = visualIntensity / 85;
-      return blendColors(theme.background, lowColor, blendFactor);
-    } else if (visualIntensity < 170) {
-      // Medium intensity (85-170) - blend from low to mid color
-      const blendFactor = (visualIntensity - 85) / 85;
-      return blendColors(lowColor, midColor, blendFactor);
-    } else {
-      // High intensity (170-255) - blend from mid to high color
-      const blendFactor = (visualIntensity - 170) / 85;
-      return blendColors(midColor, highColor, blendFactor);
-    }
+    // Create color blend directly from background to high energy (red)
+    return blendColors(theme.background, theme.energy.high, factor);
   }
   
   // Helper to blend two hex colors
@@ -132,11 +116,13 @@
     const c1 = parseColor(color1);
     const c2 = parseColor(color2);
     
+    // Blend the RGB values
     const r = Math.round(c1.r + factor * (c2.r - c1.r));
     const g = Math.round(c1.g + factor * (c2.g - c1.g));
     const b = Math.round(c1.b + factor * (c2.b - c1.b));
     
-    return `rgb(${r}, ${g}, ${b})`;
+    // Return as hex string
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
   }
   
   // Parse a hex color into RGB components
