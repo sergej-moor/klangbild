@@ -8,7 +8,7 @@
   // Props
   const { 
     fullHeight = false,
-    debug = false // Add debug option
+    debug = false
   } = $props();
   
   // Canvas and context
@@ -16,13 +16,14 @@
   let ctx: CanvasRenderingContext2D;
   let width = $state(0);
   let height = $state(0);
-  let scale = $state(1); // Scale factor from parent
+  let scale = $state(1);
   let animationId: number;
   let isCanvasReady = $state(false);
   
-  // Styling parameters
-  const lineColor = visualizerTheme.visualizations.waveform || '#00ff00';
-  const lineWidth = 2;
+  // Theme colors
+  const lineColor = visualizerTheme.colors.primary;
+  const lineWidth = visualizerTheme.visualizations.waveform.lineWidth;
+  const debugColor = visualizerTheme.colors.accent;
   
   // Draw the oscilloscope waveform
   function drawOscilloscope() {
@@ -31,13 +32,13 @@
     // Clear the canvas
     ctx.clearRect(0, 0, width, height);
     
-    // If in debug mode, draw a colored background to show the extent of the canvas
+    // If in debug mode, draw debug info
     if (debug) {
-      ctx.fillStyle = 'rgba(255, 0, 0, 0.1)';
+      ctx.fillStyle = `${debugColor}20`; // Using alpha for transparency
       ctx.fillRect(0, 0, width, height);
       
       // Draw crosshair to show center
-      ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+      ctx.strokeStyle = `${debugColor}80`;
       ctx.beginPath();
       ctx.moveTo(0, height/2);
       ctx.lineTo(width, height/2);
@@ -46,7 +47,7 @@
       ctx.stroke();
       
       // Draw text showing dimensions
-      ctx.fillStyle = 'red';
+      ctx.fillStyle = debugColor;
       ctx.font = '10px monospace';
       ctx.fillText(`Oscilloscope: ${width}x${height} (scale: ${scale.toFixed(2)})`, 5, 15);
     }
@@ -55,7 +56,7 @@
     const waveformData = $waveform;
     if (!waveformData || waveformData.length === 0) {
       if (debug) {
-        ctx.fillStyle = 'red';
+        ctx.fillStyle = debugColor;
         ctx.font = '12px sans-serif';
         ctx.fillText('No waveform data', width / 2 - 60, height / 2);
       }
@@ -75,7 +76,6 @@
     const centerY = height / 2;
     
     // Auto-scale amplitude based on available height and current scale factor
-    // The 0.8 factor ensures some margin from edges
     const scaleFactor = (height * 0.8) / 2 * scale;
     
     // Plot each point in the waveform

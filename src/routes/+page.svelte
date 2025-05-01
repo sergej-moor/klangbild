@@ -1,6 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import { loadAudio } from '$lib/audio/engine';
+	import { visualizerTheme } from '$lib/theme';
 	import Oscilloscope from "$lib/components/Oscilloscope.svelte";
 	import FrequencySpectrum from "$lib/components/FrequencySpectrum.svelte";
 	import Spectrogram from "$lib/components/Spectrogram.svelte";
@@ -37,6 +38,21 @@
 </div>
 
 <style>
+	:global(body) {
+		margin: 0;
+		padding: 0;
+		background-color: var(--bg-color);
+		color: var(--text-color);
+		font-family: sans-serif;
+	}
+	
+	:root {
+		--bg-color: #000000;
+		--text-color: #ffffff;
+		--primary-color: #00ff00;
+		--border-color: #00ff00;
+	}
+	
 	.visualizer-container {
 		display: grid;
 		grid-template-rows: 88vh auto; /* Allocate 88% to visualizers, rest to controls */
@@ -46,8 +62,8 @@
 		margin: 0 auto;
 		padding: 0.25rem 0.75rem;
 		gap: 0.25rem;
-		background-color: #000;
-		color: #fff;
+		background-color: var(--bg-color);
+		color: var(--text-color);
 		overflow: hidden;
 	}
 	
@@ -55,12 +71,11 @@
 		display: grid;
 		grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
 		gap: 0.25rem;
-		border: 1px solid #00ff00;
 		overflow: hidden;
 	}
 	
 	.main-visualizers > :global(*) {
-		border: 1px solid #00ff00;
+		border: 1px solid var(--primary-color);
 		min-height: 0;
 		max-height: 29vh; /* Ensure each visualizer doesn't exceed its allocated space */
 	}
@@ -70,12 +85,11 @@
 		grid-template-rows: 1fr auto;
 		gap: 0.25rem;
 		max-height: 10vh;
-		border: 1px solid #00ff00;
 		overflow: hidden; /* Prevent overflow */
 	}
 	
 	.bottom-controls > :global(*) {
-		border: 1px solid #00ff00;
+		border: 1px solid var(--primary-color);
 		min-height: 0; /* Allow compressing */
 		overflow: hidden;
 	}

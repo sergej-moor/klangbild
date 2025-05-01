@@ -5,11 +5,11 @@
   
   // Props using Svelte 5 runes syntax
   const { 
-    bgColor = 'transparent',
+    bgColor = visualizerTheme.colors.background,
     canvasHeight = sizes.defaultHeight,
     id = 'visualizer-' + Math.random().toString(36).substring(2, 9),
     fullHeight = false,
-    scaleToFit = true // New prop to control auto-scaling
+    scaleToFit = true
   } = $props();
   
   // Canvas reference and state
@@ -17,7 +17,7 @@
   let ctx: CanvasRenderingContext2D;
   let width = $state(0);
   let height = $state(0);
-  let scale = $state(1); // Scale factor for visualizations
+  let scale = $state(1);
   
   // Create an event dispatcher for communication with parent
   const dispatch = createEventDispatcher();
@@ -94,11 +94,7 @@
     };
   });
   
-  // Expose methods to parent components via bindings
-  export function getContext() {
-    return ctx;
-  }
-  
+  // Exported functions and properties
   export function getDimensions() {
     if (!scale) {
       console.warn(`${id} - getDimensions called before initialization`);
@@ -107,15 +103,10 @@
     return { width, height };
   }
   
-  // Add this method to expose the canvas element
-  export function getCanvas() {
-    return canvas;
-  }
-  
   export { clearCanvas, scale };
 </script>
 
-<div class="canvas-container" {id}>
+<div class="canvas-container" {id} style="--border-color: {visualizerTheme.colors.primary}">
   <canvas bind:this={canvas} width={width} height={height} class="visualization-canvas"></canvas>
   <slot />
 </div>
@@ -127,6 +118,8 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    border: 1px solid var(--border-color, #00ff00);
+    box-sizing: border-box;
   }
   
   .visualization-canvas {

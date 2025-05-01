@@ -2,13 +2,20 @@
   import { onMount, onDestroy } from 'svelte';
   import { browser } from '$app/environment';
   import { spectrum, isPlaying } from '$lib/audio/engine';
+  import { visualizerTheme } from '$lib/theme';
   import VisualizerCanvas from './base/VisualizerCanvas.svelte';
   
   // Props
   const { 
     fullHeight = false,
-    debug = false // Add debug option
+    debug = false
   } = $props();
+  
+  // Theme colors
+  const lowColor = visualizerTheme.visualizations.spectrogram.lowIntensity;
+  const midColor = visualizerTheme.visualizations.spectrogram.midIntensity;
+  const highColor = visualizerTheme.visualizations.spectrogram.highIntensity;
+  const debugColor = visualizerTheme.colors.accent;
   
   // Canvas and context
   let canvas: HTMLCanvasElement;
@@ -17,7 +24,7 @@
   let height = $state(0);
   let spectrogramData: Uint8Array[] = [];
   let isCanvasReady = $state(false);
-  let scale = $state(1); // Add scale factor
+  let scale = $state(1);
   
   // Animation frame ID for continuous updates
   let animationId: number;
@@ -27,10 +34,47 @@
   
   // Color gradient for intensity representation
   function getColor(value: number): string {
-    // Convert value (0-255) to hue (240-0)
-    // Low values (quiet) are blue, high values (loud) are red
-    const hue = 240 - (value / 255) * 240;
-    return `hsl(${hue}, 100%, ${10 + (value / 255) * 50}%)`;
+    // Use the theme colors to create a gradient based on value
+    if (value < 85) {
+      // Low intensity (0-85) - blend from black to low color
+      const blendFactor = value / 85;
+      return blendColors('#000000', lowColor, blendFactor);
+    } else if (value < 170) {
+      // Medium intensity (85-170) - blend from low to mid color
+      const blendFactor = (value - 85) / 85;
+      return blendColors(lowColor, midColor, blendFactor);
+    } else {
+      // High intensity (170-255) - blend from mid to high color
+      const blendFactor = (value - 170) / 85;
+      return blendColors(midColor, highColor, blendFactor);
+    }
+  }
+  
+  // Helper to blend two hex colors
+  function blendColors(color1: string, color2: string, factor: number): string {
+    const c1 = parseColor(color1);
+    const c2 = parseColor(color2);
+    
+    const r = Math.round(c1.r + factor * (c2.r - c1.r));
+    const g = Math.round(c1.g + factor * (c2.g - c1.g));
+    const b = Math.round(c1.b + factor * (c2.b - c1.b));
+    
+    return `rgb(${r}, ${g}, ${b})`;
+  }
+  
+  // Parse a hex color into RGB components
+  function parseColor(color: string): {r: number, g: number, b: number} {
+    // Handle hex format
+    if (color.startsWith('#')) {
+      const hex = color.substring(1);
+      return {
+        r: parseInt(hex.substring(0, 2), 16),
+        g: parseInt(hex.substring(2, 4), 16),
+        b: parseInt(hex.substring(4, 6), 16)
+      };
+    }
+    // Handle rgb format (simplified)
+    return {r: 0, g: 255, b: 0}; // Fallback to green
   }
   
   // Function to draw the spectrogram

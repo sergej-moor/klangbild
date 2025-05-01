@@ -20,10 +20,10 @@
   // Animation frame ID for continuous updates
   let animationId: number;
   
-  // Styling parameters for bars
+  // Styling parameters for bars - Get colors from theme
   const bgColor = 'transparent'; // Change to transparent
-  const waveformColor = visualizerTheme.visualizations.waveform || '#6366f1'; // Unplayed portion
-  const progressColor = visualizerTheme.visualizations.progress || '#f43f5e'; // Played portion
+  const waveformColor = visualizerTheme.colors.secondary; // Use secondary color for unplayed portion
+  const progressColor = visualizerTheme.colors.primary; // Use primary color for played portion
   const barWidth = compactMode ? 1 : 2; // Thinner bars in compact mode
   const barGap = compactMode ? 0 : 1; // Smaller gap in compact mode
   
@@ -162,9 +162,6 @@
     // Mark as ready
     isReady = true;
     
-    // Load audio data
-    await loadAudio();
-    
     // Start animation
     startProgressAnimation();
   });
@@ -189,7 +186,7 @@
   </div>
   {#if !compactMode}
     <div class="text-sm opacity-70 text-center">
-       ({Math.round(progress * 100)}%) 
+      ({Math.round(progress * 100)}%) 
     </div>
   {/if}
 </div> 

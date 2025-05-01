@@ -2,13 +2,13 @@
   import { onMount, onDestroy } from 'svelte';
   import { browser } from '$app/environment';
   import { spectrum, isPlaying } from '$lib/audio/engine';
-  import VisualizerCanvas from './base/VisualizerCanvas.svelte';
   import { visualizerTheme } from '$lib/theme';
+  import VisualizerCanvas from './base/VisualizerCanvas.svelte';
   
   // Props
   const { 
     fullHeight = false,
-    debug = false // Add debug option
+    debug = false
   } = $props();
   
   // Canvas and drawing state
@@ -16,12 +16,16 @@
   let ctx: CanvasRenderingContext2D;
   let width = $state(0);
   let height = $state(0);
-  let scale = $state(1); // Scale factor from parent
+  let scale = $state(1);
   let animationId: number;
   let isCanvasReady = $state(false);
   
+  // Theme colors
+  const barColor = visualizerTheme.colors.primary;
+  const peakColor = visualizerTheme.colors.secondary;
+  const debugColor = visualizerTheme.colors.accent;
+  
   // Bar styling
-  const barColor = visualizerTheme.visualizations.spectrum || '#00ff00';
   const barWidth = 2;
   const barGap = 1;
   
@@ -32,13 +36,13 @@
     // Clear the canvas
     ctx.clearRect(0, 0, width, height);
     
-    // If in debug mode, draw a colored background to show the extent of the canvas
+    // If in debug mode, draw debug info
     if (debug) {
-      ctx.fillStyle = 'rgba(0, 0, 255, 0.1)';
+      ctx.fillStyle = `${debugColor}20`;
       ctx.fillRect(0, 0, width, height);
       
       // Draw crosshair to show center
-      ctx.strokeStyle = 'rgba(0, 0, 255, 0.5)';
+      ctx.strokeStyle = `${debugColor}80`;
       ctx.beginPath();
       ctx.moveTo(0, height/2);
       ctx.lineTo(width, height/2);
@@ -47,7 +51,7 @@
       ctx.stroke();
       
       // Draw text showing dimensions
-      ctx.fillStyle = 'blue';
+      ctx.fillStyle = debugColor;
       ctx.font = '10px monospace';
       ctx.fillText(`Spectrum: ${width}x${height} (scale: ${scale.toFixed(2)})`, 5, 15);
     }
@@ -56,18 +60,15 @@
     const spectrumData = $spectrum;
     if (!spectrumData || spectrumData.length === 0) {
       if (debug) {
-        ctx.fillStyle = 'blue';
+        ctx.fillStyle = debugColor;
         ctx.font = '12px sans-serif';
         ctx.fillText('No spectrum data', width / 2 - 60, height / 2);
       }
       return;
     }
     
-    // Setup fill style
-    ctx.fillStyle = barColor;
-    
     // Calculate bar width and spacing
-    const barCount = Math.min(spectrumData.length, Math.floor(width / 3)); // Limit to available width
+    const barCount = Math.min(spectrumData.length, Math.floor(width / 3));
     const barWidth = Math.max(1, Math.floor(width / barCount) - 1);
     const barSpacing = 1;
     const totalBarWidth = barWidth + barSpacing;
@@ -78,14 +79,19 @@
       const value = spectrumData[i];
       
       // Calculate bar height (scale to fit canvas height)
-      // The scale factor helps ensure the bars don't overflow
       const barHeight = (value / 255) * height * 0.9 * scale;
       
       // Calculate position
       const x = i * totalBarWidth;
       const y = height - barHeight;
       
+      // Use gradient for bars
+      const gradient = ctx.createLinearGradient(x, y, x, height);
+      gradient.addColorStop(0, peakColor);
+      gradient.addColorStop(1, barColor);
+      
       // Draw the bar
+      ctx.fillStyle = gradient;
       ctx.fillRect(x, y, barWidth, barHeight);
     }
   }
