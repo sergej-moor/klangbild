@@ -21,6 +21,9 @@
 	// Use active track from playlist for the song name
 	const songName = $derived($playlist.activeTrack?.title || "Demo Track");
 	
+	// Variable to toggle between old and new layouts
+	let showNewLayout = true;
+	
 	// Preload audio when the page loads
 	onMount(async () => {
 		console.log('Main page mounted, preloading audio...');
@@ -80,7 +83,69 @@
 	}
 </script>
 
-<!-- Main Container - Convert regular CSS to Tailwind -->
+<!-- New Grid-Based Responsive Layout -->
+{#if showNewLayout}
+<div class="fixed inset-0 bg-gray-900 text-white z-10 overflow-auto" style="color: {theme.primary};">
+  <!-- Main container - changes to column on small screens, row on medium & large -->
+  <div class="flex flex-col md:flex-row h-full p-2 gap-2">
+    
+    <!-- Controls Grid - takes full width on small screens, 1/3 on medium & large -->
+    <div class="w-full md:w-1/3 h-auto md:h-full grid grid-cols-4 grid-rows-8 gap-1 min-h-[40vh] md:min-h-0">
+      <div class="col-span-4 border border-current rounded p-2 overflow-hidden">
+        EQ
+      </div>
+      
+      <div class="col-span-3 row-span-2 row-start-2 border border-current rounded p-2 overflow-hidden">
+        SongControl
+      </div>
+      
+      <div class="col-span-3 row-span-5 col-start-1 row-start-4 border border-current rounded p-2 overflow-auto">
+        Tracklist
+      </div>
+      
+      <div class="row-span-7 col-start-4 row-start-2 border border-current rounded p-2 overflow-hidden">
+        Meter
+      </div>
+    </div>
+    
+    <!-- Visuals Grid - takes full width on small screens, 2/3 on medium & large -->
+    <div class="w-full md:w-2/3 h-auto md:h-full grid grid-cols-8 grid-rows-9 md:grid-rows-8 gap-1 min-h-[50vh] md:min-h-0">
+      <!-- Oscilloscope -->
+      <div class="col-span-3 md:col-span-2 row-span-3 md:row-span-5 col-start-1 row-start-1 border border-current rounded p-2 overflow-hidden">
+        Oscilloscope
+      </div>
+      
+      <!-- Spectrogram -->
+      <div class="col-span-5 row-span-3 col-start-4 md:col-start-3 row-start-1 border border-current rounded p-2 overflow-hidden">
+        Spectrogram
+      </div>
+      
+      <!-- Logo - desktop/tablet only (hidden on small screens) -->
+      <div class="hidden md:block col-span-1 row-span-3 col-start-8 row-start-1 border border-current rounded p-2 overflow-hidden">
+        Logo
+      </div>
+      
+      <!-- Waveform -->
+      <div class="col-span-8 md:col-span-6 row-span-2 col-start-1 md:col-start-3 row-start-4 border border-current rounded p-2 overflow-hidden">
+        Waveform
+      </div>
+      
+      <!-- Frequency Spectrum -->
+      <div class="col-span-8 row-span-3 col-start-1 row-start-6 border border-current rounded p-2 overflow-hidden">
+        Frequency Spectrum
+      </div>
+      
+      <!-- Mobile Logo - only shown on small screens, below everything else -->
+      <div class="md:hidden col-span-8 row-span-1 col-start-1 row-start-9 border border-current rounded p-2 overflow-hidden">
+        Logo
+      </div>
+    </div>
+  </div>
+</div>
+{/if}
+
+<!-- Original UI - still can be accessed via showNewLayout variable -->
+{#if !showNewLayout}
 <div class="grid grid-rows-[60vh_auto] h-screen w-full max-w-screen-2xl mx-auto p-1 gap-1 overflow-hidden" 
     style="background-color: {theme.background}; color: {theme.primary};">
     
@@ -155,4 +220,22 @@
             <Playlist />
         </div>
     </div>
+    
+    <!-- Keep the button to switch to new layout -->
+    <button 
+      class="fixed bottom-4 right-4 px-3 py-2 bg-gray-800 border border-current rounded z-50"
+      on:click={() => showNewLayout = true}
+      style="color: {theme.primary}; border-color: {theme.primary};"
+    >
+      <span class="hidden sm:inline">Switch to New Layout</span>
+      <span class="sm:hidden">New UI</span>
+    </button>
 </div>
+{/if}
+
+<!-- Debug Indicator - always shows regardless of layout -->
+{#if $debugMode}
+    <div class="fixed bottom-2 right-2 bg-black/70 text-red-500 px-2 py-1 rounded text-xs z-50">
+        Debug Mode ON (Press 'O' to toggle)
+    </div>
+{/if}
