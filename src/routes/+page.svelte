@@ -16,6 +16,7 @@
 	import Equalizer from '$lib/components/Equalizer.svelte';
 	import VolumeSlider from "$lib/components/VolumeSlider.svelte";
 	import { setVolume } from '$lib/audio/index';
+	import PitchControls from "$lib/components/PitchControls.svelte";
 	
 	// Use active track from playlist for the song name
 	const songName = $derived($playlist.activeTrack?.title || "Demo Track");
@@ -77,6 +78,13 @@
 		// Now actually apply the volume change
 		setVolume(volume);
 	}
+
+	// Add a function to handle pitch changes
+	function handlePitchChange(event) {
+		const semitones = event.detail;
+		console.log('Pitch changed:', semitones);
+		// Pitch shift functionality will be implemented later
+	}
 </script>
 
 <!-- Main Container - Convert regular CSS to Tailwind -->
@@ -137,16 +145,14 @@
         
         <!-- Two placeholder boxes side by side -->
         <div class="grid grid-cols-2 gap-1 min-h-0">
-            <!-- Volume Slider (replacing first placeholder) -->
+            <!-- Volume Slider  -->
             <div class="border rounded overflow-hidden" style="border-color: {theme.primary};">
                 <VolumeSlider on:change={handleVolumeChange} />
             </div>
             
-            <!-- Second placeholder box -->
+            <!-- Pitch Controls (replacing second placeholder) -->
             <div class="border rounded overflow-hidden" style="border-color: {theme.primary};">
-                <div class="h-full flex items-center justify-center text-center p-2 text-sm opacity-60">
-                    Future Component 2
-                </div>
+                <PitchControls on:change={handlePitchChange} />
             </div>
         </div>
         
