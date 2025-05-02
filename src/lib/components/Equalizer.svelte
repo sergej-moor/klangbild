@@ -4,6 +4,7 @@
   import { adjustEqualizer, eqSettings } from '$lib/audio/index';
   import { browser } from '$app/environment';
   import { onMount } from 'svelte';
+  import EqKnob from './EqKnob.svelte';
   
   // Define interface for equalizer values
   export interface EqualizerValues {
@@ -12,7 +13,7 @@
     high: number;
   }
   
-  // Local state for sliders
+  // Local state for EQ values
   let low = $eqSettings.low;
   let mid = $eqSettings.mid;
   let high = $eqSettings.high;
@@ -20,28 +21,27 @@
   // Range limits
   const MIN_VALUE = -12;
   const MAX_VALUE = 12;
-  const STEP = 0.5;
   
   // Event dispatcher
   const dispatch = createEventDispatcher<{
     change: EqualizerValues;
   }>();
   
-  // Handle the slider input events directly
-  function handleLowChange(e) {
-    low = parseFloat(e.target.value);
+  // Handle knob value changes
+  function handleLowChange(value: number) {
+    low = value;
     adjustEqualizer('low', low);
     dispatch('change', { low, mid, high });
   }
   
-  function handleMidChange(e) {
-    mid = parseFloat(e.target.value);
+  function handleMidChange(value: number) {
+    mid = value;
     adjustEqualizer('mid', mid);
     dispatch('change', { low, mid, high });
   }
   
-  function handleHighChange(e) {
-    high = parseFloat(e.target.value);
+  function handleHighChange(value: number) {
+    high = value;
     adjustEqualizer('high', high);
     dispatch('change', { low, mid, high });
   }
@@ -69,13 +69,11 @@
     high = $eqSettings.high;
   });
   
-  // Sync with store - only run in browser and only when not actively dragging
-  $: if (browser) {
-    const isSliderActive = browser && 
-      document.activeElement && 
-      document.activeElement.matches('input[type="range"]');
-    
-    if (!isSliderActive) {
+  // Sync with store when it changes (but not when actively changing a knob)
+  $: if (browser && $eqSettings) {
+    // Only update if we're not actively interacting with knobs
+    if (document.activeElement?.tagName !== 'DIV' || 
+        !document.activeElement?.classList.contains('knob')) {
       low = $eqSettings.low;
       mid = $eqSettings.mid;
       high = $eqSettings.high;
@@ -84,56 +82,38 @@
 </script>
 
 <div class="equalizer">
-  <div class="sliders">
-    <div class="slider-group">
+  <div class="knobs">
+    <div class="knob-group">
       <span class="label">Low</span>
-      <div class="slider-container">
-        <input 
-          type="range" 
-          min={MIN_VALUE} 
-          max={MAX_VALUE} 
-          step={STEP}
-          value={low}
-          on:input={handleLowChange}
-          style="--track-color: {theme.primary};"
-          class="vertical-slider"
-        />
-      </div>
-      <span class="value">{low.toFixed(1)} dB</span>
+      <EqKnob 
+        bind:value={low}
+        min={MIN_VALUE}
+        max={MAX_VALUE}
+        primaryColor={theme.primary}
+        on:change={() => handleLowChange(low)}
+      />
     </div>
     
-    <div class="slider-group">
+    <div class="knob-group">
       <span class="label">Mid</span>
-      <div class="slider-container">
-        <input 
-          type="range" 
-          min={MIN_VALUE} 
-          max={MAX_VALUE} 
-          step={STEP}
-          value={mid}
-          on:input={handleMidChange}
-          style="--track-color: {theme.primary};"
-          class="vertical-slider"
-        />
-      </div>
-      <span class="value">{mid.toFixed(1)} dB</span>
+      <EqKnob 
+        bind:value={mid}
+        min={MIN_VALUE}
+        max={MAX_VALUE}
+        primaryColor={theme.primary}
+        on:change={() => handleMidChange(mid)}
+      />
     </div>
     
-    <div class="slider-group">
+    <div class="knob-group">
       <span class="label">High</span>
-      <div class="slider-container">
-        <input 
-          type="range" 
-          min={MIN_VALUE} 
-          max={MAX_VALUE} 
-          step={STEP}
-          value={high}
-          on:input={handleHighChange}
-          style="--track-color: {theme.primary};"
-          class="vertical-slider"
-        />
-      </div>
-      <span class="value">{high.toFixed(1)} dB</span>
+      <EqKnob 
+        bind:value={high}
+        min={MIN_VALUE}
+        max={MAX_VALUE}
+        primaryColor={theme.primary}
+        on:change={() => handleHighChange(high)}
+      />
     </div>
   </div>
   
@@ -159,14 +139,14 @@
     padding: 0.5rem;
   }
   
-  .sliders {
+  .knobs {
     width: 100%;
     flex: 1;
     display: flex;
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    gap: 0.5rem;
+    gap: 1rem;
     margin: auto 0;
     padding: 1rem 0;
   }
@@ -188,7 +168,7 @@
     cursor: pointer;
     transition: all 0.2s ease;
     width: 100%;
-    max-width: calc(3 * 24px + 2 * 0.5rem); /* Width of 3 sliders plus gaps */
+    max-width: 240px;
   }
   
   .reset-button:hover {
@@ -196,77 +176,15 @@
     color: white;
   }
   
-  .slider-group {
+  .knob-group {
     display: flex;
     flex-direction: column;
     align-items: center;
-    height: 100%;
-    gap: 0.25rem;
-    padding: 0 0.25rem;
-  }
-  
-  .slider-container {
-    position: relative;
-    height: 160px;
-    width: 24px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .vertical-slider {
-    -webkit-appearance: none;
-    width: 160px;
-    height: 6px;
-    border-radius: 3px;
-    background: #33333333;
-    outline: none;
-    margin: 0;
-    transform: rotate(-90deg);
-    transform-origin: center;
-    position: absolute;
-  }
-  
-  .vertical-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: var(--track-color);
-    cursor: pointer;
-    margin-top: -5px; /* Center the thumb vertically */
-  }
-  
-  .vertical-slider::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: var(--track-color);
-    cursor: pointer;
-    border: none;
-  }
-  
-  /* Simple solid color track instead of gradient */
-  .vertical-slider::-webkit-slider-runnable-track {
-    background: #33333333;
-    height: 6px;
-    border-radius: 3px;
-  }
-  
-  .vertical-slider::-moz-range-track {
-    background: #33333333;
-    height: 6px;
-    border-radius: 3px;
+    gap: 0.5rem;
   }
   
   .label {
     font-size: 0.9rem;
     font-weight: 500;
-  }
-  
-  .value {
-    font-size: 0.8rem;
-    width: 3.5rem;
-    text-align: center;
   }
 </style>
