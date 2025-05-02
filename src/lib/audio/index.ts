@@ -8,9 +8,16 @@ export * from './utils';
 
 // Simplified API functions
 import { loadAudioFile } from './core';
-import { togglePlayPause, seekToPosition, adjustEqualizer } from './controls';
+import {
+  togglePlayPause,
+  seekToPosition,
+  adjustEqualizer,
+  setVolume,
+  getVolume,
+  toggleMute,
+} from './controls';
 import { startVisualizerUpdates } from './visualizer';
-import { isPlaying, audioBuffer, playbackPosition, eqSettings } from './stores';
+import { isPlaying, audioBuffer, playbackPosition, eqSettings, volume } from './stores';
 import { get } from 'svelte/store';
 
 /**
@@ -76,3 +83,6 @@ export function setEqualizerValues(values: { low: number; mid: number; high: num
   adjustEqualizer('mid', values.mid);
   adjustEqualizer('high', values.high);
 }
+
+// Re-export volume-related functions and stores
+export { setVolume, getVolume, toggleMute, volume };

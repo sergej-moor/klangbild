@@ -41,3 +41,6 @@ export const eqSettings = writable({
   mid: 0, // dB, range: -12 to 12
   high: 0, // dB, range: -12 to 12
 });
+
+// Volume (0-100)
+export const volume = writable(75);

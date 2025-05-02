@@ -14,6 +14,8 @@
 	import RmsMeter from '$lib/components/visualizer/RMSMeter.svelte';
 	import { playlist } from '$lib/stores/playlist';
 	import Equalizer from '$lib/components/Equalizer.svelte';
+	import VolumeSlider from "$lib/components/VolumeSlider.svelte";
+	import { setVolume } from '$lib/audio/index';
 	
 	// Use active track from playlist for the song name
 	const songName = $derived($playlist.activeTrack?.title || "Demo Track");
@@ -67,6 +69,14 @@
 		console.log('Equalizer settings changed:', { low, mid, high });
 		// Here you would apply the EQ settings to your audio processing
 	}
+
+	// Handle volume change
+	function handleVolumeChange(event) {
+		const volume = event.detail;
+		console.log('Volume changed:', volume);
+		// Now actually apply the volume change
+		setVolume(volume);
+	}
 </script>
 
 <!-- Main Container - Convert regular CSS to Tailwind -->
@@ -118,11 +128,26 @@
     {/if}
     
     <!-- Bottom Section -->
-    <div class="grid grid-cols-[3fr_1fr] gap-1 max-h-[40vh] min-h-0">
+    <div class="grid grid-cols-[2fr_1fr_1fr] gap-1 max-h-[40vh] min-h-0">
         <!-- Waveform and Controls -->
         <div class="flex flex-col gap-1 overflow-hidden">
             <Waveform />
             <PlayPauseControls songName={songName} />
+        </div>
+        
+        <!-- Two placeholder boxes side by side -->
+        <div class="grid grid-cols-2 gap-1 min-h-0">
+            <!-- Volume Slider (replacing first placeholder) -->
+            <div class="border rounded overflow-hidden" style="border-color: {theme.primary};">
+                <VolumeSlider on:change={handleVolumeChange} />
+            </div>
+            
+            <!-- Second placeholder box -->
+            <div class="border rounded overflow-hidden" style="border-color: {theme.primary};">
+                <div class="h-full flex items-center justify-center text-center p-2 text-sm opacity-60">
+                    Future Component 2
+                </div>
+            </div>
         </div>
         
         <!-- Playlist -->

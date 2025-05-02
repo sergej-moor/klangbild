@@ -14,6 +14,7 @@ import {
   eqMidNode,
   eqHighNode,
   eqSettings,
+  volume,
 } from './stores';
 import { getAudioContext, createAudioSource, setupEqualizer } from './core';
 import { setupAnalyzer } from './analyzer';
@@ -189,5 +190,46 @@ export function adjustEqualizer(band: 'low' | 'mid' | 'high', value: number) {
   // Apply the gain value to the filter
   if (filterNode) {
     filterNode.gain.value = gain;
+  }
+}
+
+// Set volume level (0-100)
+export function setVolume(level: number) {
+  // Ensure level is within bounds
+  const normalizedLevel = Math.max(0, Math.min(100, level));
+
+  // Update the volume store
+  volume.set(normalizedLevel);
+
+  // Get the gain node and apply the volume
+  const gain = get(gainNode);
+  if (gain) {
+    // Convert percentage (0-100) to gain (0-1)
+    const gainValue = normalizedLevel / 100;
+    gain.gain.value = gainValue;
+  }
+
+  return normalizedLevel;
+}
+
+// Get current volume level
+export function getVolume() {
+  return get(volume);
+}
+
+// Mute audio (set volume to 0 but remember previous level)
+let previousVolume = 75;
+export function toggleMute() {
+  const currentVolume = get(volume);
+
+  if (currentVolume > 0) {
+    // If not muted, store current volume and mute
+    previousVolume = currentVolume;
+    setVolume(0);
+    return true; // now muted
+  } else {
+    // If muted, restore previous volume
+    setVolume(previousVolume);
+    return false; // now unmuted
   }
 }
