@@ -16,7 +16,7 @@
 	import Equalizer from '$lib/components/Equalizer.svelte';
 	import VolumeSlider from "$lib/components/VolumeSlider.svelte";
 	import { setVolume } from '$lib/audio/index';
-	import PitchControls from "$lib/components/PitchControls.svelte";
+	import CDVisualizer from "$lib/components/CDVisualizer.svelte";
 	
 	// Use active track from playlist for the song name
 	const songName = $derived($playlist.activeTrack?.title || "Demo Track");
@@ -72,18 +72,11 @@
 	}
 
 	// Handle volume change
-	function handleVolumeChange(event) {
+	function handleVolumeChange(event: CustomEvent<number>) {
 		const volume = event.detail;
 		console.log('Volume changed:', volume);
 		// Now actually apply the volume change
 		setVolume(volume);
-	}
-
-	// Add a function to handle pitch changes
-	function handlePitchChange(event) {
-		const semitones = event.detail;
-		console.log('Pitch changed:', semitones);
-		// Pitch shift functionality will be implemented later
 	}
 </script>
 
@@ -143,16 +136,16 @@
             <PlayPauseControls songName={songName} />
         </div>
         
-        <!-- Two placeholder boxes side by side -->
+        <!-- Volume and CD Visualizer side by side -->
         <div class="grid grid-cols-2 gap-1 min-h-0">
-            <!-- Volume Slider  -->
+            <!-- Volume Slider -->
             <div class="border rounded overflow-hidden" style="border-color: {theme.primary};">
                 <VolumeSlider on:change={handleVolumeChange} />
             </div>
             
-            <!-- Pitch Controls (replacing second placeholder) -->
+            <!-- CD Visualizer -->
             <div class="border rounded overflow-hidden" style="border-color: {theme.primary};">
-                <PitchControls on:change={handlePitchChange} />
+                <CDVisualizer />
             </div>
         </div>
         
