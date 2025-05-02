@@ -3,8 +3,8 @@
   import { theme } from '$lib/theme';
   import BaseVisualizer from './BaseVisualizer.svelte';
   
-  // Props - removed debug prop
-  const {} = $props();
+  // Props
+  export let orientation = 'horizontal'; // 'horizontal' or 'vertical'
   
   // References to canvas context
   let ctx: CanvasRenderingContext2D;
@@ -17,16 +17,16 @@
   const lineWidth = 1;
   
   // Handle ready event from BaseVisualizer
-  function handleReady(event) {
+  function handleReady(event: CustomEvent) {
     ({ ctx, width, height, scale } = event.detail);
   }
   
   // Handle resize event from BaseVisualizer
-  function handleResize(event) {
+  function handleResize(event: CustomEvent) {
     ({ width, height, scale } = event.detail);
   }
   
-  // Draw function - no changes needed here as debug is handled by BaseVisualizer
+  // Draw function with support for both horizontal and vertical orientations
   function drawOscilloscope() {
     if (!ctx) return;
     
@@ -62,32 +62,63 @@
     // Begin path
     ctx.beginPath();
     
-    // Calculate the center line and amplitude scaling
-    const centerY = height / 2;
-    
-    // Auto-scale amplitude based on available height and current scale factor
-    const scaleFactor = (height * 0.8) / 2 * scale;
-    
-    // Always stretch the waveform to fill the entire canvas width
-    // by adjusting the step size based on the available data points
-    const step = waveformData.length / width;
-    
-    // Plot each point in the waveform
-    for (let i = 0; i < width; i++) {
-      // Calculate the data index for this x position
-      const dataIndex = Math.min(waveformData.length - 1, Math.floor(i * step));
+    if (orientation === 'horizontal') {
+      // Horizontal mode (original)
+      // Calculate the center line and amplitude scaling
+      const centerY = height / 2;
       
-      // Get the waveform value (-1.0 to 1.0)
-      const value = waveformData[dataIndex];
+      // Auto-scale amplitude based on available height and current scale factor
+      const scaleFactor = (height * 0.8) / 2 * scale;
       
-      // Calculate y position (invert and scale)
-      const y = centerY - (value * scaleFactor);
+      // Always stretch the waveform to fill the entire canvas width
+      const step = waveformData.length / width;
       
-      // Plot the point
-      if (i === 0) {
-        ctx.moveTo(i, y);
-      } else {
-        ctx.lineTo(i, y);
+      // Plot each point in the waveform
+      for (let i = 0; i < width; i++) {
+        // Calculate the data index for this x position
+        const dataIndex = Math.min(waveformData.length - 1, Math.floor(i * step));
+        
+        // Get the waveform value (-1.0 to 1.0)
+        const value = waveformData[dataIndex];
+        
+        // Calculate y position (invert and scale)
+        const y = centerY - (value * scaleFactor);
+        
+        // Plot the point
+        if (i === 0) {
+          ctx.moveTo(i, y);
+        } else {
+          ctx.lineTo(i, y);
+        }
+      }
+    } else {
+      // Vertical mode (top to bottom)
+      // Calculate the center line and amplitude scaling
+      const centerX = width / 2;
+      
+      // Auto-scale amplitude based on available width and current scale factor
+      const scaleFactor = (width * 0.8) / 2 * scale;
+      
+      // Stretch the waveform to fill the entire canvas height
+      const step = waveformData.length / height;
+      
+      // Plot each point in the waveform (top to bottom)
+      for (let i = 0; i < height; i++) {
+        // Calculate the data index for this y position
+        const dataIndex = Math.min(waveformData.length - 1, Math.floor(i * step));
+        
+        // Get the waveform value (-1.0 to 1.0)
+        const value = waveformData[dataIndex];
+        
+        // Calculate x position (invert and scale)
+        const x = centerX + (value * scaleFactor);
+        
+        // Plot the point
+        if (i === 0) {
+          ctx.moveTo(x, i);
+        } else {
+          ctx.lineTo(x, i);
+        }
       }
     }
     

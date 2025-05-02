@@ -10,6 +10,7 @@
 	import Waveform from "$lib/components/Waveform.svelte";
 	import PlayPauseControls from "$lib/components/PlayPauseControls.svelte";
 	import Playlist from '$lib/components/Playlist.svelte';
+	import SongControls from '$lib/components/SongControls.svelte';
 	
 	import RmsMeter from '$lib/components/visualizer/RMSMeter.svelte';
 	import { playlist } from '$lib/stores/playlist';
@@ -96,15 +97,15 @@
       </div>
       
       <div class="col-span-3 row-span-2 row-start-2 border border-current rounded p-2 overflow-hidden">
-        SongControl
+        <SongControls />
       </div>
       
       <div class="col-span-3 row-span-5 col-start-1 row-start-4 border border-current rounded p-2 overflow-auto">
-        Tracklist
+        <Playlist />
       </div>
       
       <div class="row-span-7 col-start-4 row-start-2 border border-current rounded p-2 overflow-hidden">
-        Meter
+        <RmsMeter />
       </div>
     </div>
     
@@ -112,12 +113,12 @@
     <div class="w-full md:w-2/3 h-auto md:h-full grid grid-cols-8 grid-rows-9 md:grid-rows-8 gap-1 min-h-[50vh] md:min-h-0">
       <!-- Oscilloscope -->
       <div class="col-span-3 md:col-span-2 row-span-3 md:row-span-5 col-start-1 row-start-1 border border-current rounded p-2 overflow-hidden">
-        Oscilloscope
+        <Oscilloscope orientation="vertical" />
       </div>
       
       <!-- Spectrogram -->
       <div class="col-span-5 row-span-3 col-start-4 md:col-start-3 row-start-1 border border-current rounded p-2 overflow-hidden">
-        Spectrogram
+        <Spectrogram />
       </div>
       
       <!-- Logo - desktop/tablet only (hidden on small screens) -->
@@ -127,12 +128,12 @@
       
       <!-- Waveform -->
       <div class="col-span-8 md:col-span-6 row-span-2 col-start-1 md:col-start-3 row-start-4 border border-current rounded p-2 overflow-hidden">
-        Waveform
+        <Waveform />
       </div>
       
       <!-- Frequency Spectrum -->
       <div class="col-span-8 row-span-3 col-start-1 row-start-6 border border-current rounded p-2 overflow-hidden">
-        Frequency Spectrum
+        <FrequencySpectrum />
       </div>
       
       <!-- Mobile Logo - only shown on small screens, below everything else -->
