@@ -9,16 +9,38 @@
 	import Spectrogram from "$lib/components/visualizer/Spectrogram.svelte";
 	import Waveform from "$lib/components/Waveform.svelte";
 	import PlayPauseControls from "$lib/components/PlayPauseControls.svelte";
+	import Playlist from '$lib/components/Playlist.svelte';
 	
 	import RmsMeter from '$lib/components/visualizer/RMSMeter.svelte';
+	import { playlist } from '$lib/stores/playlist';
 	
-	// Song name - you can replace this with dynamic content if needed
-	const songName = "Demo Track";
+	// Use active track from playlist for the song name
+	const songName = $derived($playlist.activeTrack?.title || "Demo Track");
 	
 	// Preload audio when the page loads
 	onMount(async () => {
 		console.log('Main page mounted, preloading audio...');
-		await loadAudio('/demo.wav');
+		
+		// If we have tracks in the playlist, load the active one or first one
+		if ($playlist.length > 0) {
+			if (!$playlist.activeTrackId) {
+				// If no active track yet, set the first one
+				playlist.setActiveTrack($playlist[0].id);
+			}
+			
+			// Get the active track and load it
+			const activeTrack = $playlist.activeTrack;
+			if (activeTrack) {
+				await loadAudio(activeTrack.path);
+			} else {
+				// Fallback to demo file
+				await loadAudio('/demo.wav');
+			}
+		} else {
+			// Fallback to demo file if playlist is empty
+			await loadAudio('/demo.wav');
+		}
+		
 		console.log('Audio preloaded in main page');
 	});
 
@@ -42,8 +64,6 @@
 			<Spectrogram />
 			<Oscilloscope />
 		</div>
-      
-        
 	</div>
 	
 	<!-- Display debug mode indicator if debug is on -->
@@ -53,20 +73,22 @@
 		</div>
 	{/if}
 	
-	<div class="bottom-controls">
-		<Waveform   />
-		<div class="play-controls">
-			<PlayPauseControls compact={true} songName={songName} />
+	<div class="bottom-section">
+		<div class="bottom-controls">
+			<Waveform />
+			<PlayPauseControls songName={songName} />
+		
+		</div>
+		<div class="playlist-container">
+			<Playlist />
 		</div>
 	</div>
 </div>
 
 <style>
-
-	
 	.visualizer-container {
 		display: grid;
-		grid-template-rows: 60vh auto; /* Allocate 88% to visualizers, rest to controls */
+		grid-template-rows: 60vh auto; /* Allocate 60% to visualizers, rest to controls */
 		height: 100vh;
 		width: 100%;
 		max-width: 100vw;
@@ -104,17 +126,18 @@
 		max-height: 29vh; /* Ensure each visualizer doesn't exceed its allocated space */
 	}
 	
+	.bottom-section {
+		display: grid;
+		grid-template-columns: 3fr 1fr;
+		gap: 0.25rem;
+		max-height: 40vh;
+		min-height: 0; /* Allow container to shrink if needed */
+	}
+	
 	.bottom-controls {
 		display: grid;
 		grid-template-rows: 1fr auto;
 		gap: 0.25rem;
-		max-height: 40vh;
-		overflow: hidden; /* Prevent overflow */
-	}
-	
-	.bottom-controls > :global(*) {
-		border: 1px solid; /* Color set by component */
-		min-height: 0; /* Allow compressing */
 		overflow: hidden;
 	}
 	
@@ -138,5 +161,21 @@
 		border-radius: 3px;
 		font-size: 12px;
 		z-index: 1000;
+	}
+	
+	.layout {
+		display: flex;
+		gap: 2rem;
+		align-items: flex-start;
+		justify-content: center;
+		margin: 2rem auto;
+		max-width: 1200px;
+	}
+	
+	.playlist-container {
+		min-height: 0; /* Allow container to shrink */
+		max-height: 40vh; /* Match bottom section */
+		overflow: auto; /* Enable scrolling if content overflows */
+		border: 1px solid; /* Add border - color will be set inline */
 	}
 </style>

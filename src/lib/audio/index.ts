@@ -8,23 +8,60 @@ export * from './utils';
 
 // Simplified API functions
 import { loadAudioFile } from './core';
-import { togglePlayPause, seekToPosition, getAudioDuration } from './controls';
+import { togglePlayPause, seekToPosition } from './controls';
 import { startVisualizerUpdates } from './visualizer';
+import { isPlaying, audioBuffer, playbackPosition } from './stores';
+import { get } from 'svelte/store';
 
-// Load audio and start visualizer
-export async function loadAudio(url: string) {
-  const buffer = await loadAudioFile(url);
+/**
+ * Loads an audio file and prepares it for playback
+ */
+export async function loadAudio(audioSrc: string): Promise<void> {
+  try {
+    console.log(`Loading audio from: ${audioSrc}`);
 
-  // Always start the visualizer updates, even before playing
-  // This ensures UI updates happen continuously
-  const cleanup = startVisualizerUpdates();
+    // Check if we have a valid URL
+    if (!audioSrc) {
+      console.error('Invalid audio source provided');
+      return;
+    }
 
-  // Return any cleanup function if needed
-  return {
-    buffer,
-    cleanup,
-  };
+    // Check if we need to pause current playback
+    const wasPlaying = get(isPlaying);
+    if (wasPlaying) {
+      togglePlayPause(); // Pause current playback
+    }
+
+    // Reset position
+    playbackPosition.set(0);
+
+    // Load the audio file using the core function
+    const buffer = await loadAudioFile(audioSrc);
+
+    if (!buffer) {
+      console.error('Failed to load audio buffer');
+      return;
+    }
+
+    // Start visualizer updates if not already running
+    startVisualizerUpdates();
+
+    // Auto-play if previous track was playing
+    if (wasPlaying) {
+      togglePlayPause(); // Resume playback with new track
+    }
+
+    console.log('Audio loaded successfully');
+  } catch (error) {
+    console.error('Error loading audio:', error);
+  }
 }
 
 // Re-export commonly used functions directly
-export { togglePlayPause, seekToPosition, getAudioDuration };
+export { togglePlayPause, seekToPosition };
+
+// Export function to get audio duration that uses the store
+export function getAudioDuration(): number {
+  const buffer = get(audioBuffer);
+  return buffer ? buffer.duration : 0;
+}

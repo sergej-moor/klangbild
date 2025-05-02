@@ -21,3 +21,10 @@ export interface AudioEventDetail {
   time: number;
   position: number;
 }
+
+export interface PlaylistTrack {
+  id: string;
+  title: string;
+  path: string;
+  duration: number;
+}

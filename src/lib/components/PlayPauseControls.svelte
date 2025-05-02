@@ -5,11 +5,31 @@
   import { togglePlayPause, seekToPosition, getAudioDuration } from '$lib/audio/controls';
   import { formatTime } from '$lib/audio/utils';
   import { theme } from '$lib/theme';
+  import { playlist } from '$lib/stores/playlist';  // Import playlist store
   
   // Props
   const { 
     songName = "Untitled"
   } = $props();
+  
+  // Get active track title from playlist with debugging
+  $effect(() => {
+    console.log("PlayPauseControls - Active Track:", $playlist.activeTrack);
+  });
+  
+  const activeTrackTitle = $derived($playlist.activeTrack?.title || songName);
+  
+  // Additional reactive code for improved debugging
+  $effect(() => {
+    const activeTrack = $playlist.activeTrack;
+    const activeId = $playlist.activeTrackId;
+    
+    console.log("PlayPauseControls - Song Info:", { 
+      activeTrackId: activeId, 
+      activeTrack: activeTrack,
+      displayTitle: activeTrack?.title || songName 
+    });
+  });
   
   // Component state
   let sliderValue = $state(0);
@@ -116,7 +136,7 @@
   });
 </script>
 
-<div class="player-controls">
+<div class="player-controls" style="border-color: {theme.primary}; border: 1px solid;">
   <button 
     class="play-button" 
     on:click={togglePlayPause}
@@ -162,7 +182,7 @@
   </div>
   
   <div class="song-name" style="color: {theme.primary};">
-    {songName}
+    {activeTrackTitle}
   </div>
 </div>
 
