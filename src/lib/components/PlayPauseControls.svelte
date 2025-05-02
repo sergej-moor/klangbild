@@ -143,6 +143,37 @@
     await loadAudio(nextTrack.path);
   }
   
+  // Setup event listener for track completion
+  function setupTrackEndListener() {
+    // Find the audio element
+    const audioElement = document.querySelector('audio');
+    if (audioElement) {
+      // Add ended event listener
+      audioElement.addEventListener('ended', handleTrackEnd);
+    }
+  }
+  
+  // Handle when a track ends
+  async function handleTrackEnd() {
+    console.log('Track ended, playing next track');
+    await goToNextTrack();
+  }
+  
+  // Watch for position near the end to handle tracks that might not fire 'ended' event
+  $effect(() => {
+    // If we're at or very near the end of the track (99.9%)
+    if ($playbackPosition > 0.999 && $duration > 0 && $isPlaying) {
+      console.log('Track nearing end, preparing to play next');
+      // Small timeout to avoid interrupting any 'ended' event
+      setTimeout(() => {
+        // Double-check we're still at the end (in case user seeked back)
+        if ($playbackPosition > 0.999) {
+          goToNextTrack();
+        }
+      }, 500);
+    }
+  });
+  
   onMount(() => {
     // Initial duration update
     updateDuration();
@@ -165,8 +196,34 @@
       }
     }, 250);
     
+    // Set up the track end listener
+    setupTrackEndListener();
+    
+    // Re-add the listener whenever audio sources might change
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type === 'childList') {
+          setupTrackEndListener();
+        }
+      }
+    });
+    
+    // Watch for changes to the body that might include audio elements
+    observer.observe(document.body, { childList: true, subtree: true });
+    
     // Clean up on component destruction
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      
+      // Clean up the audio event listener
+      const audioElement = document.querySelector('audio');
+      if (audioElement) {
+        audioElement.removeEventListener('ended', handleTrackEnd);
+      }
+      
+      // Disconnect the observer
+      observer.disconnect();
+    };
   });
 </script>
 
