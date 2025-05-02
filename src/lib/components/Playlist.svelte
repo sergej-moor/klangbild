@@ -37,36 +37,88 @@
     // Dispatch select event
     dispatch('select', { track, index });
   }
+  
+  // Add function to handle track deletion
+  function handleDeleteTrack(event: Event, trackId: string) {
+    // Stop event from bubbling to parent (which would select the track)
+    event.stopPropagation();
+    
+    // If this is the active track, select another one first
+    if (activeTrackId === trackId) {
+      // Find the index of the current track
+      const currentIndex = tracks.findIndex(t => t.id === trackId);
+      
+      // Try to select the next track, or the previous if at the end
+      if (tracks.length > 1) {
+        const nextIndex = currentIndex < tracks.length - 1 ? currentIndex + 1 : currentIndex - 1;
+        const nextTrack = tracks[nextIndex];
+        
+        // Set the new active track and load it
+        playlist.setActiveTrack(nextTrack.id);
+        loadAudio(nextTrack.path);
+      }
+    }
+    
+    // Remove the track from the playlist
+    playlist.removeTrack(trackId);
+  }
 </script>
 
 <div class="playlist" style="border-color: {theme.primary};">
-  <h3>Playlist</h3>
+  <div class="playlist-header">
+    <h3>Playlist</h3>
+    <UploadButton />
+  </div>
   
-  <UploadButton />
-  
-  <ul>
-    {#each tracks as track, index}
-      <li 
-        class:active={activeTrackId === track.id}
-        class:playing={activeTrackId === track.id && playing}
-        style="border-left-color: {theme.primary};"
-        on:click={() => handleTrackSelect(track, index)}
-      >
-        <div class="track-info">
-          <span class="track-number">{index + 1}</span>
-          <span class="track-title" title={track.title}>{track.title}</span>
-        </div>
-        <span class="track-duration">{formatTime(track.duration)}</span>
-      </li>
-    {/each}
-  </ul>
+  <div class="playlist-content">
+    <ul>
+      {#each tracks as track, index}
+        <li 
+          class:active={activeTrackId === track.id}
+          class:playing={activeTrackId === track.id && playing}
+          style="border-left-color: {theme.primary};"
+          on:click={() => handleTrackSelect(track, index)}
+        >
+          <div class="track-info">
+            <span class="track-number">{index + 1}</span>
+            <span class="track-title" title={track.title}>{track.title}</span>
+          </div>
+          <div class="track-actions">
+            <span class="track-duration">{formatTime(track.duration)}</span>
+            <button 
+              class="delete-button" 
+              on:click={(e) => handleDeleteTrack(e, track.id)}
+              title="Remove from playlist"
+              style="color: {theme.primary};"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" fill="currentColor"/>
+              </svg>
+            </button>
+          </div>
+        </li>
+      {/each}
+    </ul>
+  </div>
 </div>
 
 <style>
   .playlist {
-    height: 100%; /* Fill container */
-    overflow: auto; /* Enable scrolling */
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+  }
+  
+  .playlist-header {
+    flex-shrink: 0; /* Prevent header from shrinking */
     padding: 0.5rem;
+  }
+  
+  .playlist-content {
+    flex: 1; /* Take remaining space */
+    overflow-y: auto; /* Enable vertical scrolling */
+    min-height: 0; /* Allow flexbox to constrain height */
   }
   
   h3 {
@@ -80,7 +132,6 @@
     list-style: none;
     padding: 0;
     margin: 0;
-    margin-top: 0.5rem;
   }
   
   li {
@@ -141,5 +192,35 @@
     flex-shrink: 0; /* Prevent duration from shrinking */
     min-width: 3rem; /* Ensure minimum width for time display */
     text-align: right;
+  }
+  
+  .track-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .delete-button {
+    opacity: 0;
+    background: none;
+    border: none;
+    padding: 0.25rem;
+    cursor: pointer;
+    border-radius: 50%;
+    height: 20px;
+    width: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s, background-color 0.2s;
+  }
+  
+  li:hover .delete-button {
+    opacity: 0.6;
+  }
+  
+  .delete-button:hover {
+    opacity: 1 !important;
+    background-color: rgba(255, 255, 255, 0.1);
   }
 </style> 

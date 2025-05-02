@@ -44,6 +44,13 @@
 		console.log('Audio preloaded in main page');
 	});
 
+	// Set CSS variables for scrollbars when the component mounts
+	onMount(() => {
+		// Set primary color for scrollbars (with 40% opacity for translucent version)
+		document.documentElement.style.setProperty('--theme-primary', theme.primary);
+		document.documentElement.style.setProperty('--theme-primary-translucent', theme.primary + '66'); // 66 is hex for 40% opacity
+	});
+
 	// Add debug mode indicator
 	$effect(() => {
 		if ($debugMode) {
