@@ -5,7 +5,8 @@
   import { togglePlayPause, seekToPosition, getAudioDuration } from '$lib/audio/controls';
   import { formatTime } from '$lib/audio/utils';
   import { theme } from '$lib/theme';
-  import { playlist } from '$lib/stores/playlist';  // Import playlist store
+  import { playlist } from '$lib/stores/playlist';
+  import { loadAudio } from '$lib/audio/index';
   
   // Props
   const { 
@@ -109,6 +110,39 @@
     }
   });
   
+  // Track navigation functions
+  async function goToPreviousTrack() {
+    if (!$playlist.activeTrackId || $playlist.length <= 1) return;
+    
+    // Find current track index
+    const currentIndex = $playlist.findIndex(track => track.id === $playlist.activeTrackId);
+    if (currentIndex === -1) return;
+    
+    // Calculate previous index (with wraparound)
+    const prevIndex = currentIndex > 0 ? currentIndex - 1 : $playlist.length - 1;
+    const prevTrack = $playlist[prevIndex];
+    
+    // Set the new active track and load it
+    playlist.setActiveTrack(prevTrack.id);
+    await loadAudio(prevTrack.path);
+  }
+  
+  async function goToNextTrack() {
+    if (!$playlist.activeTrackId || $playlist.length <= 1) return;
+    
+    // Find current track index
+    const currentIndex = $playlist.findIndex(track => track.id === $playlist.activeTrackId);
+    if (currentIndex === -1) return;
+    
+    // Calculate next index (with wraparound)
+    const nextIndex = (currentIndex + 1) % $playlist.length;
+    const nextTrack = $playlist[nextIndex];
+    
+    // Set the new active track and load it
+    playlist.setActiveTrack(nextTrack.id);
+    await loadAudio(nextTrack.path);
+  }
+  
   onMount(() => {
     // Initial duration update
     updateDuration();
@@ -137,23 +171,46 @@
 </script>
 
 <div class="player-controls" style="border-color: {theme.primary}; border: 1px solid;">
-  <button 
-    class="play-button" 
-    on:click={togglePlayPause}
-    aria-label={$isPlaying ? "Pause" : "Play"}
-    style="border-color: {theme.primary}; color: {theme.primary};"
-  >
-    {#if $isPlaying}
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="6" y="4" width="4" height="16" rx="1" fill={theme.primary}/>
-        <rect x="14" y="4" width="4" height="16" rx="1" fill={theme.primary}/>
+  <div class="control-buttons">
+    <button 
+      class="nav-button prev-button" 
+      on:click={goToPreviousTrack}
+      title="Previous track"
+      style="border-color: {theme.primary};"
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6 6h2v12H6V6zm3.5 6l8.5 6V6l-8.5 6z" fill={theme.primary}/>
       </svg>
-    {:else}
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M8 5.14V19.14C8 19.94 8.92 20.42 9.58 19.98L20.29 12.99C20.89 12.59 20.89 11.69 20.29 11.29L9.58 4.3C8.92 3.86 8 4.34 8 5.14Z" fill={theme.primary}/>
+    </button>
+    
+    <button 
+      class="play-button" 
+      on:click={togglePlayPause}
+      title={$isPlaying ? "Pause" : "Play"}
+    >
+      {#if $isPlaying}
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="6" y="4" width="4" height="16" rx="1" fill={theme.primary}/>
+          <rect x="14" y="4" width="4" height="16" rx="1" fill={theme.primary}/>
+        </svg>
+      {:else}
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8 5.14V19.14C8 19.94 8.92 20.42 9.58 19.98L20.29 12.99C20.89 12.59 20.89 11.69 20.29 11.29L9.58 4.3C8.92 3.86 8 4.34 8 5.14Z" fill={theme.primary}/>
+        </svg>
+      {/if}
+    </button>
+    
+    <button 
+      class="nav-button next-button" 
+      on:click={goToNextTrack}
+      title="Next track"
+      style="border-color: {theme.primary};"
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6 6h2v12H6V6zm3.5 6l8.5 6V6l-8.5 6z" fill={theme.primary} transform="scale(-1,1) translate(-24,0)"/>
       </svg>
-    {/if}
-  </button>
+    </button>
+  </div>
   
   <div class="time" style="color: {theme.primary};">
     {formatTime(currentTime)} / {formatTime(totalDuration)}
@@ -192,11 +249,16 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    
     padding: 12px;
     color: #ffffff;
     font-size: 12px;
     overflow: hidden;
+  }
+  
+  .control-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
   
   .time {
@@ -263,11 +325,26 @@
     transition: background 0.2s;
   }
   
-  .play-button:hover {
+  .nav-button {
+    background: none;
+    border: 1px solid;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.2s;
+  }
+  
+  .play-button:hover, .nav-button:hover {
     background-color: rgba(255, 255, 255, 0.1);
   }
   
-  .play-button:focus {
+  .play-button:focus, .nav-button:focus {
     outline: none;
     box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
   }
