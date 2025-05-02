@@ -54,7 +54,7 @@
       >
         <div class="track-info">
           <span class="track-number">{index + 1}</span>
-          <span class="track-title">{track.title}</span>
+          <span class="track-title" title={track.title}>{track.title}</span>
         </div>
         <span class="track-duration">{formatTime(track.duration)}</span>
       </li>
@@ -87,9 +87,10 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.25rem;  /* Make sure there's padding on the left to adjust for the border */
+    padding: 0.25rem;
     cursor: pointer;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    min-width: 0; /* Allow flex items to shrink below content size */
   }
   
   li:hover {
@@ -114,16 +115,31 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    flex: 1;
+    min-width: 0; /* Allow to shrink */
+    margin-right: 0.5rem; /* Ensure space between title and duration */
   }
   
   .track-number {
     opacity: 0.5;
     width: 1.5rem;
     text-align: right;
+    flex-shrink: 0; /* Prevent number from shrinking */
+  }
+  
+  .track-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+    min-width: 0; /* Allow text to be truncated */
   }
   
   .track-duration {
     opacity: 0.5;
     font-size: 0.9rem;
+    flex-shrink: 0; /* Prevent duration from shrinking */
+    min-width: 3rem; /* Ensure minimum width for time display */
+    text-align: right;
   }
 </style> 
