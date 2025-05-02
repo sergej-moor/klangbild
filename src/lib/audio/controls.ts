@@ -10,8 +10,12 @@ import {
   startTime,
   pauseTime,
   playbackPosition,
+  eqLowNode,
+  eqMidNode,
+  eqHighNode,
+  eqSettings,
 } from './stores';
-import { getAudioContext, createAudioSource } from './core';
+import { getAudioContext, createAudioSource, setupEqualizer } from './core';
 import { setupAnalyzer } from './analyzer';
 import { startVisualizerUpdates } from './visualizer';
 
@@ -44,19 +48,47 @@ export function playAudio() {
     gainNode.set(gain);
   }
 
+  // Create equalizer nodes if needed
+  let lowEq = get(eqLowNode);
+  let midEq = get(eqMidNode);
+  let highEq = get(eqHighNode);
+
+  if (!lowEq || !midEq || !highEq) {
+    const eq = setupEqualizer(context);
+    if (eq) {
+      ({ lowFilter: lowEq, midFilter: midEq, highFilter: highEq } = eq);
+    }
+  }
+
   // Create analyzer if needed
   let analyzer = get(analyzerNode);
   if (!analyzer) {
     analyzer = setupAnalyzer();
   }
 
-  // Connect audio graph
+  // Connect audio graph with equalizers
   source.connect(gain);
-  if (analyzer) {
-    gain.connect(analyzer);
-    analyzer.connect(context.destination);
+
+  // Connect through equalizer chain if available
+  if (lowEq && midEq && highEq) {
+    gain.connect(lowEq);
+    lowEq.connect(midEq);
+    midEq.connect(highEq);
+
+    if (analyzer) {
+      highEq.connect(analyzer);
+      analyzer.connect(context.destination);
+    } else {
+      highEq.connect(context.destination);
+    }
   } else {
-    gain.connect(context.destination);
+    // Fallback if no equalizer
+    if (analyzer) {
+      gain.connect(analyzer);
+      analyzer.connect(context.destination);
+    } else {
+      gain.connect(context.destination);
+    }
   }
 
   // Calculate position
@@ -127,4 +159,35 @@ export function seekToPosition(position: number) {
 export function getAudioDuration() {
   const buffer = get(audioBuffer);
   return buffer ? buffer.duration : 0;
+}
+
+// Add equalizer adjustment function
+export function adjustEqualizer(band: 'low' | 'mid' | 'high', value: number) {
+  // Clamp the value to the allowed range
+  const gain = Math.max(-12, Math.min(12, value));
+
+  // Update the equalizer settings store
+  eqSettings.update((settings) => ({
+    ...settings,
+    [band]: gain,
+  }));
+
+  // Get the appropriate filter node
+  let filterNode;
+  switch (band) {
+    case 'low':
+      filterNode = get(eqLowNode);
+      break;
+    case 'mid':
+      filterNode = get(eqMidNode);
+      break;
+    case 'high':
+      filterNode = get(eqHighNode);
+      break;
+  }
+
+  // Apply the gain value to the filter
+  if (filterNode) {
+    filterNode.gain.value = gain;
+  }
 }

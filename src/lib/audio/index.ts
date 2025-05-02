@@ -8,9 +8,9 @@ export * from './utils';
 
 // Simplified API functions
 import { loadAudioFile } from './core';
-import { togglePlayPause, seekToPosition } from './controls';
+import { togglePlayPause, seekToPosition, adjustEqualizer } from './controls';
 import { startVisualizerUpdates } from './visualizer';
-import { isPlaying, audioBuffer, playbackPosition } from './stores';
+import { isPlaying, audioBuffer, playbackPosition, eqSettings } from './stores';
 import { get } from 'svelte/store';
 
 /**
@@ -64,4 +64,15 @@ export { togglePlayPause, seekToPosition };
 export function getAudioDuration(): number {
   const buffer = get(audioBuffer);
   return buffer ? buffer.duration : 0;
+}
+
+// Re-export the equalizer function
+export { eqSettings };
+
+// Simplified EQ adjustment function for all bands at once
+export function setEqualizerValues(values: { low: number; mid: number; high: number }) {
+  // Update all bands
+  adjustEqualizer('low', values.low);
+  adjustEqualizer('mid', values.mid);
+  adjustEqualizer('high', values.high);
 }

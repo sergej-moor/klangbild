@@ -1,7 +1,16 @@
 // Core audio context and initialization
 import { browser } from '$app/environment';
 import { get } from 'svelte/store';
-import { isInitialized, audioContext, audioBuffer, audioSource, sampleRate } from './stores';
+import {
+  isInitialized,
+  audioContext,
+  audioBuffer,
+  audioSource,
+  sampleRate,
+  eqLowNode,
+  eqMidNode,
+  eqHighNode,
+} from './stores';
 
 // Initialize audio context (safely handles browser compatibility)
 export function initAudioContext() {
@@ -52,4 +61,37 @@ export function createAudioSource(buffer: AudioBuffer) {
 // Get current audio context
 export function getAudioContext() {
   return get(audioContext) || initAudioContext();
+}
+
+// Create and configure equalizer nodes
+export function setupEqualizer(context: AudioContext) {
+  if (!context) return null;
+
+  // Create three filters for a basic 3-band equalizer
+
+  // Low frequency band (shelf filter)
+  const lowFilter = context.createBiquadFilter();
+  lowFilter.type = 'lowshelf';
+  lowFilter.frequency.value = 200; // Typical crossover between low and mid
+  lowFilter.gain.value = 0; // Default to no gain adjustment
+
+  // Mid frequency band (peaking filter)
+  const midFilter = context.createBiquadFilter();
+  midFilter.type = 'peaking';
+  midFilter.frequency.value = 1000; // Center frequency of mid band
+  midFilter.Q.value = 1; // Quality factor for peaking filter
+  midFilter.gain.value = 0; // Default to no gain adjustment
+
+  // High frequency band (shelf filter)
+  const highFilter = context.createBiquadFilter();
+  highFilter.type = 'highshelf';
+  highFilter.frequency.value = 3200; // Typical crossover between mid and high
+  highFilter.gain.value = 0; // Default to no gain adjustment
+
+  // Store the filter nodes
+  eqLowNode.set(lowFilter);
+  eqMidNode.set(midFilter);
+  eqHighNode.set(highFilter);
+
+  return { lowFilter, midFilter, highFilter };
 }

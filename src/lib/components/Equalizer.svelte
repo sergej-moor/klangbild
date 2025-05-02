@@ -1,6 +1,9 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { theme } from '$lib/theme';
+  import { adjustEqualizer, eqSettings } from '$lib/audio/index';
+  import { browser } from '$app/environment';
+  import { onMount } from 'svelte';
   
   // Define interface for equalizer values
   export interface EqualizerValues {
@@ -9,10 +12,10 @@
     high: number;
   }
   
-  // Initial values (centered at 0)
-  let low = 0;
-  let mid = 0;
-  let high = 0;
+  // Local state for sliders
+  let low = $eqSettings.low;
+  let mid = $eqSettings.mid;
+  let high = $eqSettings.high;
   
   // Range limits
   const MIN_VALUE = -12;
@@ -24,9 +27,44 @@
     change: EqualizerValues;
   }>();
   
-  // Handle value changes and dispatch event
-  function handleChange(): void {
+  // Handle the slider input events directly
+  function handleLowChange(e) {
+    low = parseFloat(e.target.value);
+    adjustEqualizer('low', low);
     dispatch('change', { low, mid, high });
+  }
+  
+  function handleMidChange(e) {
+    mid = parseFloat(e.target.value);
+    adjustEqualizer('mid', mid);
+    dispatch('change', { low, mid, high });
+  }
+  
+  function handleHighChange(e) {
+    high = parseFloat(e.target.value);
+    adjustEqualizer('high', high);
+    dispatch('change', { low, mid, high });
+  }
+  
+  // Initialize when mounted (browser-only)
+  onMount(() => {
+    // Initial sync with the store
+    low = $eqSettings.low;
+    mid = $eqSettings.mid;
+    high = $eqSettings.high;
+  });
+  
+  // Sync with store - only run in browser and only when not actively dragging
+  $: if (browser) {
+    const isSliderActive = browser && 
+      document.activeElement && 
+      document.activeElement.matches('input[type="range"]');
+    
+    if (!isSliderActive) {
+      low = $eqSettings.low;
+      mid = $eqSettings.mid;
+      high = $eqSettings.high;
+    }
   }
 </script>
 
@@ -41,8 +79,8 @@
         min={MIN_VALUE} 
         max={MAX_VALUE} 
         step={STEP}
-        bind:value={low} 
-        on:input={handleChange}
+        value={low}
+        on:input={handleLowChange}
         style="--track-color: {theme.primary};"
       />
       <span class="value">{low.toFixed(1)} dB</span>
@@ -55,8 +93,8 @@
         min={MIN_VALUE} 
         max={MAX_VALUE} 
         step={STEP}
-        bind:value={mid} 
-        on:input={handleChange}
+        value={mid}
+        on:input={handleMidChange}
         style="--track-color: {theme.primary};"
       />
       <span class="value">{mid.toFixed(1)} dB</span>
@@ -69,8 +107,8 @@
         min={MIN_VALUE} 
         max={MAX_VALUE} 
         step={STEP}
-        bind:value={high} 
-        on:input={handleChange}
+        value={high}
+        on:input={handleHighChange}
         style="--track-color: {theme.primary};"
       />
       <span class="value">{high.toFixed(1)} dB</span>

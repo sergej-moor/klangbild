@@ -29,3 +29,15 @@ export interface RmsLevels {
   right: number;
 }
 export const rmsLevels = writable<RmsLevels>({ left: 0, right: 0 });
+
+// Equalizer nodes
+export const eqLowNode = writable<BiquadFilterNode | null>(null);
+export const eqMidNode = writable<BiquadFilterNode | null>(null);
+export const eqHighNode = writable<BiquadFilterNode | null>(null);
+
+// Equalizer settings
+export const eqSettings = writable({
+  low: 0, // dB, range: -12 to 12
+  mid: 0, // dB, range: -12 to 12
+  high: 0, // dB, range: -12 to 12
+});
