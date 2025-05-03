@@ -29,13 +29,13 @@
   let bandBinRanges: {start: number, end: number}[] = [];
   
   // Handle ready event from BaseVisualizer
-  function handleReady(event) {
+  function handleReady(event: CustomEvent) {
     ({ ctx, width, height, scale } = event.detail);
     initFrequencyBands();
   }
   
   // Handle resize event from BaseVisualizer
-  function handleResize(event) {
+  function handleResize(event: CustomEvent) {
     ({ width, height, scale } = event.detail);
   }
   
@@ -93,8 +93,8 @@
     // Apply power curve to emphasize higher values
     const factor = Math.pow(norm, 1.4);
     
-    // Create color blend directly from background to high energy (red)
-    return blendColors(theme.background, theme.energy.high, factor, 1.0);
+    // Create color blend with a very subtle start color difference from background
+    return blendColors('#111111', theme.energy.high, factor, 1.0);
   }
   
   // Draw function - no changes needed here as debug is handled by BaseVisualizer

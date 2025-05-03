@@ -24,9 +24,6 @@
 	// Use active track from playlist for the song name
 	const songName = $derived($playlist.activeTrack?.title || "Demo Track");
 	
-	// Variable to toggle between old and new layouts
-	let showNewLayout = true;
-	
 	// Preload audio when the page loads
 	onMount(async () => {
 		console.log('Main page mounted, preloading audio...');
@@ -86,35 +83,34 @@
 	}
 </script>
 
-<!-- New Grid-Based Responsive Layout -->
-{#if showNewLayout}
-<div class="fixed inset-0 bg-gray-900 text-white z-10 overflow-auto" style="color: {theme.primary};">
+<!-- Grid-Based Responsive Layout -->
+<div class="fixed inset-0 text-white z-10 overflow-auto" style="background-color: {theme.background}; color: {theme.primary};">
   <!-- Main container - changes to column on small screens, row on medium & large -->
   <div class="flex flex-col md:flex-row h-full p-2 gap-2">
     
     <!-- Controls Grid - takes full width on small screens, 1/3 on medium & large -->
     <div class="w-full md:w-1/3 h-[45vh] md:h-full grid grid-cols-4 grid-rows-8 gap-1">
-      <div class="col-span-3 row-span-2 md:row-span-1 border border-current rounded p-2 overflow-hidden">
+      <div class="col-span-3 row-span-2 md:row-span-1 border border-current overflow-hidden">
         <Equalizer on:change={handleEqChange} />
       </div>
       
-      <div class="col-span-1 row-span-2 md:row-span-1 border border-current rounded p-2 overflow-hidden">
+      <div class="col-span-1 row-span-2 md:row-span-1 border border-current overflow-hidden">
         <VolumeKnob on:change={handleVolumeChange} />
       </div>
       
-      <div class="col-span-3 row-span-1 row-start-3 md:row-start-2 border border-current rounded p-1 overflow-hidden">
+      <div class="col-span-3 row-span-1 row-start-3 md:row-start-2 border border-current overflow-hidden">
         <SongInfo />
       </div>
       
-      <div class="col-span-3 row-span-1 row-start-4 md:row-span-1 md:row-start-3 border border-current rounded p-1 overflow-hidden">
+      <div class="col-span-3 row-span-1 row-start-4 md:row-span-1 md:row-start-3 border border-current overflow-hidden">
         <PlaybackControls />
       </div>
       
-      <div class="col-span-3 row-span-4 md:row-span-5 col-start-1 row-start-5 md:row-start-4 border border-current rounded p-2 overflow-auto">
+      <div class="col-span-3 row-span-4 md:row-span-5 col-start-1 row-start-5 md:row-start-4 border border-current overflow-auto">
         <Playlist />
       </div>
       
-      <div class="row-span-6 md:row-span-7 col-start-4 row-start-3 md:row-start-2 border border-current rounded p-2 overflow-hidden">
+      <div class="row-span-6 md:row-span-7 col-start-4 row-start-3 md:row-start-2 border border-current overflow-hidden">
         <RmsMeter />
       </div>
     </div>
@@ -122,131 +118,41 @@
     <!-- Visuals Grid - takes full width on small screens, 2/3 on medium & large -->
     <div class="w-full md:w-2/3 h-[45vh] md:h-full grid grid-cols-8 grid-rows-9 md:grid-rows-8 gap-1">
       <!-- Oscilloscope -->
-      <div class="col-span-3 md:col-span-2 row-span-3 md:row-span-5 col-start-1 row-start-1 border border-current rounded p-2 overflow-hidden">
+      <div class="col-span-3 md:col-span-2 row-span-3 md:row-span-5 col-start-1 row-start-1 border border-current overflow-hidden">
         <Oscilloscope orientation="vertical" />
       </div>
       
       <!-- Spectrogram -->
-      <div class="col-span-5 row-span-3 col-start-4 md:col-start-3 row-start-1 border border-current rounded p-2 overflow-hidden">
+      <div class="col-span-5 row-span-3 col-start-4 md:col-start-3 row-start-1 border border-current overflow-hidden">
         <Spectrogram />
       </div>
       
       <!-- Logo - desktop/tablet only (hidden on small screens) -->
-      <div class="hidden md:block col-span-1 row-span-3 col-start-8 row-start-1 border border-current rounded p-2 overflow-hidden">
+      <div class="hidden md:block col-span-1 row-span-3 col-start-8 row-start-1 border border-current overflow-hidden">
         Logo
       </div>
       
       <!-- Waveform -->
-      <div class="col-span-8 md:col-span-6 row-span-2 col-start-1 md:col-start-3 row-start-4 border border-current rounded p-2 overflow-hidden">
+      <div class="col-span-8 md:col-span-6 row-span-2 col-start-1 md:col-start-3 row-start-4 border border-current overflow-hidden">
         <Waveform />
       </div>
       
       <!-- Frequency Spectrum -->
-      <div class="col-span-8 row-span-3 col-start-1 row-start-6 border border-current rounded p-2 overflow-hidden">
+      <div class="col-span-8 row-span-3 col-start-1 row-start-6 border border-current overflow-hidden">
         <FrequencySpectrum />
       </div>
       
       <!-- Mobile Logo - only shown on small screens, below everything else -->
-      <div class="md:hidden col-span-8 row-span-1 col-start-1 row-start-9 border border-current rounded p-2 overflow-hidden">
+      <div class="md:hidden col-span-8 row-span-1 col-start-1 row-start-9 border border-current overflow-hidden">
         Logo
       </div>
     </div>
   </div>
 </div>
-{/if}
-
-<!-- Original UI - still can be accessed via showNewLayout variable -->
-{#if !showNewLayout}
-<div class="grid grid-rows-[60vh_auto] h-screen w-full max-w-screen-2xl mx-auto p-1 gap-1 overflow-hidden" 
-    style="background-color: {theme.background}; color: {theme.primary};">
-    
-    <!-- Main Visualizers -->
-    <div class="grid grid-cols-[1fr_3fr] gap-1 h-full">
-        <!-- Peak Meter -->
-        <div class="border rounded overflow-hidden" style="border-color: {theme.primary};">
-            <RmsMeter />
-        </div>
-        
-        <!-- Modified Visualizer Grid -->
-        <div class="grid grid-rows-[1fr_2fr] gap-1 h-full">
-            <!-- First row: FrequencySpectrum takes full width -->
-            <div class="border rounded overflow-hidden" style="border-color: {theme.primary};">
-                <FrequencySpectrum />
-            </div>
-            
-            <!-- Second section: Contains the empty box and stacked visualizers -->
-            <div class="grid grid-cols-[1fr_3fr] gap-1">
-                <!-- Single empty red box spanning both visualizers -->
-                <div class="border rounded overflow-hidden" style="border-color: {theme.primary};">
-                    <Equalizer on:change={handleEqChange} />
-                </div>
-                
-                <!-- Container for stacked visualizers -->
-                <div class="grid grid-rows-2 gap-1">
-                    <!-- Spectrogram -->
-                    <div class="border rounded overflow-hidden" style="border-color: {theme.primary};">
-                        <Spectrogram />
-                    </div>
-                    
-                    <!-- Oscilloscope -->
-                    <div class="border rounded overflow-hidden" style="border-color: {theme.primary};">
-                        <Oscilloscope />
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Debug Indicator -->
-    {#if $debugMode}
-        <div class="fixed bottom-2 right-2 bg-black/70 text-red-500 px-2 py-1 rounded text-xs z-50">
-            Debug Mode ON (Press 'O' to toggle)
-        </div>
-    {/if}
-    
-    <!-- Bottom Section -->
-    <div class="grid grid-cols-[2fr_1fr_1fr] gap-1 max-h-[40vh] min-h-0">
-        <!-- Waveform and Controls -->
-        <div class="flex flex-col gap-1 overflow-hidden">
-            <Waveform />
-            <PlayPauseControls songName={songName} />
-        </div>
-        
-        <!-- Volume and CD Visualizer side by side -->
-        <div class="grid grid-cols-2 gap-1 min-h-0">
-            <!-- Volume Slider -->
-            <div class="border rounded overflow-hidden" style="border-color: {theme.primary};">
-                <VolumeSlider on:change={handleVolumeChange} />
-            </div>
-            
-            <!-- CD Visualizer -->
-            <div class="border rounded overflow-hidden" style="border-color: {theme.primary};">
-                <CDVisualizer />
-            </div>
-        </div>
-        
-        <!-- Playlist -->
-        <div class="min-h-0 max-h-[40vh] overflow-auto border rounded" 
-            style="border-color: {theme.primary};">
-            <Playlist />
-        </div>
-    </div>
-    
-    <!-- Keep the button to switch to new layout -->
-    <button 
-      class="fixed bottom-4 right-4 px-3 py-2 bg-gray-800 border border-current rounded z-50"
-      on:click={() => showNewLayout = true}
-      style="color: {theme.primary}; border-color: {theme.primary};"
-    >
-      <span class="hidden sm:inline">Switch to New Layout</span>
-      <span class="sm:hidden">New UI</span>
-    </button>
-</div>
-{/if}
 
 <!-- Debug Indicator - always shows regardless of layout -->
 {#if $debugMode}
-    <div class="fixed bottom-2 right-2 bg-black/70 text-red-500 px-2 py-1 rounded text-xs z-50">
+    <div class="fixed bottom-2 right-2 bg-black/70 text-red-500 px-2 py-1 text-xs z-50">
         Debug Mode ON (Press 'O' to toggle)
     </div>
 {/if}

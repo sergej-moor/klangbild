@@ -3,7 +3,7 @@ export const theme = {
   // Primary colors
   primary: '#f42e1f', // Bright green
   secondary: '#FFFFFF', // Medium green
-  background: '#060608', // Black
+  background: '#000', // Black
 
   // Energy levels
   energy: {

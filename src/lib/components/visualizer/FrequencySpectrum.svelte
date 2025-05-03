@@ -18,12 +18,12 @@
   const minFreqPercent = 0.001; // Start from very low frequencies
   
   // Handle ready event from BaseVisualizer
-  function handleReady(event) {
+  function handleReady(event: CustomEvent) {
     ({ ctx, width, height, scale } = event.detail);
   }
   
   // Handle resize event from BaseVisualizer
-  function handleResize(event) {
+  function handleResize(event: CustomEvent) {
     ({ width, height, scale } = event.detail);
   }
   
@@ -93,8 +93,8 @@
       const factor = Math.pow(amplitude, 1.5); // Use power curve to emphasize peaks
       const alpha = 0.2 + (factor * 0.8); // Maintain some minimum opacity
       
-      // Create the color by blending background to high energy red
-      const fillColor = blendColors(theme.background, theme.energy.high, factor, alpha);
+      // Create the color with a very subtle start color difference from background
+      const fillColor = blendColors('#111111', theme.energy.high, factor, alpha);
       
       // Fill this vertical slice with the calculated color
       ctx.fillStyle = fillColor;
