@@ -9,7 +9,11 @@
 	export let max = 12;
 	export let label = '';
 	export let unit = 'dB';
-	export let showZeroIndicator = true;
+	export let showZeroIndicator = false;
+	export let numTicks = 9; // Changed back to 9 tick marks
+	export let snapStrength = 0.3; // How strong the "lock in" effect is (0-1)
+	export let snapThreshold = 0.8; // Size of the snap zone (in value units)
+	export let defaultValue: number | null = null; // The value to snap to (null means center of range)
 
 	// Rotation constants - modified to start at top left diagonal
 	export let rotRange = 2 * Math.PI * 0.75; // 270 degrees of rotation
@@ -23,11 +27,27 @@
 	let startValue: number;
 	let dragging = false;
 	let knobElement: HTMLDivElement;
+	
+	// Calculate the default snap position based on props
+	$: actualDefaultValue = defaultValue !== null ? defaultValue : 
+		(min < 0 && max > 0) ? 0 : // If range crosses zero, default to zero
+		(min >= 0) ? min : // If all positive, default to min
+		max; // If all negative, default to max
 
 	// Calculate rotation based on value
 	$: valueRange = max - min;
 	$: normalized = (value - min) / valueRange;
 	$: rotation = startRotation + normalized * rotRange;
+	
+	// Is the value in the "snap zone"
+	$: isInSnapZone = Math.abs(value - actualDefaultValue) < snapThreshold;
+
+	// Generate tick marks based on the rotation range
+	$: ticks = Array.from({ length: numTicks }, (_, i) => {
+		const tickNormalized = i / (numTicks - 1); // 0 to 1
+		const tickRotation = startRotation + tickNormalized * rotRange;
+		return tickRotation;
+	});
 
 	// Utility function to keep values in range
 	function clamp(num: number, min: number, max: number) {
@@ -41,9 +61,36 @@
 		event.preventDefault();
 		event.stopPropagation();
 
-		// Calculate sensitivity based on value range and adjust for drag distance
+		// Calculate basic drag delta
 		const sensitivity = valueRange / pixelRange;
-		const delta = (startY - event.clientY) * sensitivity;
+		const rawDelta = (startY - event.clientY) * sensitivity;
+		
+		// Apply the snapping effect
+		let delta = rawDelta;
+		
+		// If we're close to defaultValue and moving away from it, add resistance
+		if (Math.abs(value - actualDefaultValue) < snapThreshold) {
+			// Direction we're moving
+			const movingAwayFromDefault = 
+				(value < actualDefaultValue && delta < 0) || 
+				(value > actualDefaultValue && delta > 0);
+			
+			// If moving away from default, reduce the delta (add resistance)
+			if (movingAwayFromDefault) {
+				delta = rawDelta * (1 - snapStrength);
+			}
+		}
+		
+		// If we're outside the snap zone but new value would be inside it,
+		// make it easier to snap back to default
+		const newValueBeforeSnap = startValue + delta;
+		if (Math.abs(newValueBeforeSnap - actualDefaultValue) < snapThreshold &&
+			Math.abs(value - actualDefaultValue) >= snapThreshold) {
+			// Snap to default more strongly
+			delta = actualDefaultValue - startValue;
+		}
+		
+		// Apply the adjusted delta
 		const newValue = clamp(startValue + delta, min, max);
 
 		// Only dispatch if value actually changed
@@ -97,6 +144,12 @@
 			window.removeEventListener('pointerup', pointerUp);
 			window.removeEventListener('selectstart', preventDefault);
 		}
+		
+		// Final snap to default if very close
+		if (Math.abs(value - actualDefaultValue) < snapThreshold * 0.5) {
+			value = actualDefaultValue;
+			dispatch('change', value);
+		}
 	}
 
 	function preventDefault(e: Event) {
@@ -120,23 +173,30 @@
 
 	<div class="knob-wrapper">
 		<div
-			class="knob {dragging ? 'dragging' : ''}"
-			style="--rotation: {rotation}; --primary-color: {theme.primary};"
+			class="knob {dragging ? 'dragging' : ''} {isInSnapZone ? 'in-snap-zone' : ''}"
+			style="transform: translate(-50%, -50%) rotate({rotation}rad); border-color: {theme.primary};"
 			on:pointerdown={pointerDown}
 			bind:this={knobElement}
 			data-label={label}
 		>
-			<!-- Indicator line that extends from center to edge -->
-			<div class="indicator"></div>
-
-			<!-- Center dot for the knob -->
-			<div class="center-dot"></div>
-
-			<!-- Zero indicator shown when value is close to zero -->
-			{#if showZeroIndicator && Math.abs(value) < 0.1}
-				<div class="zero-indicator"></div>
-			{/if}
+			<!-- Inner ring -->
+			<div class="inner-ring" style="border-color: {theme.primary};"></div>
+			
+			<!-- Circle indicator near the edge -->
+			<div class="indicator-circle" style="background-color: {theme.primary};"></div>
 		</div>
+		
+		<!-- Separate ticks element outside the knob -->
+		<div class="outer-ticks">
+			{#each ticks as tickRotation, i}
+				<div 
+					class="tick" 
+					style="transform: rotate({tickRotation}rad); background-color: {theme.primary};"
+					class:tick-zero={i === Math.floor(numTicks / 2) && numTicks % 2 !== 0}>
+				</div>
+			{/each}
+		</div>
+		
 		<div class="value-display" title="{value.toFixed(1)} {unit}">
 			<span class="value-text">
 				{#if unit}
@@ -171,59 +231,92 @@
 		flex-direction: column;
 		align-items: center;
 		width: 70px;
+		height: 70px;
+		position: relative;
 		touch-action: none;
 	}
 
 	.knob {
-		position: relative;
-		width: 60px;
-		height: 60px;
+		position: absolute;
+		width: 54px;
+		height: 54px;
 		border-radius: 50%;
-		border: 1.5px solid var(--primary-color);
-		transform: rotate(calc(var(--rotation) * 1rad));
+		background-color: transparent;
+		border: 2px solid transparent; /* Color set via style attribute */
 		transform-origin: 50% 50%;
 		cursor: ns-resize;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		touch-action: none;
+		z-index: 1;
+		top: 50%;
+		left: 50%;
+		transition: border-width 0.1s ease-in-out;
+	}
+	
+	.knob.in-snap-zone {
+		border-width: 2.5px;
+	}
+	
+	.inner-ring {
+		position: absolute;
+		width: 36px;
+		height: 36px;
+		border-radius: 50%;
+		border: 1.5px solid transparent; /* Color set via style attribute */
+		background-color: transparent;
+		transition: border-width 0.1s ease-in-out;
+	}
+
+	.knob.in-snap-zone .inner-ring {
+		border-width: 2px;
 	}
 
 	.knob.dragging {
-		border-width: 2px;
-		opacity: 1;
-		box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+		opacity: 0.9;
 	}
 
-	.indicator {
+	.indicator-circle {
 		position: absolute;
-		width: 1.5px;
-		height: 20px;
-		background-color: var(--primary-color);
-		transform-origin: bottom center;
-		bottom: 50%;
-		margin-bottom: 10px;
-	}
-
-	.center-dot {
-		position: absolute;
-		width: 4px;
-		height: 4px;
-		background-color: var(--primary-color);
+		width: 7px;
+		height: 7px;
+		background-color: transparent; /* Color set via style attribute */
 		border-radius: 50%;
+		top: 7%;
+		transform: translateY(-50%);
+	}
+	
+	.outer-ticks {
+		position: absolute;
+		width: 70px;
+		height: 70px;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		pointer-events: none;
+	}
+	
+	.tick {
+		position: absolute;
+		top: 0;
+		left: 50%;
+		margin-left: -1px;
+		width: 2px;
+		height: 5px;
+		background-color: transparent; /* Color set via style attribute */
+		transform-origin: 50% 35px;
 	}
 
-	.zero-indicator {
-		position: absolute;
-		width: 8px;
-		height: 8px;
-		border: 1.5px solid var(--primary-color);
-		border-radius: 50%;
-		background: transparent;
+	.tick-zero {
+		width: 2px;
+		height: 5px;
+		margin-left: -1px;
 	}
 
 	.value-display {
-		margin-top: 4px;
+		position: absolute;
+		bottom: -20px;
 		font-size: 0.7rem;
 		min-height: 1rem;
 		text-align: center;
@@ -243,41 +336,62 @@
 	/* Medium-sized devices */
 	@media (max-width: 796px) {
 		.knob-group {
-			min-width: 45px;
+			min-width: 42px;
 		}
 
 		.knob-wrapper {
-			width: 50px;
+			width: 55px;
+			height: 55px;
+		}
+		
+		.outer-ticks {
+			width: 55px;
+			height: 55px;
+		}
+		
+		.inner-ring {
+			width: 24px;
+			height: 24px;
+			border-width: 1px;
+		}
+		
+		.knob.in-snap-zone .inner-ring {
+			border-width: 1.5px;
+		}
+
+		.tick {
+			width: 2px;
+			height: 4px;
+			margin-left: -1px;
+			transform-origin: 50% 27.5px;
+		}
+
+		.tick-zero {
+			width: 2px;
+			height: 4px;
+			margin-left: -1px;
 		}
 
 		.knob {
-			width: 45px;
-			height: 45px;
-			border-width: 1.2px;
+			width: 40px;
+			height: 40px;
+			border-width: 1.5px;
+		}
+		
+		.knob.in-snap-zone {
+			border-width: 2px;
 		}
 
-		.indicator {
-			width: 1.2px;
-			height: 15px;
-			margin-bottom: 8px;
-		}
-
-		.center-dot {
-			width: 3px;
-			height: 3px;
-		}
-
-		.zero-indicator {
-			width: 6px;
-			height: 6px;
-			border-width: 1.2px;
+		.indicator-circle {
+			width: 5px;
+			height: 5px;
 		}
 	}
 
 	/* Small devices */
 	@media (max-width: 640px) {
 		.knob-group {
-			min-width: 50px;
+			min-width: 45px;
 		}
 
 		.label {

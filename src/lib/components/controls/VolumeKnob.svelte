@@ -10,7 +10,14 @@
 
 	// Range limits
 	const MIN_VALUE = 0;
-	const MAX_VALUE = 100;
+	const MAX_VALUE = 135; // Extended to 135% for extra volume
+	
+	// Default value for snapping (100%)
+	const DEFAULT_VALUE = 100;  // Will be passed as defaultValue to Knob
+	
+	// Custom snap settings for volume - stronger than defaults
+	const SNAP_STRENGTH = 0.3;  // Stronger resistance (0-1)
+	const SNAP_THRESHOLD = 3;   // Wider snap zone (in value units)
 
 	// Event dispatcher
 	const dispatch = createEventDispatcher<{
@@ -20,7 +27,8 @@
 	// Handle knob value change
 	function handleVolumeChange(value: number) {
 		volume = value;
-		setVolume(volume / 100); // Normalize to 0-1 range for audio API
+		// Map 0-135 range to 0-1.35 range for audio API
+		setVolume(volume / 100); 
 		dispatch('change', volume);
 	}
 
@@ -32,15 +40,15 @@
 		// Try to get current volume from audio system
 		try {
 			const currentVol = getVolume();
-			// Only update if we get a valid value (between 0-1)
+			// Only update if we get a valid value (between 0-1.35)
 			if (
 				currentVol !== undefined &&
 				currentVol !== null &&
 				!isNaN(currentVol) &&
 				currentVol >= 0 &&
-				currentVol <= 1
+				currentVol <= 1.35
 			) {
-				volume = Math.round(currentVol * 100); // Convert from 0-1 to 0-100 range
+				volume = Math.round(currentVol * 100); // Convert from 0-1.35 to 0-135 range
 			} else {
 				// Fallback to 100% if value is invalid
 				volume = 100;
@@ -60,6 +68,9 @@
 		bind:value={volume}
 		min={MIN_VALUE}
 		max={MAX_VALUE}
+		defaultValue={DEFAULT_VALUE}
+		snapStrength={SNAP_STRENGTH}
+		snapThreshold={SNAP_THRESHOLD}
 		label="Volume"
 		unit="%"
 		showZeroIndicator={false}

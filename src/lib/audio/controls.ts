@@ -193,10 +193,10 @@ export function adjustEqualizer(band: 'low' | 'mid' | 'high', value: number) {
 	}
 }
 
-// Set volume level (0-100)
+// Set volume level (0-135)
 export function setVolume(level: number) {
-	// Ensure level is within bounds
-	const normalizedLevel = Math.max(0, Math.min(100, level));
+	// Ensure level is within bounds (now allowing up to 135%)
+	const normalizedLevel = Math.max(0, Math.min(135, level));
 
 	// Update the volume store
 	volume.set(normalizedLevel);
@@ -204,7 +204,7 @@ export function setVolume(level: number) {
 	// Get the gain node and apply the volume
 	const gain = get(gainNode);
 	if (gain) {
-		// Convert percentage (0-100) to gain (0-1)
+		// Convert percentage (0-135) to gain (0-1.35)
 		const gainValue = normalizedLevel / 100;
 		gain.gain.value = gainValue;
 	}
