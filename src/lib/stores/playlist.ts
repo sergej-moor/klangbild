@@ -7,9 +7,10 @@ interface PlaylistStore extends Array<PlaylistTrack> {
   activeTrack: PlaylistTrack | null;
 }
 
-// Initial playlist with just the demo track
+// Initial playlist with two demo tracks
 const initialTracks: PlaylistTrack[] = [
-  { id: '1', title: 'Demo Track', path: '/demo.wav', duration: 120 },
+  { id: '1', title: 'demo.wav', path: '/demo.wav', duration: 120 },
+  { id: '2', title: 'demo2.mp3', path: '/demo2.mp3', duration: 180 },
 ];
 
 // Create a proper integrated playlist store

@@ -115,36 +115,41 @@
   }
 </script>
 
+<!-- Hidden UI elements that can be triggered from the parent component -->
 <div class="upload-container" style="border-color: {theme.primary};">
-  <div class="upload-buttons">
-    <button 
-      on:click={openFileDialog}
-      disabled={uploading}
-      style="color: {theme.primary}; border-color: {theme.primary};"
-    >
-      {#if uploading}
-        Loading {uploadingCount}/{totalFiles}...
-      {:else}
-        Select Files
-      {/if}
-    </button>
-    
-    <button 
-      on:click={openFolderDialog}
-      disabled={uploading}
-      style="color: {theme.primary}; border-color: {theme.primary};"
-    >
-      {#if uploading}
-        Loading...
-      {:else}
-        Select Folder
-      {/if}
-    </button>
-  </div>
+  <!-- Only show buttons when not being used by the Playlist component -->
+  <slot name="buttons">
+    <div class="upload-buttons">
+      <button 
+        on:click={openFileDialog}
+        disabled={uploading}
+        style="color: {theme.primary}; border-color: {theme.primary};"
+      >
+        {#if uploading}
+          Loading {uploadingCount}/{totalFiles}...
+        {:else}
+          Select Files
+        {/if}
+      </button>
+      
+      <button 
+        on:click={openFolderDialog}
+        disabled={uploading}
+        style="color: {theme.primary}; border-color: {theme.primary};"
+      >
+        {#if uploading}
+          Loading...
+        {:else}
+          Select Folder
+        {/if}
+      </button>
+    </div>
+  </slot>
   
-  <!-- Hidden input for file selection -->
+  <!-- Hidden input for file selection - with ID for external access -->
   <input 
     bind:this={fileInput}
+    id="playlist-file-input"
     type="file" 
     accept="audio/*" 
     multiple
@@ -152,9 +157,10 @@
     style="display: none;"
   />
   
-  <!-- Hidden input for folder selection -->
+  <!-- Hidden input for folder selection - with ID for external access -->
   <input 
     bind:this={folderInput}
+    id="playlist-folder-input"
     type="file" 
     webkitdirectory
     directory
@@ -165,8 +171,8 @@
 
 <style>
   .upload-container {
-    padding: 0.5rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    /* Remove padding to let parent component control layout */
+    width: 100%;
   }
   
   .upload-buttons {

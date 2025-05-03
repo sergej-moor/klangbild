@@ -22,9 +22,7 @@
 	import CDVisualizer from "$lib/components/CDVisualizer.svelte";
 	import Logo from "$lib/components/Logo.svelte";
 	
-	// Use active track from playlist for the song name
-	const songName = $derived($playlist.activeTrack?.title || "Demo Track");
-	
+
 	// Preload audio when the page loads
 	onMount(async () => {
 		console.log('Main page mounted, preloading audio...');

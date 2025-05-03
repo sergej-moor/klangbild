@@ -62,25 +62,35 @@
     // Remove the track from the playlist
     playlist.removeTrack(trackId);
   }
+  
+  // Handle actions for Upload Single/Multiple Files
+  function handleFilesUpload() {
+    const fileInput = document.getElementById('playlist-file-input') as HTMLInputElement;
+    if (fileInput) fileInput.click();
+  }
+  
+  // Handle actions for Upload Folder
+  function handleFolderUpload() {
+    const folderInput = document.getElementById('playlist-folder-input') as HTMLInputElement;
+    if (folderInput) folderInput.click();
+  }
 </script>
 
-<div class="playlist" style="border-color: {theme.primary};">
-  <div class="playlist-header">
-    <h3>Playlist</h3>
-    <UploadButton />
-  </div>
-  
+<div class="playlist">
   <div class="playlist-content">
     <ul>
       {#each tracks as track, index}
         <li 
           class:active={activeTrackId === track.id}
           class:playing={activeTrackId === track.id && playing}
-          style="border-left-color: {theme.primary};"
           on:click={() => handleTrackSelect(track, index)}
+          style="
+            color: {activeTrackId === track.id ? theme.background : theme.primary}; 
+            background-color: {activeTrackId === track.id ? theme.primary : 'transparent'};
+            --indicator-color: {theme.primary};
+          "
         >
           <div class="track-info">
-            <span class="track-number">{index + 1}</span>
             <span class="track-title" title={track.title}>{track.title}</span>
           </div>
           <div class="track-actions">
@@ -89,9 +99,8 @@
               class="delete-button" 
               on:click={(e) => handleDeleteTrack(e, track.id)}
               title="Remove from playlist"
-              style="color: {theme.primary};"
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" fill="currentColor"/>
               </svg>
             </button>
@@ -99,6 +108,46 @@
         </li>
       {/each}
     </ul>
+  </div>
+  
+  <div class="playlist-header" style="color: {theme.primary}; border-color: {theme.primary};">
+    <div class="playlist-title">
+      <h3>Playlist</h3>
+      <span class="track-count">{tracks.length} tracks</span>
+    </div>
+    
+    <div class="playlist-actions">
+      <!-- File upload icon button with tooltip -->
+      <button 
+        class="icon-button" 
+        on:click={handleFilesUpload}
+        title="Upload Audio Files"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+      </button>
+      
+      <!-- Folder upload icon button with tooltip -->
+      <button 
+        class="icon-button" 
+        on:click={handleFolderUpload}
+        title="Upload Folder"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          <path d="M12 11v6"></path>
+          <path d="M9 14h6"></path>
+        </svg>
+      </button>
+    </div>
+    
+    <!-- We'll reuse the UploadButton component but hide its UI -->
+    <div style="display: none;">
+      <UploadButton />
+    </div>
   </div>
 </div>
 
@@ -111,20 +160,56 @@
   }
   
   .playlist-header {
-    flex-shrink: 0; /* Prevent header from shrinking */
-    padding: 0.5rem;
+    flex-shrink: 0;
+    padding: 0.25rem 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid;
+  }
+  
+  .playlist-title {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+  
+  .track-count {
+    font-size: 0.75rem;
+    opacity: 0.6;
+  }
+  
+  .playlist-actions {
+    display: flex;
+    gap: 0.25rem;
+  }
+  
+  .icon-button {
+    background: transparent;
+    border: none;
+    color: inherit;
+    padding: 0.25rem;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+  }
+  
+  .icon-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
   }
   
   .playlist-content {
-    flex: 1; /* Take remaining space */
-    overflow-y: auto; /* Enable vertical scrolling */
-    min-height: 0; /* Allow flexbox to constrain height */
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
   }
   
   h3 {
-    margin-top: 0;
-    margin-bottom: 0.5rem;
-    font-size: 1rem;
+    margin: 0;
+    font-size: 0.9rem;
     font-weight: normal;
   }
   
@@ -138,59 +223,65 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.25rem;
+    padding: 0.15rem 0.25rem;
+    margin: 0.1rem 0;
     cursor: pointer;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    min-width: 0; /* Allow flex items to shrink below content size */
+    font-size: 0.8rem;
+    min-width: 0;
+    transition: all 0.15s ease;
+    border-radius: 2px;
+    position: relative;
   }
   
   li:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    opacity: 0.9;
   }
   
   li.active {
-    background-color: rgba(255, 255, 255, 0.1);
-    border-left: 3px solid; /* Color set by inline style */
-    padding-left: calc(0.25rem - 3px); /* Adjust for the default padding */
+    position: relative;
   }
   
-  li.playing {
-    background-color: rgba(255, 255, 255, 0.15);
+  li.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 2px;
+    background-color: var(--indicator-color);
   }
   
-  li.active .track-title {
-    font-weight: bold;
+  li.playing.active::before {
+    animation: pulse 1.5s infinite;
+  }
+  
+  @keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
   }
   
   .track-info {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
     flex: 1;
-    min-width: 0; /* Allow to shrink */
-    margin-right: 0.5rem; /* Ensure space between title and duration */
-  }
-  
-  .track-number {
-    opacity: 0.5;
-    width: 1.5rem;
-    text-align: right;
-    flex-shrink: 0; /* Prevent number from shrinking */
+    min-width: 0;
+    margin-right: 0.25rem;
   }
   
   .track-title {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    word-break: break-word;
+    overflow-wrap: break-word;
     flex: 1;
-    min-width: 0; /* Allow text to be truncated */
+    min-width: 0;
+    padding-right: 0.5rem;
   }
   
   .track-duration {
-    opacity: 0.5;
-    font-size: 0.9rem;
-    flex-shrink: 0; /* Prevent duration from shrinking */
-    min-width: 3rem; /* Ensure minimum width for time display */
+    opacity: 0.7;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+    min-width: 2.5rem;
     text-align: right;
   }
   
@@ -201,26 +292,56 @@
   }
   
   .delete-button {
-    opacity: 0;
+    opacity: 0.7;
     background: none;
     border: none;
-    padding: 0.25rem;
+    padding: 0.1rem;
+    width: 16px;
+    height: 16px;
     cursor: pointer;
-    border-radius: 50%;
-    height: 20px;
-    width: 20px;
+    border-radius: 2px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: opacity 0.2s, background-color 0.2s;
+    transition: opacity 0.2s, background-color 0.15s;
+    color: inherit;
   }
   
   li:hover .delete-button {
-    opacity: 0.6;
+    opacity: 1;
   }
   
   .delete-button:hover {
     opacity: 1 !important;
     background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Large screen styles - increase padding */
+  @media (min-width: 768px) {
+    .playlist-header {
+      padding: 0.5rem 0.75rem;
+    }
+    
+    li {
+      padding: 0.35rem 0.5rem;
+      margin: 0.15rem 0;
+    }
+    
+    h3 {
+      font-size: 1rem;
+    }
+    
+    .track-title {
+      font-size: 0.9rem;
+    }
+    
+    .track-duration {
+      font-size: 0.8rem;
+    }
+    
+    .delete-button {
+      width: 18px;
+      height: 18px;
+    }
   }
 </style> 

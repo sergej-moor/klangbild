@@ -67,7 +67,7 @@
 
 <div class="song-info h-full flex items-center" style="color: {theme.primary};">
   <div class="flex flex-col justify-center w-full items-center">
-    <div class="song-name truncate px-2 text-center">
+    <div class="song-name px-2 text-center">
       {activeTrackTitle}
     </div>
     
@@ -87,6 +87,8 @@
     font-size: 0.8rem;
     font-weight: 500;
     max-width: 100%;
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
   
   .time {
