@@ -19,14 +19,13 @@
 	// Animation frame ID for continuous updates
 	let animationId: number;
 
-	// Styling parameters for bars
+	// Styling parameters for waveform
 	const bgColor = 'transparent';
 	const waveformColor = theme.accent;
 	const progressColor = theme.primary;
-	const barWidth = compactMode ? 1 : 2;
-	const barGap = compactMode ? 0 : 1;
+	const lineWidth = compactMode ? 0.8 : 1.2;
 
-	// Store full waveform data (replacement for the store from engine.ts)
+	// Store full waveform data
 	let fullWaveform = $state<Float32Array | null>(null);
 
 	// Handle resize for responsiveness
@@ -60,8 +59,8 @@
 		const rawData = $audioBuffer.getChannelData(0);
 		const samples = rawData.length;
 
-		// For very large buffers, downsample to improve performance
-		const downsampleFactor = Math.max(1, Math.floor(samples / 10000));
+		// For detailed waveform, use more points while still keeping performance reasonable
+		const downsampleFactor = Math.max(1, Math.floor(samples / 50000));
 		const downsampledLength = Math.floor(samples / downsampleFactor);
 		const data = new Float32Array(downsampledLength);
 
@@ -129,51 +128,70 @@
 		// Ensure we're using the entire data array
 		if (!data || data.length === 0) return;
 
-		// Calculate how many bars we can fit (use available width)
-		const totalBarWidth = barWidth + barGap;
-		const maxBars = Math.floor(width / totalBarWidth);
-
-		// Calculate step size based on data length to ensure the entire waveform fits
-		const step = data.length / maxBars;
-
-		// Calculate the bar index at which the progress marker should appear
-		const progressBarIndex = Math.floor(maxBars * currentProgress);
-
 		// Calculate vertical scaling factor
 		const verticalScale = height * (compactMode ? 0.6 : 0.4);
-
-		// Draw the bars
-		for (let i = 0; i < maxBars; i++) {
-			// Get data index for this bar (ensuring we use the full data range)
-			const startIdx = Math.floor(i * step);
-			const endIdx = Math.min(Math.floor((i + 1) * step), data.length);
-
-			// Find maximum amplitude in this segment
-			let maxValue = 0;
-			for (let j = startIdx; j < endIdx; j++) {
-				maxValue = Math.max(maxValue, Math.abs(data[j]));
+		const centerY = height / 2;
+		
+		// Calculate the progress position in pixels
+		const progressPixel = width * currentProgress;
+		
+		// Draw the paths for both played and remaining portions
+		ctx.lineWidth = lineWidth;
+		ctx.lineJoin = 'round';
+		
+		// Helper function to draw a portion of the waveform
+		const drawWaveformPortion = (start: number, end: number, color: string) => {
+			if (start >= end) return;
+			
+			const sampleStep = data.length / width;
+			
+			// Create top path (above center)
+			ctx.beginPath();
+			ctx.strokeStyle = color;
+			
+			// Start at the center for the first point
+			ctx.moveTo(start, centerY);
+			
+			// Draw the top curve
+			for (let x = start; x < end; x++) {
+				const dataIdx = Math.min(Math.floor(x * sampleStep), data.length - 1);
+				const amplitude = data[dataIdx] * verticalScale;
+				ctx.lineTo(x, centerY - amplitude);
 			}
-
-			// Calculate bar height based on value
-			const barHeight = Math.max(1, maxValue * verticalScale); // Ensure at least 1px height
-
-			// Calculate position
-			const x = i * totalBarWidth;
-			const centerY = height / 2;
-
-			// Set color based on playback progress
-			if (i <= progressBarIndex) {
-				ctx.fillStyle = progressColor;
-			} else {
-				ctx.fillStyle = waveformColor;
+			
+			// Draw back to center at the end
+			ctx.lineTo(end, centerY);
+			ctx.stroke();
+			
+			// Create bottom path (below center)
+			ctx.beginPath();
+			ctx.moveTo(start, centerY);
+			
+			// Draw the bottom curve (mirror of top)
+			for (let x = start; x < end; x++) {
+				const dataIdx = Math.min(Math.floor(x * sampleStep), data.length - 1);
+				const amplitude = data[dataIdx] * verticalScale;
+				ctx.lineTo(x, centerY + amplitude);
 			}
-
-			// Draw top bar (above center line)
-			ctx.fillRect(x, centerY - barHeight, barWidth, barHeight);
-
-			// Draw bottom bar (below center line, mirror of top)
-			ctx.fillRect(x, centerY, barWidth, barHeight);
-		}
+			
+			// Draw back to center at the end
+			ctx.lineTo(end, centerY);
+			ctx.stroke();
+		};
+		
+		// Draw the played portion (with progress color)
+		drawWaveformPortion(0, progressPixel, progressColor);
+		
+		// Draw the remaining portion (with regular waveform color)
+		drawWaveformPortion(progressPixel, width, waveformColor);
+		
+		// Add a very thin vertical progress line
+		ctx.beginPath();
+		ctx.strokeStyle = progressColor;
+		ctx.lineWidth = 0.5; // Much thinner line
+		ctx.moveTo(progressPixel, 0);
+		ctx.lineTo(progressPixel, height);
+		ctx.stroke();
 	}
 
 	// Watch for audio buffer changes to generate the waveform
