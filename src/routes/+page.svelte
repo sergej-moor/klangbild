@@ -91,26 +91,30 @@
   <div class="flex flex-col md:flex-row h-full p-2 gap-2">
     
     <!-- Controls Grid - takes full width on small screens, 1/3 on medium & large -->
-    <div class="w-full md:w-1/3 h-auto md:h-full grid grid-cols-4 grid-rows-8 gap-1 min-h-[40vh] md:min-h-0">
-      <div class="col-span-4 border border-current rounded p-2 overflow-hidden">
+    <div class="w-full md:w-1/3 h-[45vh] md:h-full grid grid-cols-4 grid-rows-8 gap-1">
+      <div class="col-span-3 row-span-2 md:row-span-1 border border-current rounded p-2 overflow-hidden">
         <Equalizer on:change={handleEqChange} />
       </div>
       
-      <div class="col-span-3 row-span-2 row-start-2 border border-current rounded p-2 overflow-hidden">
+      <div class="col-span-1 row-span-2 md:row-span-1 border border-current rounded p-2 overflow-hidden flex items-center justify-center">
+        <span class="text-sm">Volume</span>
+      </div>
+      
+      <div class="col-span-3 row-span-2 row-start-3 md:row-start-2 border border-current rounded p-2 overflow-hidden">
         <SongControls />
       </div>
       
-      <div class="col-span-3 row-span-5 col-start-1 row-start-4 border border-current rounded p-2 overflow-auto">
+      <div class="col-span-3 row-span-4 md:row-span-5 col-start-1 row-start-5 md:row-start-4 border border-current rounded p-2 overflow-auto">
         <Playlist />
       </div>
       
-      <div class="row-span-7 col-start-4 row-start-2 border border-current rounded p-2 overflow-hidden">
+      <div class="row-span-6 md:row-span-7 col-start-4 row-start-3 md:row-start-2 border border-current rounded p-2 overflow-hidden">
         <RmsMeter />
       </div>
     </div>
     
     <!-- Visuals Grid - takes full width on small screens, 2/3 on medium & large -->
-    <div class="w-full md:w-2/3 h-auto md:h-full grid grid-cols-8 grid-rows-9 md:grid-rows-8 gap-1 min-h-[50vh] md:min-h-0">
+    <div class="w-full md:w-2/3 h-[45vh] md:h-full grid grid-cols-8 grid-rows-9 md:grid-rows-8 gap-1">
       <!-- Oscilloscope -->
       <div class="col-span-3 md:col-span-2 row-span-3 md:row-span-5 col-start-1 row-start-1 border border-current rounded p-2 overflow-hidden">
         <Oscilloscope orientation="vertical" />
