@@ -93,7 +93,7 @@
     <!-- Controls Grid - takes full width on small screens, 1/3 on medium & large -->
     <div class="w-full md:w-1/3 h-auto md:h-full grid grid-cols-4 grid-rows-8 gap-1 min-h-[40vh] md:min-h-0">
       <div class="col-span-4 border border-current rounded p-2 overflow-hidden">
-        EQ
+        <Equalizer on:change={handleEqChange} />
       </div>
       
       <div class="col-span-3 row-span-2 row-start-2 border border-current rounded p-2 overflow-hidden">
