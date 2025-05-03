@@ -10,7 +10,8 @@
 	import Waveform from "$lib/components/Waveform.svelte";
 	import PlayPauseControls from "$lib/components/PlayPauseControls.svelte";
 	import Playlist from '$lib/components/Playlist.svelte';
-	import SongControls from '$lib/components/SongControls.svelte';
+	import SongInfo from '$lib/components/SongInfo.svelte';
+	import PlaybackControls from '$lib/components/PlaybackControls.svelte';
 	
 	import RmsMeter from '$lib/components/visualizer/RMSMeter.svelte';
 	import { playlist } from '$lib/stores/playlist';
@@ -101,8 +102,12 @@
         <VolumeKnob on:change={handleVolumeChange} />
       </div>
       
-      <div class="col-span-3 row-span-2 row-start-3 md:row-start-2 border border-current rounded p-2 overflow-hidden">
-        <SongControls />
+      <div class="col-span-3 row-span-1 row-start-3 md:row-start-2 border border-current rounded p-1 overflow-hidden">
+        <SongInfo />
+      </div>
+      
+      <div class="col-span-3 row-span-1 row-start-4 md:row-span-1 md:row-start-3 border border-current rounded p-1 overflow-hidden">
+        <PlaybackControls />
       </div>
       
       <div class="col-span-3 row-span-4 md:row-span-5 col-start-1 row-start-5 md:row-start-4 border border-current rounded p-2 overflow-auto">
