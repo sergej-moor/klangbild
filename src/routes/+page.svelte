@@ -20,6 +20,7 @@
 	import VolumeKnob from "$lib/components/VolumeKnob.svelte";
 	import { setVolume } from '$lib/audio/index';
 	import CDVisualizer from "$lib/components/CDVisualizer.svelte";
+	import Logo from "$lib/components/Logo.svelte";
 	
 	// Use active track from playlist for the song name
 	const songName = $derived($playlist.activeTrack?.title || "Demo Track");
@@ -128,8 +129,8 @@
       </div>
       
       <!-- Logo - desktop/tablet only (hidden on small screens) -->
-      <div class="hidden md:block col-span-1 row-span-3 col-start-8 row-start-1 border border-current overflow-hidden">
-        Logo
+      <div class="hidden md:block col-span-1 row-span-3 col-start-8 row-start-1  overflow-hidden">
+        <Logo vertical={true} />
       </div>
       
       <!-- Waveform -->
@@ -143,8 +144,8 @@
       </div>
       
       <!-- Mobile Logo - only shown on small screens, below everything else -->
-      <div class="md:hidden col-span-8 row-span-1 col-start-1 row-start-9 border border-current overflow-hidden">
-        Logo
+      <div class="md:hidden col-span-8 row-span-1 col-start-1 row-start-9 overflow-hidden">
+        <Logo vertical={false} />
       </div>
     </div>
   </div>

@@ -230,7 +230,7 @@
   });
 </script>
 
-<div class="waveform-container" style="border-color: {theme.primary}; border: 1px solid;">
+<div class="waveform-container" >
   <div class="w-full h-full mx-auto flex flex-col {compactMode ? 'gap-0' : 'gap-2'}" id="full-waveform">
     <div class="w-full rounded-md overflow-hidden">
       <canvas bind:this={canvas} width={width} height={height} class="block w-full h-full"></canvas>

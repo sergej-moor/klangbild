@@ -4,7 +4,7 @@ import { audioContext, analyzerNode, fftSize } from './stores';
 import { getAudioContext } from './core';
 
 // Setup analyzer node with specified settings
-export function setupAnalyzer(size = 2048) {
+export function setupAnalyzer(size = 8192) {
   const context = getAudioContext();
   if (!context) return null;
 
