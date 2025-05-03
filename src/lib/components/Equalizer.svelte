@@ -13,7 +13,7 @@
   import { adjustEqualizer, eqSettings } from '$lib/audio/index';
   import { browser } from '$app/environment';
   import { onMount } from 'svelte';
-  import EqKnob from './EqKnob.svelte';
+  import Knob from './Knob.svelte';
   
   // Local state for EQ values
   let low = $eqSettings.low;
@@ -68,70 +68,36 @@
   }
 </script>
 
-<div class="equalizer h-full flex flex-col">
-  <div class="knobs-container flex-1 flex justify-center items-center">
-    <div class="knobs flex justify-evenly w-full px-2">
-      <div class="knob-group flex flex-col items-center">
-        <span class="label">Low</span>
-        <EqKnob 
-          bind:value={low}
-          min={MIN_VALUE}
-          max={MAX_VALUE}
-          primaryColor={theme.primary}
-          on:change={() => handleLowChange(low)}
-        />
-      </div>
-      
-      <div class="knob-group flex flex-col items-center">
-        <span class="label">Mid</span>
-        <EqKnob 
-          bind:value={mid}
-          min={MIN_VALUE}
-          max={MAX_VALUE}
-          primaryColor={theme.primary}
-          on:change={() => handleMidChange(mid)}
-        />
-      </div>
-      
-      <div class="knob-group flex flex-col items-center">
-        <span class="label">High</span>
-        <EqKnob 
-          bind:value={high}
-          min={MIN_VALUE}
-          max={MAX_VALUE}
-          primaryColor={theme.primary}
-          on:change={() => handleHighChange(high)}
-        />
-      </div>
-    </div>
+<div class="equalizer h-full flex flex-col items-center justify-center">
+  <div class="knobs flex justify-evenly w-full px-2">
+    <Knob 
+      bind:value={low}
+      min={MIN_VALUE}
+      max={MAX_VALUE}
+      label="Low"
+      on:change={() => handleLowChange(low)}
+    />
+    
+    <Knob 
+      bind:value={mid}
+      min={MIN_VALUE}
+      max={MAX_VALUE}
+      label="Mid"
+      on:change={() => handleMidChange(mid)}
+    />
+    
+    <Knob 
+      bind:value={high}
+      min={MIN_VALUE}
+      max={MAX_VALUE}
+      label="High"
+      on:change={() => handleHighChange(high)}
+    />
   </div>
 </div>
 
 <style>
   .equalizer {
     width: 100%;
-  }
-  
-  .knob-group {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-width: 60px;
-  }
-  
-  .label {
-    font-size: 0.75rem;
-    font-weight: 500;
-    margin-bottom: 0.15rem;
-  }
-
-  @media (max-width: 640px) {
-    .knob-group {
-      min-width: 50px;
-    }
-    
-    .label {
-      font-size: 0.7rem;
-    }
   }
 </style>

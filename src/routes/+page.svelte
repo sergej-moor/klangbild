@@ -16,6 +16,7 @@
 	import { playlist } from '$lib/stores/playlist';
 	import Equalizer from '$lib/components/Equalizer.svelte';
 	import VolumeSlider from "$lib/components/VolumeSlider.svelte";
+	import VolumeKnob from "$lib/components/VolumeKnob.svelte";
 	import { setVolume } from '$lib/audio/index';
 	import CDVisualizer from "$lib/components/CDVisualizer.svelte";
 	
@@ -96,8 +97,8 @@
         <Equalizer on:change={handleEqChange} />
       </div>
       
-      <div class="col-span-1 row-span-2 md:row-span-1 border border-current rounded p-2 overflow-hidden flex items-center justify-center">
-        <span class="text-sm">Volume</span>
+      <div class="col-span-1 row-span-2 md:row-span-1 border border-current rounded p-2 overflow-hidden">
+        <VolumeKnob on:change={handleVolumeChange} />
       </div>
       
       <div class="col-span-3 row-span-2 row-start-3 md:row-start-2 border border-current rounded p-2 overflow-hidden">
