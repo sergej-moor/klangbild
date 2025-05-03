@@ -25,8 +25,8 @@ export const spectrum = writable(new Uint8Array());
 export const waveform = writable(new Float32Array());
 
 export interface RmsLevels {
-  left: number;
-  right: number;
+	left: number;
+	right: number;
 }
 export const rmsLevels = writable<RmsLevels>({ left: 0, right: 0 });
 
@@ -37,9 +37,9 @@ export const eqHighNode = writable<BiquadFilterNode | null>(null);
 
 // Equalizer settings
 export const eqSettings = writable({
-  low: 0, // dB, range: -12 to 12
-  mid: 0, // dB, range: -12 to 12
-  high: 0, // dB, range: -12 to 12
+	low: 0, // dB, range: -12 to 12
+	mid: 0, // dB, range: -12 to 12
+	high: 0 // dB, range: -12 to 12
 });
 
 // Volume (0-100)
