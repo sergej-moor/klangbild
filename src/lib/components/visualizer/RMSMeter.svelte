@@ -3,7 +3,7 @@
   import { calculateLevels } from '$lib/audio/visualizer';
   import { theme } from '$lib/theme';
   import BaseVisualizer from './BaseVisualizer.svelte';
-  import { linearToDb, dbToPosition } from '$lib/utils/visualizerUtils';
+  import { linearToDb, dbToPosition } from '$lib/audio/utils';
   
   // Props - removed debug prop
   const {} = $props();
@@ -16,7 +16,7 @@
   
   // Theme colors - using only primary color now
   const meterColor = theme.primary;
-  const backgroundColor = 'rgba(0, 0, 0, 0.1)';
+  const backgroundColor = theme.background;
   
   // Level thresholds for markers
   const LEVEL_THRESHOLDS = [
@@ -33,12 +33,12 @@
   const MIN_DB = -60;
   
   // Handle ready event from BaseVisualizer
-  function handleReady(event) {
+  function handleReady(event: CustomEvent) {
     ({ ctx, width, height, scale } = event.detail);
   }
   
   // Handle resize event from BaseVisualizer
-  function handleResize(event) {
+  function handleResize(event: CustomEvent) {
     ({ width, height, scale } = event.detail);
   }
   
@@ -92,7 +92,7 @@
     ctx.fillRect(padding, rmsY, meterWidth, rmsHeight);
     
     // Draw level markings
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.strokeStyle = theme.accent;
     ctx.lineWidth = 1;
     
     // Add a marker for 0 dB and headroom
@@ -103,13 +103,13 @@
     ctx.stroke();
     
     // Add a "0 dB" label in slightly bolder/different style
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.fillStyle = theme.accent;
     ctx.font = 'bold 9px sans-serif';
     ctx.fillText(`0dB`, padding + 2, zeroDbY - 2);
     
     // Draw the rest of the level markings
     ctx.font = '9px sans-serif';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.fillStyle = theme.accent;
     
     LEVEL_THRESHOLDS.forEach(threshold => {
       // Skip 0 dB as we've already drawn it

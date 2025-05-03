@@ -2,7 +2,7 @@
   import { spectrum, sampleRate } from '$lib/audio/stores';
   import { theme } from '$lib/theme';
   import BaseVisualizer from './BaseVisualizer.svelte';
-  import { blendColors, parseColor } from '$lib/utils/visualizerUtils';
+  import { blendColors, parseColor } from '$lib/audio/visualizer';
   import { browser } from '$app/environment';
   
   // Props - removed debug prop
@@ -71,7 +71,7 @@
     const alpha = minAlpha + (factor * alphaRange);
     
     // Use more vivid color for peaks
-    const peakColor = theme.energy.high;
+    const peakColor = theme.primary;
     const lowColor = theme.background;  // Very dark background
     
     // Create the color with enhanced contrast

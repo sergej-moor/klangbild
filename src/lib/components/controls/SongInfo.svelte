@@ -65,56 +65,14 @@
   });
 </script>
 
-<div class="song-info h-full flex items-center" style="color: {theme.primary};">
+<div class="w-full h-full flex items-center" style="color: {theme.primary};">
   <div class="flex flex-col justify-center w-full items-center">
-    <div class="song-name px-2 text-center">
+    <div class="px-2 text-center text-[0.7rem] md:text-[0.8rem] xl:text-[1.1rem] font-medium max-w-full break-words overflow-wrap-anywhere xl:pb-[0.2rem]">
       {activeTrackTitle}
     </div>
     
-    <div class="time text-center">
+    <div class="text-center text-[0.65rem] md:text-[0.7rem] xl:text-[0.9rem]">
       {formatTime(currentTime)} / {formatTime(totalDuration)}
     </div>
   </div>
-</div>
-
-<style>
-  .song-info {
-    width: 100%;
-  }
-  
-  /* Base sizes for small/medium screens */
-  .song-name {
-    font-size: 0.8rem;
-    font-weight: 500;
-    max-width: 100%;
-    word-break: break-word;
-    overflow-wrap: break-word;
-  }
-  
-  .time {
-    font-size: 0.7rem;
-  }
-  
-  /* Smaller sizes for very small screens */
-  @media (max-width: 960px) {
-    .song-name {
-      font-size: 0.7rem;
-    }
-    
-    .time {
-      font-size: 0.65rem;
-    }
-  }
-  
-  /* Larger sizes for big screens */
-  @media (min-width: 1280px) {
-    .song-name {
-      font-size: 1.1rem;
-      padding-bottom: 0.2rem;
-    }
-    
-    .time {
-      font-size: 0.9rem;
-    }
-  }
-</style> 
+</div> 

@@ -3,7 +3,7 @@
   import { theme } from '$lib/theme';
   import { playlist } from '$lib/stores/playlist';
   import { loadAudio } from '$lib/audio/index';
-  import UploadButton from './UploadButton.svelte';
+  import UploadButton from '$lib/components/controls/UploadButton.svelte';
   import { playbackPosition, isPlaying } from '$lib/audio/stores';
   import type { PlaylistTrack } from '$lib/audio/types';
   
@@ -76,11 +76,12 @@
   }
 </script>
 
-<div class="playlist">
-  <div class="playlist-content">
-    <ul>
+<div class="h-full flex flex-col p-0">
+  <div class="flex-1 overflow-y-auto min-h-0">
+    <ul class="list-none p-0 m-0">
       {#each tracks as track, index}
         <li 
+          class="flex justify-between items-center py-[0.15rem] px-[0.25rem] my-[0.1rem] mx-0 cursor-pointer text-[0.8rem] min-w-0 transition-all duration-150 rounded-[2px] relative hover:opacity-90 md:py-[0.35rem] md:px-[0.5rem] md:my-[0.15rem]"
           class:active={activeTrackId === track.id}
           class:playing={activeTrackId === track.id && playing}
           on:click={() => handleTrackSelect(track, index)}
@@ -90,13 +91,13 @@
             --indicator-color: {theme.primary};
           "
         >
-          <div class="track-info">
-            <span class="track-title" title={track.title}>{track.title}</span>
+          <div class="flex items-center flex-1 min-w-0 mr-1">
+            <span class="break-words overflow-wrap-anywhere flex-1 min-w-0 pr-2 md:text-[0.9rem]" title={track.title}>{track.title}</span>
           </div>
-          <div class="track-actions">
-            <span class="track-duration">{formatTime(track.duration)}</span>
+          <div class="flex items-center gap-2">
+            <span class="opacity-70 text-[0.75rem] flex-shrink-0 min-w-[2.5rem] text-right md:text-[0.8rem]">{formatTime(track.duration)}</span>
             <button 
-              class="delete-button" 
+              class="opacity-70 bg-transparent border-none p-[0.1rem] w-4 h-4 md:w-[18px] md:h-[18px] cursor-pointer rounded-[2px] flex items-center justify-center transition-all duration-150 hover:opacity-100 hover:bg-white/10"
               on:click={(e) => handleDeleteTrack(e, track.id)}
               title="Remove from playlist"
             >
@@ -110,16 +111,16 @@
     </ul>
   </div>
   
-  <div class="playlist-header" style="color: {theme.primary}; border-color: {theme.primary};">
-    <div class="playlist-title">
-      <h3>Playlist</h3>
-      <span class="track-count">{tracks.length} tracks</span>
+  <div class="flex-shrink-0 py-1 px-2 md:py-2 md:px-3 flex justify-between items-center border-t border-solid" style="color: {theme.primary}; border-color: {theme.primary};">
+    <div class="flex items-baseline gap-2">
+      <h3 class="m-0 text-[0.9rem] font-normal md:text-base">Playlist</h3>
+      <span class="text-[0.75rem] opacity-60">{tracks.length} tracks</span>
     </div>
     
-    <div class="playlist-actions">
+    <div class="flex gap-1">
       <!-- File upload icon button with tooltip -->
       <button 
-        class="icon-button" 
+        class="bg-transparent border-none text-inherit p-1 cursor-pointer rounded transition-colors duration-200 flex items-center justify-center hover:bg-white/10" 
         on:click={handleFilesUpload}
         title="Upload Audio Files"
       >
@@ -132,7 +133,7 @@
       
       <!-- Folder upload icon button with tooltip -->
       <button 
-        class="icon-button" 
+        class="bg-transparent border-none text-inherit p-1 cursor-pointer rounded transition-colors duration-200 flex items-center justify-center hover:bg-white/10"
         on:click={handleFolderUpload}
         title="Upload Folder"
       >
@@ -145,98 +146,14 @@
     </div>
     
     <!-- We'll reuse the UploadButton component but hide its UI -->
-    <div style="display: none;">
+    <div class="hidden">
       <UploadButton />
     </div>
   </div>
 </div>
 
 <style>
-  .playlist {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    padding: 0;
-  }
-  
-  .playlist-header {
-    flex-shrink: 0;
-    padding: 0.25rem 0.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-top: 1px solid;
-  }
-  
-  .playlist-title {
-    display: flex;
-    align-items: baseline;
-    gap: 0.5rem;
-  }
-  
-  .track-count {
-    font-size: 0.75rem;
-    opacity: 0.6;
-  }
-  
-  .playlist-actions {
-    display: flex;
-    gap: 0.25rem;
-  }
-  
-  .icon-button {
-    background: transparent;
-    border: none;
-    color: inherit;
-    padding: 0.25rem;
-    cursor: pointer;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.2s;
-  }
-  
-  .icon-button:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-  
-  .playlist-content {
-    flex: 1;
-    overflow-y: auto;
-    min-height: 0;
-  }
-  
-  h3 {
-    margin: 0;
-    font-size: 0.9rem;
-    font-weight: normal;
-  }
-  
-  ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  
-  li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.15rem 0.25rem;
-    margin: 0.1rem 0;
-    cursor: pointer;
-    font-size: 0.8rem;
-    min-width: 0;
-    transition: all 0.15s ease;
-    border-radius: 2px;
-    position: relative;
-  }
-  
-  li:hover {
-    opacity: 0.9;
-  }
-  
+
   li.active {
     position: relative;
   }
@@ -249,99 +166,5 @@
     height: 100%;
     width: 2px;
     background-color: var(--indicator-color);
-  }
-  
-  li.playing.active::before {
-    animation: pulse 1.5s infinite;
-  }
-  
-  @keyframes pulse {
-    0% { opacity: 0.6; }
-    50% { opacity: 1; }
-    100% { opacity: 0.6; }
-  }
-  
-  .track-info {
-    display: flex;
-    align-items: center;
-    flex: 1;
-    min-width: 0;
-    margin-right: 0.25rem;
-  }
-  
-  .track-title {
-    word-break: break-word;
-    overflow-wrap: break-word;
-    flex: 1;
-    min-width: 0;
-    padding-right: 0.5rem;
-  }
-  
-  .track-duration {
-    opacity: 0.7;
-    font-size: 0.75rem;
-    flex-shrink: 0;
-    min-width: 2.5rem;
-    text-align: right;
-  }
-  
-  .track-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  
-  .delete-button {
-    opacity: 0.7;
-    background: none;
-    border: none;
-    padding: 0.1rem;
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-    border-radius: 2px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: opacity 0.2s, background-color 0.15s;
-    color: inherit;
-  }
-  
-  li:hover .delete-button {
-    opacity: 1;
-  }
-  
-  .delete-button:hover {
-    opacity: 1 !important;
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-  
-  /* Large screen styles - increase padding */
-  @media (min-width: 768px) {
-    .playlist-header {
-      padding: 0.5rem 0.75rem;
-    }
-    
-    li {
-      padding: 0.35rem 0.5rem;
-      margin: 0.15rem 0;
-    }
-    
-    h3 {
-      font-size: 1rem;
-    }
-    
-    .track-title {
-      font-size: 0.9rem;
-    }
-    
-    .track-duration {
-      font-size: 0.8rem;
-    }
-    
-    .delete-button {
-      width: 18px;
-      height: 18px;
-    }
   }
 </style> 

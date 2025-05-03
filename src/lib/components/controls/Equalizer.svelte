@@ -13,7 +13,7 @@
   import { adjustEqualizer, eqSettings } from '$lib/audio/index';
   import { browser } from '$app/environment';
   import { onMount } from 'svelte';
-  import Knob from './Knob.svelte';
+  import Knob from '$lib/components/utils/Knob.svelte';
   
   // Local state for EQ values
   let low = $eqSettings.low;
@@ -68,7 +68,7 @@
   }
 </script>
 
-<div class="equalizer h-full flex flex-col items-center justify-center">
+<div class="w-full h-full flex flex-col items-center justify-center">
   <div class="knobs flex justify-evenly w-full px-2">
     <Knob 
       bind:value={low}
@@ -96,8 +96,4 @@
   </div>
 </div>
 
-<style>
-  .equalizer {
-    width: 100%;
-  }
-</style>
+

@@ -7,19 +7,19 @@
 	import Oscilloscope from "$lib/components/visualizer/Oscilloscope.svelte";
 	import FrequencySpectrum from "$lib/components/visualizer/FrequencySpectrum.svelte";
 	import Spectrogram from "$lib/components/visualizer/Spectrogram.svelte";
-	import Waveform from "$lib/components/Waveform.svelte";
-	import PlayPauseControls from "$lib/components/PlayPauseControls.svelte";
-	import Playlist from '$lib/components/Playlist.svelte';
-	import SongInfo from '$lib/components/SongInfo.svelte';
-	import PlaybackControls from '$lib/components/PlaybackControls.svelte';
+	import Waveform from "$lib/components/visualizer/Waveform.svelte";
+
+	import Playlist from '$lib/components/controls/Playlist.svelte';
+	import SongInfo from '$lib/components/controls/SongInfo.svelte';
+	import PlaybackControls from '$lib/components/controls/PlaybackControls.svelte';
 	
 	import RmsMeter from '$lib/components/visualizer/RMSMeter.svelte';
 	import { playlist } from '$lib/stores/playlist';
-	import Equalizer from '$lib/components/Equalizer.svelte';
-	import VolumeSlider from "$lib/components/VolumeSlider.svelte";
-	import VolumeKnob from "$lib/components/VolumeKnob.svelte";
+	import Equalizer from '$lib/components/controls/Equalizer.svelte';
+
+	import VolumeKnob from "$lib/components/controls/VolumeKnob.svelte";
 	import { setVolume } from '$lib/audio/index';
-	import CDVisualizer from "$lib/components/CDVisualizer.svelte";
+
 	import Logo from "$lib/components/Logo.svelte";
 	
 

@@ -2,7 +2,7 @@
   import { spectrum, isPlaying, sampleRate } from '$lib/audio/stores';
   import { theme } from '$lib/theme';
   import BaseVisualizer from './BaseVisualizer.svelte';
-  import { blendColors, parseColor } from '$lib/utils/visualizerUtils';
+  import { blendColors, parseColor } from '$lib/audio/visualizer';
   
   // Props - removed debug prop
   const {} = $props();
@@ -94,7 +94,7 @@
     const factor = Math.pow(norm, 1.4);
     
     // Create color blend with a very subtle start color difference from background
-    return blendColors('#111111', theme.energy.high, factor, 1.0);
+    return blendColors(theme.background, theme.primary, factor, 1.0);
   }
   
   // Draw function - no changes needed here as debug is handled by BaseVisualizer
@@ -171,6 +171,3 @@
   draw={drawSpectrogram}
 />
 
-<style>
-  /* Any spectrogram-specific styles can go here */
-</style> 

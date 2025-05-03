@@ -4,7 +4,7 @@
   import { isPlaying } from '$lib/audio/stores';
   import { theme } from '$lib/theme';
   import { debugMode } from '$lib/stores/debug';
-  import VisualizerCanvas from '../base/VisualizerCanvas.svelte';
+  import VisualizerCanvas from './VisualizerCanvas.svelte';
   
   // Props that all visualizers should support
   const { 
@@ -23,7 +23,7 @@
   let isCanvasReady = $state(false);
   
   // Standard theme colors for consistency
-  const debugColor = theme.energy.high;
+  const debugColor = theme.primary;
   
   // Event dispatcher for child component events
   const dispatch = createEventDispatcher();

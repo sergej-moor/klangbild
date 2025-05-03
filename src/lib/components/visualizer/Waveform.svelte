@@ -23,7 +23,7 @@
   
   // Styling parameters for bars
   const bgColor = 'transparent';
-  const waveformColor = theme.secondary;
+  const waveformColor = theme.accent;
   const progressColor = theme.primary;
   const barWidth = compactMode ? 1 : 2;
   const barGap = compactMode ? 0 : 1;
@@ -95,7 +95,7 @@
     if (animationId) cancelAnimationFrame(animationId);
     
     function animate() {
-      if (isReady && ctx && fullWaveform?.length > 0) {
+      if (isReady && ctx && fullWaveform && fullWaveform.length > 0) {
         // Always get the latest progress directly from the store
         progress = $playbackPosition;
         drawWaveform(fullWaveform, progress);
@@ -230,31 +230,10 @@
   });
 </script>
 
-<div class="waveform-container" >
+<div class="w-full h-full relative overflow-hidden rounded">
   <div class="w-full h-full mx-auto flex flex-col {compactMode ? 'gap-0' : 'gap-2'}" id="full-waveform">
     <div class="w-full rounded-md overflow-hidden">
-      <canvas bind:this={canvas} width={width} height={height} class="block w-full h-full"></canvas>
+      <canvas bind:this={canvas} width={width} height={height} class="block w-full h-full cursor-pointer"></canvas>
     </div>
   </div>
 </div>
-
-<style>
-  .waveform-container {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    overflow: hidden;
-    border-radius: 3px;
-  }
-  
-  .waveform-container.compact-mode {
-    height: 40px;
-  }
-  
-  .waveform-canvas {
-    width: 100%;
-    height: 100%;
-    display: block;
-    cursor: pointer;
-  }
-</style> 

@@ -13,7 +13,10 @@ export function linearToDb(value: number, minDb = -60) {
 }
 
 // Convert decibels to normalized position (0-1)
-export function dbToPosition(db: number, minDb = -60, headroom = 6) {
-  const range = Math.abs(minDb) + headroom;
-  return (db + Math.abs(minDb)) / range;
+export function dbToPosition(db: number, minDb = -60, maxDb = 6): number {
+  // Clamp to minDb
+  db = Math.max(db, minDb);
+
+  // Scale to 0-1 range
+  return (db - minDb) / (maxDb - minDb);
 }

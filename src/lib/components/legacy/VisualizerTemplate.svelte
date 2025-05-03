@@ -1,5 +1,5 @@
 <script lang="ts">
-  import VisualizerCanvas from './VisualizerCanvas.svelte';
+  import VisualizerCanvas from '../visualizer/VisualizerCanvas.svelte';
   import { visualizerTheme } from '$lib/theme';
   
   // References to base component values

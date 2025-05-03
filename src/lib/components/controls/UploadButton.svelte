@@ -116,13 +116,14 @@
 </script>
 
 <!-- Hidden UI elements that can be triggered from the parent component -->
-<div class="upload-container" style="border-color: {theme.primary};">
+<div class="w-full" style="border-color: {theme.primary};">
   <!-- Only show buttons when not being used by the Playlist component -->
   <slot name="buttons">
-    <div class="upload-buttons">
+    <div class="flex gap-2">
       <button 
         on:click={openFileDialog}
         disabled={uploading}
+        class="flex-1 p-2 bg-transparent border border-current rounded text-sm cursor-pointer transition-colors duration-200 hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
         style="color: {theme.primary}; border-color: {theme.primary};"
       >
         {#if uploading}
@@ -135,6 +136,7 @@
       <button 
         on:click={openFolderDialog}
         disabled={uploading}
+        class="flex-1 p-2 bg-transparent border border-current rounded text-sm cursor-pointer transition-colors duration-200 hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
         style="color: {theme.primary}; border-color: {theme.primary};"
       >
         {#if uploading}
@@ -163,40 +165,8 @@
     id="playlist-folder-input"
     type="file" 
     webkitdirectory
-    directory
     on:change={handleFilesSelect}
     style="display: none;"
   />
 </div>
 
-<style>
-  .upload-container {
-    /* Remove padding to let parent component control layout */
-    width: 100%;
-  }
-  
-  .upload-buttons {
-    display: flex;
-    gap: 0.5rem;
-  }
-  
-  button {
-    flex: 1;
-    padding: 0.5rem;
-    background-color: transparent;
-    border: 1px solid;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: background-color 0.2s;
-  }
-  
-  button:hover:not(:disabled) {
-    background-color: rgba(255, 255, 255, 0.05);
-  }
-  
-  button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-</style> 

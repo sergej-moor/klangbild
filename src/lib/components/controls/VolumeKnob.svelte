@@ -2,7 +2,7 @@
   import { createEventDispatcher } from 'svelte';
   import { theme } from '$lib/theme';
   import { onMount } from 'svelte';
-  import Knob from './Knob.svelte';
+  import Knob from '$lib/components/utils/Knob.svelte';
   import { setVolume, getVolume } from '$lib/audio/index';
   
   // Local state for volume value (initialize to 100)
@@ -50,7 +50,7 @@
   });
 </script>
 
-<div class="volume-control h-full flex items-center justify-center">
+<div class="w-full h-full flex items-center justify-center">
   <Knob 
     bind:value={volume}
     min={MIN_VALUE}
@@ -62,8 +62,3 @@
   />
 </div>
 
-<style>
-  .volume-control {
-    width: 100%;
-  }
-</style> 
