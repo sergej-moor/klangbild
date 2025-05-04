@@ -15,9 +15,9 @@
 	export let snapThreshold = 0.8; // Size of the snap zone (in value units)
 	export let defaultValue: number | null = null; // The value to snap to (null means center of range)
 
-	// Rotation constants - modified to start at top left diagonal
-	export let rotRange = 2 * Math.PI * 0.75; // 270 degrees of rotation
-	export let startRotation = (-3 * Math.PI) / 4; // -135 degrees (45 degrees left of top)
+	// Rotation constants - correctly removing the bottom part of circle
+	export let rotRange = 2 * Math.PI * 0.75; // 270 degrees of rotation 
+	export let startRotation = Math.PI * 0.75; // 135 degrees (bottom left)
 	export let pixelRange = 150;
 
 	const dispatch = createEventDispatcher<{ change: number }>();
@@ -41,6 +41,39 @@
 	
 	// Is the value in the "snap zone"
 	$: isInSnapZone = Math.abs(value - actualDefaultValue) < snapThreshold;
+
+	// Calculate arc values for the SVG paths (for the outer and inner arcs)
+	$: endRotation = startRotation + rotRange;
+	$: ringRadius = 24; // Size of the ring
+	$: strokeWidth =  5; // Thicker stroke for the ring
+	$: indicatorRadius = 24; // Position indicator more inside the ring
+	
+	// Calculate SVG arc paths
+	$: ringArcPath = createArcPath(0, 0, ringRadius, startRotation, endRotation);
+	
+	// Calculate position for the indicator circle along the arc
+	$: indicatorAngle = rotation;
+	$: indicatorX = Math.cos(indicatorAngle) * indicatorRadius;
+	$: indicatorY = Math.sin(indicatorAngle) * indicatorRadius;
+
+	// Calculate position for default value marker
+	$: defaultNormalized = (actualDefaultValue - min) / valueRange;
+	$: defaultRotation = startRotation + defaultNormalized * rotRange;
+	$: defaultMarkerX = Math.cos(defaultRotation) * (ringRadius + 1);
+	$: defaultMarkerY = Math.sin(defaultRotation) * (ringRadius + 1);
+
+	// Function to create an SVG arc path
+	function createArcPath(cx: number, cy: number, r: number, startAngle: number, endAngle: number) {
+		const startX = cx + r * Math.cos(startAngle);
+		const startY = cy + r * Math.sin(startAngle);
+		const endX = cx + r * Math.cos(endAngle);
+		const endY = cy + r * Math.sin(endAngle);
+		
+		// Large arc flag is 0 if arc is less than 180 degrees, 1 if more
+		const largeArcFlag = endAngle - startAngle <= Math.PI ? 0 : 1;
+		
+		return `M ${startX} ${startY} A ${r} ${r} 0 ${largeArcFlag} 1 ${endX} ${endY}`;
+	}
 
 	// Generate tick marks based on the rotation range
 	$: ticks = Array.from({ length: numTicks }, (_, i) => {
@@ -166,38 +199,62 @@
 	});
 </script>
 
-<div class="knob-group">
-	{#if label}
-		<span class="label">{label}</span>
-	{/if}
-
-	<div class="knob-wrapper">
+<div class="flex flex-col items-center min-w-[60px] select-none touch-none">
+	<div class="relative flex flex-col items-center w-[70px] h-[70px] touch-none">
 		<div
-			class="knob {dragging ? 'dragging' : ''} {isInSnapZone ? 'in-snap-zone' : ''}"
-			style="transform: translate(-50%, -50%) rotate({rotation}rad); border-color: {theme.primary};"
+			class="absolute w-[54px] h-[54px] flex items-center justify-center z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 cursor-ns-resize {dragging ? 'opacity-90' : ''}"
 			on:pointerdown={pointerDown}
 			bind:this={knobElement}
 			data-label={label}
 		>
-			<!-- Inner ring -->
-			<div class="inner-ring" style="border-color: {theme.primary};"></div>
-			
-			<!-- Circle indicator near the edge -->
-			<div class="indicator-circle" style="background-color: {theme.primary};"></div>
+			<!-- SVG arcs for the knob -->
+			<svg class="absolute inset-0 w-full h-full" viewBox="-30 -30 60 60">
+				<!-- Ring arc -->
+				<path 
+					class="ring-arc" 
+					d={ringArcPath} 
+					stroke={theme.primary} 
+					stroke-linecap="round"
+					stroke-width={strokeWidth}
+					fill="none" 
+				/>
+				
+				<!-- Indicator circle that moves along the arc -->
+				<circle 
+					class="transition-[cx,cy] duration-50 ease-out"
+					cx={indicatorX}
+					cy={indicatorY}
+					r="3"
+					fill={theme.background}
+					stroke={theme.primary}
+					stroke-width="1"
+				/>
+				
+				<!-- Value text in the center -->
+				<text 
+					x="0" 
+					y="0" 
+					text-anchor="middle" 
+					dominant-baseline="middle" 
+					class="text-[10px] font-bold select-none"
+					fill={theme.primary}
+				>
+					{value.toFixed(1)}
+				</text>
+			</svg>
 		</div>
 		
-		<!-- Separate ticks element outside the knob -->
-		<div class="outer-ticks">
-			{#each ticks as tickRotation, i}
-				<div 
-					class="tick" 
-					style="transform: rotate({tickRotation}rad); background-color: {theme.primary};"
-					class:tick-zero={i === Math.floor(numTicks / 2) && numTicks % 2 !== 0}>
-				</div>
-			{/each}
-		</div>
+		<!-- Replace ticks element with single default marker -->
+		<svg class="absolute w-[70px] h-[70px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" viewBox="-30 -30 60 60">
+			<circle 
+				cx={defaultMarkerX}
+				cy={defaultMarkerY}
+				r="2"
+				fill={theme.primary}
+			/>
+		</svg>
 		
-		<div class="value-display" title="{value.toFixed(1)} {unit}">
+		<div class="value-display hidden" title="{value.toFixed(1)} {unit}">
 			<span class="value-text">
 				{#if unit}
 					{value.toFixed(1)} {unit}
@@ -206,196 +263,42 @@
 				{/if}
 			</span>
 		</div>
+		
+		<!-- Moved label inside the knob wrapper and positioned it closer to the knob -->
+		{#if label}
+			<span class="absolute bottom-[-4px] text-xs font-medium text-center w-full">{label}</span>
+		{/if}
 	</div>
 </div>
 
 <style>
-	.knob-group {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		min-width: 60px;
-		user-select: none;
-		-webkit-user-select: none;
+	.touch-none {
 		touch-action: none;
 	}
-
-	.label {
-		font-size: 0.75rem;
-		font-weight: 500;
-		margin-bottom: 0.15rem;
-	}
-
-	.knob-wrapper {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		width: 70px;
-		height: 70px;
-		position: relative;
-		touch-action: none;
-	}
-
-	.knob {
-		position: absolute;
-		width: 54px;
-		height: 54px;
-		border-radius: 50%;
-		background-color: transparent;
-		border: 2px solid transparent; /* Color set via style attribute */
-		transform-origin: 50% 50%;
-		cursor: ns-resize;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		touch-action: none;
-		z-index: 1;
-		top: 50%;
-		left: 50%;
-		transition: border-width 0.1s ease-in-out;
+	
+	.ring-arc {
+		transition: stroke-width 0.1s ease-in-out;
 	}
 	
-	.knob.in-snap-zone {
-		border-width: 2.5px;
-	}
-	
-	.inner-ring {
-		position: absolute;
-		width: 36px;
-		height: 36px;
-		border-radius: 50%;
-		border: 1.5px solid transparent; /* Color set via style attribute */
-		background-color: transparent;
-		transition: border-width 0.1s ease-in-out;
+	/* Remove outer-ticks styles */
+	.tick, .tick-zero {
+		display: none;
 	}
 
-	.knob.in-snap-zone .inner-ring {
-		border-width: 2px;
-	}
-
-	.knob.dragging {
-		opacity: 0.9;
-	}
-
-	.indicator-circle {
-		position: absolute;
-		width: 7px;
-		height: 7px;
-		background-color: transparent; /* Color set via style attribute */
-		border-radius: 50%;
-		top: 7%;
-		transform: translateY(-50%);
-	}
-	
-	.outer-ticks {
-		position: absolute;
-		width: 70px;
-		height: 70px;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%);
-		pointer-events: none;
-	}
-	
-	.tick {
-		position: absolute;
-		top: 0;
-		left: 50%;
-		margin-left: -1px;
-		width: 2px;
-		height: 5px;
-		background-color: transparent; /* Color set via style attribute */
-		transform-origin: 50% 35px;
-	}
-
-	.tick-zero {
-		width: 2px;
-		height: 5px;
-		margin-left: -1px;
-	}
-
-	.value-display {
-		position: absolute;
-		bottom: -20px;
-		font-size: 0.7rem;
-		min-height: 1rem;
-		text-align: center;
-		opacity: 0.8;
-	}
-
-	.value-text {
-		white-space: nowrap;
-	}
-
-	@media (max-width: 1024px) {
-		.value-display {
-			display: none;
-		}
-	}
-
-	/* Medium-sized devices */
 	@media (max-width: 796px) {
-		.knob-group {
-			min-width: 42px;
-		}
-
-		.knob-wrapper {
+		.default-marker {
 			width: 55px;
 			height: 55px;
 		}
 		
-		.outer-ticks {
-			width: 55px;
-			height: 55px;
-		}
-		
-		.inner-ring {
-			width: 24px;
-			height: 24px;
-			border-width: 1px;
-		}
-		
-		.knob.in-snap-zone .inner-ring {
-			border-width: 1.5px;
-		}
-
-		.tick {
-			width: 2px;
-			height: 4px;
-			margin-left: -1px;
-			transform-origin: 50% 27.5px;
-		}
-
-		.tick-zero {
-			width: 2px;
-			height: 4px;
-			margin-left: -1px;
-		}
-
-		.knob {
-			width: 40px;
-			height: 40px;
-			border-width: 1.5px;
-		}
-		
-		.knob.in-snap-zone {
-			border-width: 2px;
-		}
-
-		.indicator-circle {
-			width: 5px;
-			height: 5px;
+		.indicator-dot {
+			r: 2.5;
 		}
 	}
 
-	/* Small devices */
 	@media (max-width: 640px) {
 		.knob-group {
 			min-width: 45px;
-		}
-
-		.label {
-			font-size: 0.7rem;
 		}
 	}
 </style>

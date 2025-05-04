@@ -1,9 +1,9 @@
 // Simplified theme with only 6 essential colors
 export const theme = {
 	// Primary colors
-	primary: '#f42e1f', // Bright green
-	accent: '#FFFFFF', // Medium green
-	background: '#000000' // Black
+	primary: '#f42e1f', 
+	accent: '#000000', 
+	background: '#FFFFFF' 
 };
 
 // Common sizing values (keeping these as they're useful)

@@ -9,10 +9,17 @@
 
 	// Get active track title from playlist
 	const activeTrackTitle = $derived($playlist.activeTrack?.title || 'Untitled');
+	
+	// Format title with repeats for continuous scrolling - 10 copies with space between
+	const repeatedTitle = $derived(Array(10).fill(activeTrackTitle).join(' '));
 
 	// Component state
 	let currentTime = $state(0);
 	let totalDuration = $state(0);
+	let tickerSpeed = $state(25); // Animation duration in seconds
+	let tickerContainer: HTMLDivElement;
+	let tickerText: HTMLDivElement;
+	let firstClone: HTMLDivElement;
 
 	// Update duration periodically
 	async function updateDuration() {
@@ -65,16 +72,54 @@
 	});
 </script>
 
-<div class="flex h-full w-full items-center" style="color: {theme.primary};">
-	<div class="flex w-full flex-col items-center justify-center">
-		<div
-			class="overflow-wrap-anywhere max-w-full px-2 text-center text-[0.7rem] font-medium break-words md:text-[0.8rem] xl:pb-[0.2rem] xl:text-[1.1rem]"
-		>
-			{activeTrackTitle}
+<div class="flex h-full w-full flex-col">
+	<!-- Top half for song title with theme.primary background -->
+	<div class="flex h-1/2 w-full items-center justify-center" style="background-color: {theme.primary};">
+		<!-- Title container with overflow hidden -->
+		<div class="w-full overflow-hidden" style="color: {theme.background};">
+			<!-- Using a double-ticker technique for seamless scrolling -->
+			<div class="marquee">
+				<div class="marquee-content">
+					<!-- Original text -->
+					<div class="font-medium text-[0.85rem] md:text-[1rem] lg:text-[1.1rem] xl:text-[1.25rem]">
+						{repeatedTitle}
+					</div>
+					<!-- Duplicate for seamless loop -->
+					<div class="font-medium text-[0.85rem] md:text-[1rem] lg:text-[1.1rem] xl:text-[1.25rem]">
+						{repeatedTitle}
+					</div>
+				</div>
+			</div>
 		</div>
+	</div>
 
-		<div class="text-center text-[0.65rem] md:text-[0.7rem] xl:text-[0.9rem]">
+	<!-- Bottom half for time - keeps original color -->
+	<div class="flex h-1/2 w-full items-center justify-center" style="color: {theme.primary};">
+		<div class="text-center text-[0.75rem] md:text-[0.85rem] lg:text-[0.95rem] xl:text-[1.1rem]">
 			{formatTime(currentTime)} / {formatTime(totalDuration)}
 		</div>
 	</div>
 </div>
+
+<style>
+	.marquee {
+		width: 100%;
+		overflow: hidden;
+		position: relative;
+	}
+
+	.marquee-content {
+		display: flex;
+		white-space: nowrap;
+		animation: marquee 25s linear infinite;
+	}
+
+	@keyframes marquee {
+		0% {
+			transform: translateX(0);
+		}
+		100% {
+			transform: translateX(-50%);
+		}
+	}
+</style>

@@ -81,7 +81,7 @@
 		<ul class="m-0 list-none p-0">
 			{#each tracks as track, index}
 				<li
-					class="relative mx-0 my-[0.1rem] flex min-w-0 cursor-pointer items-center justify-between rounded-[2px] px-[0.25rem] py-[0.15rem] text-[0.8rem] transition-all duration-150 hover:opacity-90 md:my-[0.15rem] md:px-[0.5rem] md:py-[0.35rem]"
+					class="relative mx-0  flex min-w-0 cursor-pointer items-center justify-between  px-[0.25rem] py-[0.15rem] text-[0.8rem] transition-all duration-150 hover:opacity-90  md:px-[0.5rem] md:py-[0.35rem]"
 					class:active={activeTrackId === track.id}
 					class:playing={activeTrackId === track.id && playing}
 					on:click={() => handleTrackSelect(track, index)}
@@ -99,11 +99,11 @@
 					</div>
 					<div class="flex items-center gap-2">
 						<span
-							class="min-w-[2.5rem] flex-shrink-0 text-right text-[0.75rem] opacity-70 md:text-[0.8rem]"
+							class="min-w-[2.5rem] flex-shrink-0 text-right text-[0.75rem]  md:text-[0.8rem]"
 							>{formatTime(track.duration)}</span
 						>
 						<button
-							class="flex h-4 w-4 cursor-pointer items-center justify-center rounded-[2px] border-none bg-transparent p-[0.1rem] opacity-70 transition-all duration-150 hover:bg-white/10 hover:opacity-100 md:h-[18px] md:w-[18px]"
+							class="flex h-4 w-4 cursor-pointer items-center justify-center rounded-[2px] border-none bg-transparent p-[0.1rem]  transition-all duration-150 hover:bg-white/10 hover:opacity-100 md:h-[18px] md:w-[18px]"
 							on:click={(e) => handleDeleteTrack(e, track.id)}
 							title="Remove from playlist"
 						>

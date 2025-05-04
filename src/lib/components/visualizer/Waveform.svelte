@@ -16,12 +16,16 @@
 	let isReady = $state(false);
 	let progress = $state(0); // Track progress locally
 
+	// Off-screen canvases for prerendering
+	let playedWaveformCanvas: HTMLCanvasElement | null = null;
+	let upcomingWaveformCanvas: HTMLCanvasElement | null = null;
+	let hasPrerenderedWaveform = $state(false);
+
 	// Animation frame ID for continuous updates
 	let animationId: number;
 
 	// Styling parameters for waveform
-	const bgColor = 'transparent';
-	const waveformColor = theme.accent;
+	const waveformColor = theme.primary;
 	const progressColor = theme.primary;
 	const lineWidth = compactMode ? 0.8 : 1.2;
 
@@ -34,19 +38,22 @@
 
 		const container = canvas.parentElement;
 		if (container) {
-			width = container.clientWidth;
-
-			if (compactMode) {
-				height = 40;
-			} else {
-				height = Math.min(sizes.defaultHeight, container.clientWidth / 2);
-			}
-
-			canvas.width = width;
-			canvas.height = height;
-
-			if (fullWaveform && fullWaveform.length > 0) {
-				drawWaveform(fullWaveform, progress);
+			const newWidth = container.clientWidth;
+			const newHeight = compactMode ? 40 : Math.min(sizes.defaultHeight, container.clientWidth / 2);
+			
+			// Only recreate prerendered canvases if dimensions change
+			if (width !== newWidth || height !== newHeight) {
+				width = newWidth;
+				height = newHeight;
+				canvas.width = width;
+				canvas.height = height;
+				
+				// Reset prerendered flag so waveform will be redrawn
+				hasPrerenderedWaveform = false;
+				
+				if (fullWaveform && fullWaveform.length > 0) {
+					prerenderWaveform(fullWaveform);
+				}
 			}
 		}
 	}
@@ -79,12 +86,134 @@
 		}
 
 		fullWaveform = data;
+		
+		// Reset pre-rendered flag
+		hasPrerenderedWaveform = false;
 	}
 
 	// Clear the canvas
 	function clearCanvas() {
 		if (!ctx) return;
 		ctx.clearRect(0, 0, width, height);
+	}
+	
+	// Prerender waveform to offscreen canvases
+	function prerenderWaveform(data: Float32Array) {
+		if (!data || data.length === 0 || !browser || width === 0 || height === 0) return;
+		
+		// Create offscreen canvases if they don't exist or need to be resized
+		if (!playedWaveformCanvas) {
+			playedWaveformCanvas = document.createElement('canvas');
+		}
+		if (!upcomingWaveformCanvas) {
+			upcomingWaveformCanvas = document.createElement('canvas');
+		}
+		
+		// Set dimensions
+		playedWaveformCanvas.width = width;
+		playedWaveformCanvas.height = height;
+		upcomingWaveformCanvas.width = width;
+		upcomingWaveformCanvas.height = height;
+		
+		// Get contexts
+		const playedCtx = playedWaveformCanvas.getContext('2d')!;
+		const upcomingCtx = upcomingWaveformCanvas.getContext('2d')!;
+		
+		// Calculate vertical scaling factor
+		const verticalScale = height * (compactMode ? 0.6 : 0.4);
+		const centerY = height / 2;
+		
+		// Clear canvases
+		playedCtx.clearRect(0, 0, width, height);
+		upcomingCtx.clearRect(0, 0, width, height);
+		
+		// Set line styles
+		playedCtx.lineWidth = lineWidth;
+		playedCtx.lineJoin = 'round';
+		upcomingCtx.lineWidth = lineWidth;
+		upcomingCtx.lineJoin = 'round';
+		
+		// Draw played waveform on first canvas (theme.primary on transparent)
+		const sampleStep = data.length / width;
+		
+		// Draw played portion (inverted: theme.background waveform on theme.primary background)
+		playedCtx.fillStyle = waveformColor; // Fill entire area with primary color first
+		playedCtx.fillRect(0, 0, width, height);
+		
+		playedCtx.beginPath();
+		playedCtx.fillStyle = theme.background; // Waveform in background color
+		
+		// Start at the center
+		playedCtx.moveTo(0, centerY);
+		
+		// Draw the top curve
+		for (let x = 0; x < width; x++) {
+			const dataIdx = Math.min(Math.floor(x * sampleStep), data.length - 1);
+			const amplitude = data[dataIdx] * verticalScale;
+			playedCtx.lineTo(x, centerY - amplitude);
+		}
+		
+		// Move to the end at the center
+		playedCtx.lineTo(width, centerY);
+		
+		// Draw the bottom curve (going backwards)
+		for (let x = width - 1; x >= 0; x--) {
+			const dataIdx = Math.min(Math.floor(x * sampleStep), data.length - 1);
+			const amplitude = data[dataIdx] * verticalScale;
+			playedCtx.lineTo(x, centerY + amplitude);
+		}
+		
+		// Close the path
+		playedCtx.closePath();
+		
+		// Fill the path
+		playedCtx.fill();
+		
+		// Optionally, add stroke for a cleaner outline
+		playedCtx.strokeStyle = theme.background;
+		playedCtx.stroke();
+		
+		// Draw upcoming waveform on second canvas (theme.primary waveform on theme.background)
+		// First fill the entire area with the background color
+		upcomingCtx.fillStyle = theme.background;
+		upcomingCtx.fillRect(0, 0, width, height);
+		
+		// Then draw the primary-colored waveform
+		upcomingCtx.beginPath();
+		upcomingCtx.fillStyle = waveformColor; // Use primary color for waveform
+		
+		// Start at the center
+		upcomingCtx.moveTo(0, centerY);
+		
+		// Draw the top curve
+		for (let x = 0; x < width; x++) {
+			const dataIdx = Math.min(Math.floor(x * sampleStep), data.length - 1);
+			const amplitude = data[dataIdx] * verticalScale;
+			upcomingCtx.lineTo(x, centerY - amplitude);
+		}
+		
+		// Move to the end at the center
+		upcomingCtx.lineTo(width, centerY);
+		
+		// Draw the bottom curve (going backwards)
+		for (let x = width - 1; x >= 0; x--) {
+			const dataIdx = Math.min(Math.floor(x * sampleStep), data.length - 1);
+			const amplitude = data[dataIdx] * verticalScale;
+			upcomingCtx.lineTo(x, centerY + amplitude);
+		}
+		
+		// Close the path
+		upcomingCtx.closePath();
+		
+		// Fill the path with primary color
+		upcomingCtx.fill();
+		
+		// Optionally, add stroke for a cleaner outline
+		upcomingCtx.strokeStyle = waveformColor;
+		upcomingCtx.stroke();
+		
+		// Mark as prerendered
+		hasPrerenderedWaveform = true;
 	}
 
 	// Setup continuous animation for progress updates
@@ -95,12 +224,58 @@
 			if (isReady && ctx && fullWaveform && fullWaveform.length > 0) {
 				// Always get the latest progress directly from the store
 				progress = $playbackPosition;
-				drawWaveform(fullWaveform, progress);
+				
+				// Prerender waveform if not already done
+				if (!hasPrerenderedWaveform) {
+					prerenderWaveform(fullWaveform);
+				}
+				
+				// Draw the current state using prerendered images
+				drawCurrentState(progress);
 			}
 			animationId = requestAnimationFrame(animate);
 		}
 
 		animationId = requestAnimationFrame(animate);
+	}
+	
+	// Draw the current state using prerendered waveforms
+	function drawCurrentState(currentProgress: number) {
+		if (!ctx || !playedWaveformCanvas || !upcomingWaveformCanvas) return;
+		
+		// Clear the canvas
+		clearCanvas();
+		
+		// Calculate the progress position in pixels
+		const progressPixel = Math.floor(width * currentProgress);
+		
+		// Fill with background color
+		ctx.fillStyle = theme.background;
+		ctx.fillRect(0, 0, width, height);
+		
+		// Draw the played portion from the played waveform canvas (limited by progress)
+		ctx.drawImage(
+			playedWaveformCanvas,
+			0, 0, progressPixel, height,  // Source rectangle
+			0, 0, progressPixel, height   // Destination rectangle
+		);
+		
+		// Draw the upcoming portion from the upcoming waveform canvas
+		if (progressPixel < width) {
+			ctx.drawImage(
+				upcomingWaveformCanvas,
+				progressPixel, 0, width - progressPixel, height,  // Source rectangle
+				progressPixel, 0, width - progressPixel, height   // Destination rectangle
+			);
+		}
+		
+		// Add a very thin vertical progress line
+		ctx.beginPath();
+		ctx.strokeStyle = progressColor;
+		ctx.lineWidth = 0.5; // Much thinner line
+		ctx.moveTo(progressPixel, 0);
+		ctx.lineTo(progressPixel, height);
+		ctx.stroke();
 	}
 
 	// Handle click on the waveform to seek
@@ -119,81 +294,6 @@
 		seekToPosition(position);
 	}
 
-	function drawWaveform(data: Float32Array, currentProgress: number) {
-		if (!ctx || !canvas) return;
-
-		// Clear the canvas
-		clearCanvas();
-
-		// Ensure we're using the entire data array
-		if (!data || data.length === 0) return;
-
-		// Calculate vertical scaling factor
-		const verticalScale = height * (compactMode ? 0.6 : 0.4);
-		const centerY = height / 2;
-		
-		// Calculate the progress position in pixels
-		const progressPixel = width * currentProgress;
-		
-		// Draw the paths for both played and remaining portions
-		ctx.lineWidth = lineWidth;
-		ctx.lineJoin = 'round';
-		
-		// Helper function to draw a portion of the waveform
-		const drawWaveformPortion = (start: number, end: number, color: string) => {
-			if (start >= end) return;
-			
-			const sampleStep = data.length / width;
-			
-			// Create top path (above center)
-			ctx.beginPath();
-			ctx.strokeStyle = color;
-			
-			// Start at the center for the first point
-			ctx.moveTo(start, centerY);
-			
-			// Draw the top curve
-			for (let x = start; x < end; x++) {
-				const dataIdx = Math.min(Math.floor(x * sampleStep), data.length - 1);
-				const amplitude = data[dataIdx] * verticalScale;
-				ctx.lineTo(x, centerY - amplitude);
-			}
-			
-			// Draw back to center at the end
-			ctx.lineTo(end, centerY);
-			ctx.stroke();
-			
-			// Create bottom path (below center)
-			ctx.beginPath();
-			ctx.moveTo(start, centerY);
-			
-			// Draw the bottom curve (mirror of top)
-			for (let x = start; x < end; x++) {
-				const dataIdx = Math.min(Math.floor(x * sampleStep), data.length - 1);
-				const amplitude = data[dataIdx] * verticalScale;
-				ctx.lineTo(x, centerY + amplitude);
-			}
-			
-			// Draw back to center at the end
-			ctx.lineTo(end, centerY);
-			ctx.stroke();
-		};
-		
-		// Draw the played portion (with progress color)
-		drawWaveformPortion(0, progressPixel, progressColor);
-		
-		// Draw the remaining portion (with regular waveform color)
-		drawWaveformPortion(progressPixel, width, waveformColor);
-		
-		// Add a very thin vertical progress line
-		ctx.beginPath();
-		ctx.strokeStyle = progressColor;
-		ctx.lineWidth = 0.5; // Much thinner line
-		ctx.moveTo(progressPixel, 0);
-		ctx.lineTo(progressPixel, height);
-		ctx.stroke();
-	}
-
 	// Watch for audio buffer changes to generate the waveform
 	$effect(() => {
 		if ($audioBuffer) {
@@ -204,6 +304,13 @@
 	// Watch for playback position changes
 	$effect(() => {
 		progress = $playbackPosition;
+	});
+
+	// Watch for theme changes to trigger re-rendering
+	$effect(() => {
+		if (theme.primary || theme.background) {
+			hasPrerenderedWaveform = false;
+		}
 	});
 
 	// Lifecycle hooks
@@ -243,15 +350,19 @@
 		if (animationId) {
 			cancelAnimationFrame(animationId);
 		}
+		
+		// Clean up prerendered canvases
+		playedWaveformCanvas = null;
+		upcomingWaveformCanvas = null;
 	});
 </script>
 
-<div class="relative h-full w-full overflow-hidden rounded">
+<div class="relative h-full w-full overflow-hidden">
 	<div
 		class="mx-auto flex h-full w-full flex-col {compactMode ? 'gap-0' : 'gap-2'}"
 		id="full-waveform"
 	>
-		<div class="w-full overflow-hidden rounded-md">
+		<div class="w-full overflow-hidden ">
 			<canvas bind:this={canvas} {width} {height} class="block h-full w-full cursor-pointer"
 			></canvas>
 		</div>

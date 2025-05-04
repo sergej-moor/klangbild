@@ -14,7 +14,7 @@
 	let height = 0;
 	let scale = 1;
 
-	// Theme colors - using only primary color now
+	// Theme colors - using only primary and background colors
 	const meterColor = theme.primary;
 	const backgroundColor = theme.background;
 
@@ -42,7 +42,7 @@
 		({ width, height, scale } = event.detail);
 	}
 
-	// Draw function - no changes needed here as debug is handled by BaseVisualizer
+	// Draw function - updated to dynamically change marker colors
 	function drawMeter() {
 		if (!ctx) return;
 
@@ -83,48 +83,36 @@
 		ctx.fillStyle = backgroundColor;
 		ctx.fillRect(padding, padding, meterWidth, height - padding * 2);
 
-		// Draw RMS level
+		// Calculate RMS height and position
 		const rmsHeight = (height - padding * 2) * dbToPosition(rmsDb, MIN_DB, HEADROOM_DB);
 		const rmsY = height - padding - rmsHeight;
 
-		// Use single color for the meter (no gradient)
+		// Draw RMS level
 		ctx.fillStyle = meterColor;
 		ctx.fillRect(padding, rmsY, meterWidth, rmsHeight);
 
 		// Draw level markings
-		ctx.strokeStyle = theme.accent;
 		ctx.lineWidth = 1;
 
-		// Add a marker for 0 dB and headroom
-		const zeroDbY =
-			height - padding - (height - padding * 2) * dbToPosition(0, MIN_DB, HEADROOM_DB);
-		ctx.beginPath();
-		ctx.moveTo(padding, zeroDbY);
-		ctx.lineTo(width - padding, zeroDbY);
-		ctx.stroke();
-
-		// Add a "0 dB" label in slightly bolder/different style
-		ctx.fillStyle = theme.accent;
-		ctx.font = 'bold 9px sans-serif';
-		ctx.fillText(`0dB`, padding + 2, zeroDbY - 2);
-
-		// Draw the rest of the level markings
-		ctx.font = '9px sans-serif';
-		ctx.fillStyle = theme.accent;
-
+		// Draw all level markings and labels with dynamic color
 		LEVEL_THRESHOLDS.forEach((threshold) => {
-			// Skip 0 dB as we've already drawn it
-			if (threshold.dB === 0) return;
-
-			const y =
-				height - padding - (height - padding * 2) * dbToPosition(threshold.dB, MIN_DB, HEADROOM_DB);
-
+			const y = height - padding - (height - padding * 2) * dbToPosition(threshold.dB, MIN_DB, HEADROOM_DB);
+			
+			// Determine if this marker is inside the meter or outside
+			const isInsideMeter = y >= rmsY;
+			
+			// Set appropriate colors for line and text
+			ctx.strokeStyle = isInsideMeter ? backgroundColor : meterColor;
+			ctx.fillStyle = isInsideMeter ? backgroundColor : meterColor;
+			
+			// Draw the line
 			ctx.beginPath();
 			ctx.moveTo(padding, y);
 			ctx.lineTo(width - padding, y);
 			ctx.stroke();
 
-			// Add dB labels
+			// Add dB labels with appropriate style
+			ctx.font = threshold.dB === 0 ? 'bold 9px sans-serif' : '9px sans-serif';
 			ctx.fillText(`${threshold.dB}dB`, padding + 2, y - 2);
 		});
 	}

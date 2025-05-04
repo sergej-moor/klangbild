@@ -210,8 +210,8 @@
 				y: mouseY,
 				width,
 				frequency: hoverFrequency,
-				backgroundColor: theme.accent,
-				textColor: theme.primary,
+				backgroundColor: theme.primary,
+				textColor: theme.background,
 				showNote: true,
 				formatNote
 			});
