@@ -21,7 +21,8 @@
 	import { setVolume } from '$lib/audio/index';
 
 	import Logo from '$lib/components/Logo.svelte';
-
+	import RawDataDisplay from '$lib/components/visualizer/RawDataDisplay.svelte';
+import CdVisualizer from '$lib/components/visualizer/CDVisualizer.svelte';
 	// Preload audio when the page loads
 	onMount(async () => {
 		console.log('Main page mounted, preloading audio...');
@@ -155,10 +156,22 @@
 
 			<!-- Frequency Spectrum -->
 			<div
-				class="col-span-8 col-start-1 row-span-3 row-start-6 overflow-hidden border border-current"
+				class="col-span-7 col-start-1 row-span-3 row-start-6 overflow-hidden border border-current"
 			>
 				<FrequencySpectrum />
 			</div>
+
+			<!-- Data Display -->
+			<div
+				class="col-span-1 col-start-8 row-span-2 row-start-6 overflow-hidden border border-current"
+			>
+				<RawDataDisplay  refreshRate={100} />
+			</div>
+      <div
+      class="col-span-1 col-start-8 row-span-1 row-start-8 overflow-hidden "
+    >
+      <CdVisualizer />
+    </div>
 
 			<!-- Mobile Logo - only shown on small screens, below everything else -->
 			<div class="col-span-8 col-start-1 row-span-1 row-start-9 overflow-hidden md:hidden">

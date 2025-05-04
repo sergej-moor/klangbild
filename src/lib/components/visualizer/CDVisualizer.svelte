@@ -1,9 +1,27 @@
 <script lang="ts">
 	import { theme } from '$lib/theme';
 	import { isPlaying } from '$lib/audio/stores';
+	import { onMount } from 'svelte';
+	
+	// State for responsive stroke width
+	let windowWidth = $state(typeof window !== 'undefined' ? window.innerWidth : 1000);
+	let strokeWidth = $derived(windowWidth <= 900 ? 0.5 : 0.3);
+	let containerPadding = $derived(windowWidth <= 1200 ? '0.1rem' : '0.5rem');
+	
+	// Update window width when resized
+	onMount(() => {
+		const handleResize = () => {
+			windowWidth = window.innerWidth;
+		};
+		window.addEventListener('resize', handleResize);
+		return () => window.removeEventListener('resize', handleResize);
+	});
 </script>
 
-<div class="cd-container flex h-full w-full items-center justify-center">
+<div 
+	class="cd-container flex h-full w-full items-center justify-center"
+	style="padding: {containerPadding};"
+>
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 0 24 24"
@@ -15,7 +33,7 @@
 			stroke={theme.primary}
 			stroke-linecap="round"
 			stroke-linejoin="round"
-			stroke-width="0.5"
+			stroke-width={strokeWidth}
 		>
 			<path d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12S6.477 2 12 2s10 4.477 10 10" />
 			<path
@@ -27,7 +45,7 @@
 
 <style>
 	.cd-container {
-		padding: 0.5rem;
+		/* Padding is now handled with inline style for responsiveness */
 	}
 
 	@keyframes rotate {
