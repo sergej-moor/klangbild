@@ -153,6 +153,31 @@
 			}
 		}
 	}
+	
+	// Forward mouse events from canvas
+	function handleMouseMove(event: CustomEvent) {
+		dispatch('mousemove', event.detail);
+		// Draw on mouse move for immediate update
+		if (typeof draw === 'function' && isCanvasReady) {
+			draw();
+		}
+	}
+	
+	function handleMouseLeave(event: CustomEvent) {
+		dispatch('mouseleave', event.detail);
+		// Redraw on mouse leave to clear any hover effects
+		if (typeof draw === 'function' && isCanvasReady) {
+			draw();
+		}
+	}
+	
+	function handleMouseEnter(event: CustomEvent) {
+		dispatch('mouseenter', event.detail);
+	}
+	
+	function handleClick(event: CustomEvent) {
+		dispatch('click', event.detail);
+	}
 
 	// Watch isPlaying state to start/stop animation
 	$effect(() => {
@@ -162,7 +187,7 @@
 			startAnimation();
 		} else if (animationId) {
 			cancelAnimationFrame(animationId);
-			animationId = undefined;
+			animationId = 0; // Reset to a valid number instead of undefined
 		}
 	});
 
@@ -174,6 +199,15 @@
 	});
 </script>
 
-<VisualizerCanvas on:ready={handleCanvasReady} on:resize={handleResize} scaleToFit={true} {id}>
+<VisualizerCanvas 
+	on:ready={handleCanvasReady} 
+	on:resize={handleResize} 
+	on:mousemove={handleMouseMove}
+	on:mouseleave={handleMouseLeave}
+	on:mouseenter={handleMouseEnter}
+	on:click={handleClick}
+	scaleToFit={true} 
+	{id}
+>
 	<slot />
 </VisualizerCanvas>

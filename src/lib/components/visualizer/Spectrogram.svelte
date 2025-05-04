@@ -1,8 +1,13 @@
 <script lang="ts">
 	import { spectrum, isPlaying, sampleRate } from '$lib/audio/stores';
 	import { theme } from '$lib/theme';
-	import BaseVisualizer from './BaseVisualizer.svelte';
-	import { blendColors, parseColor } from '$lib/audio/visualizer';
+	import BaseHoverableVisualizer from './BaseHoverableVisualizer.svelte';
+	import { 
+		blendColors, 
+		drawFrequencyTooltip, 
+		formatFrequency
+	} from '$lib/audio/visualizer';
+	import { formatNote } from '$lib/audio/utils';
 
 	// Props - removed debug prop
 	const {} = $props();
@@ -13,6 +18,12 @@
 	let height = 0;
 	let scale = 1;
 	let spectrogramData: Uint8Array[] = [];
+
+	// Mouse position tracking
+	let mouseX = -1;
+	let mouseY = -1;
+	let isHovering = false;
+	let hoverFrequency = 0;
 
 	// Number of history frames to keep
 	const historyLength = 200;
@@ -37,6 +48,42 @@
 	// Handle resize event from BaseVisualizer
 	function handleResize(event: CustomEvent) {
 		({ width, height, scale } = event.detail);
+	}
+	
+	// Handle mousemove event from BaseHoverableVisualizer
+	function handleMouseMove(event: CustomEvent) {
+		// The BaseHoverableVisualizer now tracks mouse state for us
+		mouseX = event.detail.mouseX;
+		mouseY = event.detail.mouseY;
+		isHovering = event.detail.isHovering;
+		
+		// Calculate the frequency at the mouse position
+		updateHoverFrequency();
+	}
+	
+	// Handle mouseleave event from BaseHoverableVisualizer
+	function handleMouseLeave(event: CustomEvent) {
+		isHovering = event.detail.isHovering; // Should be false
+	}
+	
+	// Calculate the frequency at current mouse position
+	function updateHoverFrequency() {
+		if (!isHovering || mouseY < 0 || mouseY >= height || bandEdges.length === 0) {
+			return;
+		}
+		
+		// Calculate the band index based on mouse Y position
+		// Note: Frequencies are displayed from bottom (low) to top (high)
+		const invertedY = height - mouseY; // Invert Y because bands are drawn from bottom up
+		const bandHeight = height / NUM_BANDS;
+		const bandIndex = Math.floor(invertedY / bandHeight);
+		
+		// Ensure bandIndex is within valid range
+		const clampedBandIndex = Math.max(0, Math.min(NUM_BANDS - 1, bandIndex));
+		
+		// Get the frequency at this band
+		// We can use the lower edge of the band for simplicity
+		hoverFrequency = bandEdges[clampedBandIndex];
 	}
 
 	// Function to initialize frequency bands
@@ -154,6 +201,21 @@
 				}
 			}
 		}
+
+		// Draw hover label if mouse is over the canvas
+		if (isHovering) {
+			drawFrequencyTooltip({
+				ctx,
+				x: mouseX,
+				y: mouseY,
+				width,
+				frequency: hoverFrequency,
+				backgroundColor: theme.accent,
+				textColor: theme.primary,
+				showNote: true,
+				formatNote
+			});
+		}
 	}
 
 	// Listen for sample rate changes to reinitialize bands
@@ -164,9 +226,11 @@
 	});
 </script>
 
-<BaseVisualizer
+<BaseHoverableVisualizer
 	on:ready={handleReady}
 	on:resize={handleResize}
+	on:mousemove={handleMouseMove}
+	on:mouseleave={handleMouseLeave}
 	id="spectrogram"
 	draw={drawSpectrogram}
 />

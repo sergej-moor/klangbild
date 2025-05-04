@@ -23,6 +23,47 @@
 	// Create event dispatcher
 	const dispatch = createEventDispatcher();
 
+	// Mouse event handlers
+	function handleMouseMove(event: MouseEvent) {
+		const rect = canvas.getBoundingClientRect();
+		const x = event.clientX - rect.left;
+		const y = event.clientY - rect.top;
+		
+		dispatch('mousemove', {
+			originalEvent: event,
+			x,
+			y,
+			canvasX: x,
+			canvasY: y
+		});
+	}
+	
+	function handleMouseLeave(event: MouseEvent) {
+		dispatch('mouseleave', {
+			originalEvent: event
+		});
+	}
+	
+	function handleMouseEnter(event: MouseEvent) {
+		dispatch('mouseenter', {
+			originalEvent: event
+		});
+	}
+	
+	function handleClick(event: MouseEvent) {
+		const rect = canvas.getBoundingClientRect();
+		const x = event.clientX - rect.left;
+		const y = event.clientY - rect.top;
+		
+		dispatch('click', {
+			originalEvent: event,
+			x,
+			y,
+			canvasX: x,
+			canvasY: y
+		});
+	}
+
 	// Initialize canvas and context
 	function initCanvas() {
 		if (!browser || !container) return;
@@ -136,6 +177,13 @@
 </script>
 
 <div class="relative h-full w-full overflow-hidden" bind:this={container} {id}>
-	<canvas bind:this={canvas} class="absolute top-0 left-0 h-full w-full"></canvas>
+	<canvas 
+		bind:this={canvas} 
+		class="absolute top-0 left-0 h-full w-full"
+		on:mousemove={handleMouseMove}
+		on:mouseleave={handleMouseLeave}
+		on:mouseenter={handleMouseEnter}
+		on:click={handleClick}
+	></canvas>
 	<slot />
 </div>

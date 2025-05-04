@@ -1,9 +1,15 @@
 <script lang="ts">
 	import { spectrum, sampleRate } from '$lib/audio/stores';
 	import { theme } from '$lib/theme';
-	import BaseVisualizer from './BaseVisualizer.svelte';
-	import { blendColors, parseColor } from '$lib/audio/visualizer';
+	import BaseHoverableVisualizer from './BaseHoverableVisualizer.svelte';
+	import { 
+		blendColors, 
+		drawFrequencyTooltip, 
+		drawReferenceLine,
+		formatFrequency
+	} from '$lib/audio/visualizer';
 	import { browser } from '$app/environment';
+	import { formatNote } from '$lib/audio/utils';
 
 	// Props - removed debug prop
 	const {} = $props();
@@ -13,6 +19,17 @@
 	let width = 0;
 	let height = 0;
 	let scale = 1;
+
+	// Mouse position tracking
+	let mouseX = -1;
+	let mouseY = -1;
+	let isHovering = false;
+	let hoverFrequency = 0;
+	
+	// Track the loudest frequency
+	let peakFrequency = 0;
+	let peakAmplitude = 0;
+	let peakX = 0;
 
 	// Frequency scaling - back to original value but with better interpolation
 	const freqScalingPower = 3.0; // Controls logarithmic curve
@@ -50,6 +67,45 @@
 	function handleResize(event: CustomEvent) {
 		({ width, height, scale } = event.detail);
 		checkScreenSize();
+	}
+	
+	// Handle mousemove event from BaseHoverableVisualizer
+	function handleMouseMove(event: CustomEvent) {
+		// The BaseHoverableVisualizer now tracks mouse state for us
+		mouseX = event.detail.mouseX;
+		mouseY = event.detail.mouseY;
+		isHovering = event.detail.isHovering;
+		
+		// Calculate the frequency at the mouse position
+		updateHoverFrequency();
+	}
+	
+	// Handle mouseleave event from BaseHoverableVisualizer
+	function handleMouseLeave(event: CustomEvent) {
+		isHovering = event.detail.isHovering; // Should be false
+	}
+	
+	// Calculate the frequency at current mouse position
+	function updateHoverFrequency() {
+		if (!isHovering || mouseX < 0 || mouseX >= width) {
+			return;
+		}
+		
+		// Convert X position to frequency using the same scaling as the spectrum
+		const xPercent = mouseX / width;
+		const logPos = minFreqPercent + (1 - minFreqPercent) * Math.pow(xPercent, freqScalingPower);
+		
+		// Calculate frequency based on sample rate
+		const nyquist = ($sampleRate || 44100) / 2;
+		hoverFrequency = logPos * nyquist;
+	}
+	
+	// Calculate frequency from x position
+	function xToFrequency(x: number): number {
+		const xPercent = x / width;
+		const logPos = minFreqPercent + (1 - minFreqPercent) * Math.pow(xPercent, freqScalingPower);
+		const nyquist = ($sampleRate || 44100) / 2;
+		return logPos * nyquist;
 	}
 
 	// Cubic interpolation function for smoother curves
@@ -94,6 +150,10 @@
 		// Calculate how many points to draw
 		const pointCount = width;
 		const points: { x: number; y: number; amplitude: number }[] = [];
+		
+		// Reset peak tracking for this frame
+		peakAmplitude = 0;
+		peakX = 0;
 
 		// Process each point
 		for (let i = 0; i < pointCount; i++) {
@@ -145,6 +205,13 @@
 
 			// Store the point
 			points.push({ x: i, y, amplitude });
+			
+			// Track peak for loudest frequency
+			if (amplitude > peakAmplitude) {
+				peakAmplitude = amplitude;
+				peakX = i;
+				peakFrequency = xToFrequency(i);
+			}
 		}
 
 		// Fill the area under the curve with energy-based coloring
@@ -188,6 +255,48 @@
 
 		// Stroke the line
 		ctx.stroke();
+		
+		// If hovering, show tooltip at mouse position
+		if (isHovering) {
+			// Draw tooltip
+			drawFrequencyTooltip({
+				ctx,
+				x: mouseX,
+				y: mouseY,
+				width,
+				frequency: hoverFrequency,
+				backgroundColor: theme.accent,
+				textColor: theme.primary,
+				showNote: true,
+				formatNote
+			});
+			
+			// Draw a vertical reference line
+			drawReferenceLine(ctx, mouseX, height, theme.primary, 0.5);
+		} 
+		// Otherwise, show tooltip at peak frequency position
+		else if (peakAmplitude > 0.1) { // Only show if there's a significant peak
+			const peakY = points[peakX]?.y || height / 2;
+			
+			// Draw tooltip at peak position
+			drawFrequencyTooltip({
+				ctx,
+				x: peakX,
+				y: peakY,
+				width,
+				frequency: peakFrequency,
+				backgroundColor: theme.accent,
+				textColor: theme.primary,
+				showNote: true,
+				formatNote
+			});
+			
+			// Draw a circle at the peak point for better visibility
+			ctx.fillStyle = theme.primary;
+			ctx.beginPath();
+			ctx.arc(peakX, peakY, 4, 0, Math.PI * 2);
+			ctx.fill();
+		}
 	}
 
 	// Add event listener for window resize
@@ -196,9 +305,11 @@
 	}
 </script>
 
-<BaseVisualizer
+<BaseHoverableVisualizer
 	on:ready={handleReady}
 	on:resize={handleResize}
+	on:mousemove={handleMouseMove}
+	on:mouseleave={handleMouseLeave}
 	id="frequency-spectrum"
 	draw={drawSpectrum}
 />
