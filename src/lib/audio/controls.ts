@@ -18,6 +18,13 @@ import {
 import { getAudioContext, setupEqualizer } from './core';
 import { setupAnalyzer } from './analyzer';
 import { startVisualizerUpdates, resetVisualizerData } from './visualizer';
+import { browser } from '$app/environment';
+
+// Event to dispatch when track ends
+export const TRACK_ENDED_EVENT = 'klangbild:track-ended';
+
+// Flag to indicate when we're seeking (to prevent automatic track progression)
+let isSeeking = false;
 
 // Play audio from current position
 export function playAudio() {
@@ -40,6 +47,21 @@ export function playAudio() {
 	// Create new source node
 	const source = context.createBufferSource();
 	source.buffer = buffer;
+	
+	// Add ended event handler to automatically play next track
+	source.onended = () => {
+		// Only trigger next track if playback actually completed (not manually stopped)
+		// and we're not in the middle of a seek operation
+		if (get(isPlaying) && !isSeeking) {
+			// Dispatch a custom event that the PlaybackControls component can listen for
+			if (browser) {
+				window.dispatchEvent(new CustomEvent(TRACK_ENDED_EVENT));
+			}
+		}
+		
+		// Reset the seeking flag
+		isSeeking = false;
+	};
 
 	// Create gain node if needed
 	let gain = get(gainNode);
@@ -148,6 +170,9 @@ export function seekToPosition(position: number) {
 
 	// If playing, restart from new position
 	if (get(isPlaying)) {
+		// Set the seeking flag to prevent track ended event
+		isSeeking = true;
+		
 		// Stop current playback
 		const source = get(audioSource);
 		if (source) {

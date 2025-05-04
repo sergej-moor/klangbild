@@ -5,6 +5,8 @@ import type { PlaylistTrack } from '$lib/audio/types';
 interface PlaylistStore extends Array<PlaylistTrack> {
 	activeTrackId: string | null;
 	activeTrack: PlaylistTrack | null;
+	isShuffleMode: boolean;
+	isRepeatMode: boolean;
 }
 
 // Initial playlist with two demo tracks
@@ -18,6 +20,8 @@ function createPlaylistStore() {
 	// Create the underlying stores
 	const tracks = writable<PlaylistTrack[]>(initialTracks);
 	const activeTrackId = writable<string | null>(initialTracks[0]?.id || null);
+	const isShuffleMode = writable<boolean>(false);
+	const isRepeatMode = writable<boolean>(false);
 
 	// Create a derived store for the active track
 	const activeTrack = derived([tracks, activeTrackId], ([$tracks, $activeTrackId]) => {
@@ -29,11 +33,13 @@ function createPlaylistStore() {
 		...tracks,
 		subscribe: (run: (value: PlaylistStore) => void) => {
 			return derived(
-				[tracks, activeTrackId, activeTrack],
-				([$tracks, $activeTrackId, $activeTrack]) => {
+				[tracks, activeTrackId, activeTrack, isShuffleMode, isRepeatMode],
+				([$tracks, $activeTrackId, $activeTrack, $isShuffleMode, $isRepeatMode]) => {
 					return Object.assign([], $tracks, {
 						activeTrackId: $activeTrackId,
-						activeTrack: $activeTrack
+						activeTrack: $activeTrack,
+						isShuffleMode: $isShuffleMode,
+						isRepeatMode: $isRepeatMode
 					}) as unknown as PlaylistStore;
 				}
 			).subscribe(run);
@@ -49,6 +55,12 @@ function createPlaylistStore() {
 		setActiveTrack: (id: string) => {
 			console.log(`Setting active track ID to: ${id}`);
 			activeTrackId.set(id);
+		},
+		toggleShuffleMode: () => {
+			isShuffleMode.update(value => !value);
+		},
+		toggleRepeatMode: () => {
+			isRepeatMode.update(value => !value);
 		}
 	};
 
