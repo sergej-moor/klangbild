@@ -63,19 +63,24 @@ export function parseColor(color: string): { r: number; g: number; b: number } {
 
 // Update all visualizer data
 export function updateVisualizerData() {
-	if (!get(analyzerNode)) return;
+	const analyzer = get(analyzerNode);
+	// Don't immediately return if no analyzer - we might still need to update visualizers with empty data
+	// when paused to ensure proper state display
+	
+	// Only attempt to get new data from the analyzer if it exists
+	if (analyzer) {
+		// Update spectrum data
+		const freqData = getFrequencyData();
+		spectrum.set(freqData);
 
-	// Update spectrum data
-	const freqData = getFrequencyData();
-	spectrum.set(freqData);
+		// Update waveform data
+		const waveData = getWaveformData();
+		waveform.set(waveData);
 
-	// Update waveform data
-	const waveData = getWaveformData();
-	waveform.set(waveData);
-
-	// Update RMS levels
-	const levels = calculateRMSLevels();
-	rmsLevels.set(levels);
+		// Update RMS levels
+		const levels = calculateRMSLevels();
+		rmsLevels.set(levels);
+	}
 
 	// Update playback position (critical for UI updates)
 	updatePlaybackPosition();
@@ -117,9 +122,23 @@ export function startVisualizerUpdates() {
 	};
 }
 
+// Reset all visualizer data stores to empty/default values
+export function resetVisualizerData() {
+	// Set spectrum to empty or very low values array
+	const emptySpectrum = new Uint8Array(1024).fill(0);
+	spectrum.set(emptySpectrum);
+	
+	// Set waveform to flat line (all zeros)
+	const emptyWaveform = new Float32Array(1024).fill(0);
+	waveform.set(emptyWaveform);
+	
+	// Reset RMS levels to zero
+	rmsLevels.set({ left: 0, right: 0 });
+}
+
 // Calculate levels for visualizers
 export function calculateLevels() {
-	if (!get(isPlaying)) return;
+	// Removed the check for isPlaying to ensure updates happen even when paused
 	updateVisualizerData();
 }
 

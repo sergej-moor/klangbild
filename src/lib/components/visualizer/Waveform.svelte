@@ -4,63 +4,88 @@
 	import { audioBuffer, playbackPosition, isPlaying } from '$lib/audio/stores';
 	import { seekToPosition } from '$lib/audio/controls';
 	import { theme, sizes } from '$lib/theme';
+	import { drawReferenceLine } from '$lib/audio/visualizer';
+	import { formatTime } from '$lib/audio/utils';
+	import BaseVisualizer from './BaseVisualizer.svelte';
 
 	// Props
 	const { compactMode = false } = $props();
 
 	// Canvas references and state
-	let canvas: HTMLCanvasElement;
 	let ctx: CanvasRenderingContext2D;
 	let width = $state(0);
 	let height = $state(sizes.defaultHeight);
 	let isReady = $state(false);
 	let progress = $state(0); // Track progress locally
+	let mouseX = $state(-1);
+	let mouseY = $state(-1);
+	let isHovering = $state(false);
+	let totalDuration = $state(0); // Track the total audio duration
 
 	// Off-screen canvases for prerendering
 	let playedWaveformCanvas: HTMLCanvasElement | null = null;
 	let upcomingWaveformCanvas: HTMLCanvasElement | null = null;
 	let hasPrerenderedWaveform = $state(false);
 
-	// Animation frame ID for continuous updates
-	let animationId: number;
-
 	// Styling parameters for waveform
 	const waveformColor = theme.primary;
 	const progressColor = theme.primary;
 	const lineWidth = compactMode ? 0.8 : 1.2;
+	const hoverLineColor = waveformColor; // Use primary color for hover line
 
 	// Store full waveform data
 	let fullWaveform = $state<Float32Array | null>(null);
 
-	// Handle resize for responsiveness
-	function handleResize() {
-		if (!browser || !canvas || !ctx) return;
-
-		const container = canvas.parentElement;
-		if (container) {
-			const newWidth = container.clientWidth;
-			const newHeight = compactMode ? 40 : Math.min(sizes.defaultHeight, container.clientWidth / 2);
-			
-			// Only recreate prerendered canvases if dimensions change
-			if (width !== newWidth || height !== newHeight) {
-				width = newWidth;
-				height = newHeight;
-				canvas.width = width;
-				canvas.height = height;
-				
-				// Reset prerendered flag so waveform will be redrawn
-				hasPrerenderedWaveform = false;
-				
-				if (fullWaveform && fullWaveform.length > 0) {
-					prerenderWaveform(fullWaveform);
-				}
-			}
+	// Handle ready event from BaseVisualizer
+	function handleReady(event: CustomEvent) {
+		({ ctx, width, height } = event.detail);
+		isReady = true;
+		
+		if ($audioBuffer) {
+			generateWaveformData();
+			totalDuration = $audioBuffer.duration;
 		}
+	}
+
+	// Handle resize event from BaseVisualizer
+	function handleResize(event: CustomEvent) {
+		({ width, height } = event.detail);
+		
+		// Reset prerendered flag so waveform will be redrawn
+		hasPrerenderedWaveform = false;
+		
+		if (fullWaveform && fullWaveform.length > 0) {
+			prerenderWaveform(fullWaveform);
+		}
+	}
+
+	// Handle mouse events
+	function handleMouseMove(event: CustomEvent) {
+		mouseX = event.detail.x;
+		mouseY = event.detail.y;
+		isHovering = true;
+	}
+
+	function handleMouseLeave() {
+		isHovering = false;
+	}
+
+	function handleClick(event: CustomEvent) {
+		if (!isReady) return;
+		
+		// Calculate the click position relative to the canvas width
+		const position = mouseX / width;
+		
+		// Force seek regardless of playing state
+		seekToPosition(position);
 	}
 
 	// Generate waveform data from audio buffer
 	function generateWaveformData() {
 		if (!$audioBuffer) return;
+
+		// Store the total duration
+		totalDuration = $audioBuffer.duration;
 
 		// Use the first channel of audio data
 		const rawData = $audioBuffer.getChannelData(0);
@@ -89,12 +114,6 @@
 		
 		// Reset pre-rendered flag
 		hasPrerenderedWaveform = false;
-	}
-
-	// Clear the canvas
-	function clearCanvas() {
-		if (!ctx) return;
-		ctx.clearRect(0, 0, width, height);
 	}
 	
 	// Prerender waveform to offscreen canvases
@@ -133,7 +152,6 @@
 		upcomingCtx.lineWidth = lineWidth;
 		upcomingCtx.lineJoin = 'round';
 		
-		// Draw played waveform on first canvas (theme.primary on transparent)
 		const sampleStep = data.length / width;
 		
 		// Draw played portion (inverted: theme.background waveform on theme.primary background)
@@ -215,28 +233,84 @@
 		// Mark as prerendered
 		hasPrerenderedWaveform = true;
 	}
-
-	// Setup continuous animation for progress updates
-	function startProgressAnimation() {
-		if (animationId) cancelAnimationFrame(animationId);
-
-		function animate() {
-			if (isReady && ctx && fullWaveform && fullWaveform.length > 0) {
-				// Always get the latest progress directly from the store
-				progress = $playbackPosition;
-				
-				// Prerender waveform if not already done
-				if (!hasPrerenderedWaveform) {
-					prerenderWaveform(fullWaveform);
-				}
-				
-				// Draw the current state using prerendered images
-				drawCurrentState(progress);
-			}
-			animationId = requestAnimationFrame(animate);
+	
+	// Calculate time at mouse position
+	function getTimeAtPosition(x: number): number {
+		if (totalDuration <= 0 || width <= 0) return 0;
+		const position = Math.max(0, Math.min(1, x / width));
+		return position * totalDuration;
+	}
+	
+	// Draw time tooltip at hover position
+	function drawTimeTooltip(x: number) {
+		if (!ctx || totalDuration <= 0) return;
+		
+		const time = getTimeAtPosition(x);
+		const formattedTime = formatTime(time);
+		
+		// Set up text styling
+		ctx.font = '10px Arial';
+		ctx.textAlign = 'center';
+		const textWidth = ctx.measureText(formattedTime).width;
+		const padding = 4;
+		const tooltipWidth = textWidth + padding * 2;
+		const tooltipHeight = 18;
+		
+		// Position tooltip at the mouse Y position
+		let tooltipX = x;
+		const tooltipY = mouseY;
+		
+		// Keep tooltip within canvas bounds
+		if (tooltipX + tooltipWidth / 2 > width) {
+			tooltipX = width - tooltipWidth / 2;
+		} else if (tooltipX - tooltipWidth / 2 < 0) {
+			tooltipX = tooltipWidth / 2;
 		}
-
-		animationId = requestAnimationFrame(animate);
+		
+		// Make sure tooltip is visible and not cut off at top or bottom
+		let adjustedY = tooltipY;
+		if (adjustedY - tooltipHeight / 2 < 0) {
+			// Too close to top, move down
+			adjustedY = tooltipHeight / 2;
+		} else if (adjustedY + tooltipHeight / 2 > height) {
+			// Too close to bottom, move up
+			adjustedY = height - tooltipHeight / 2;
+		}
+		
+		// Draw tooltip background
+		ctx.fillStyle = waveformColor;
+		ctx.fillRect(
+			tooltipX - tooltipWidth / 2,
+			adjustedY - tooltipHeight / 2,
+			tooltipWidth,
+			tooltipHeight
+		);
+		
+		// Draw tooltip text
+		ctx.fillStyle = theme.background;
+		ctx.fillText(formattedTime, tooltipX, adjustedY + 4);
+	}
+	
+	// Main draw function for the visualizer
+	function drawWaveform() {
+		if (!ctx || !isReady) return;
+		
+		// Get latest progress
+		progress = $playbackPosition;
+		
+		// Ensure waveform is prerendered
+		if (!hasPrerenderedWaveform && fullWaveform && fullWaveform.length > 0) {
+			prerenderWaveform(fullWaveform);
+		}
+		
+		// Draw the current state
+		drawCurrentState(progress);
+		
+		// Draw hover line and tooltip if hovering
+		if (isHovering && mouseX >= 0) {
+			drawHoverLine();
+			drawTimeTooltip(mouseX);
+		}
 	}
 	
 	// Draw the current state using prerendered waveforms
@@ -244,7 +318,7 @@
 		if (!ctx || !playedWaveformCanvas || !upcomingWaveformCanvas) return;
 		
 		// Clear the canvas
-		clearCanvas();
+		ctx.clearRect(0, 0, width, height);
 		
 		// Calculate the progress position in pixels
 		const progressPixel = Math.floor(width * currentProgress);
@@ -277,27 +351,20 @@
 		ctx.lineTo(progressPixel, height);
 		ctx.stroke();
 	}
-
-	// Handle click on the waveform to seek
-	function handleWaveformClick(event: MouseEvent) {
-		if (!isReady || !canvas) return;
-
-		const rect = canvas.getBoundingClientRect();
-
-		// Calculate the click position relative to the canvas
-		const x = event.clientX - rect.left;
-
-		// Convert to a position between 0 and 1
-		const position = x / rect.width;
-
-		// Force seek regardless of playing state
-		seekToPosition(position);
+	
+	// Draw hover line using the visualizer utility
+	function drawHoverLine() {
+		if (!ctx) return;
+		
+		// Use utility function from visualizer.ts
+		drawReferenceLine(ctx, mouseX, height, hoverLineColor, 0.8);
 	}
 
 	// Watch for audio buffer changes to generate the waveform
 	$effect(() => {
 		if ($audioBuffer) {
 			generateWaveformData();
+			totalDuration = $audioBuffer.duration;
 		}
 	});
 
@@ -313,43 +380,9 @@
 		}
 	});
 
-	// Lifecycle hooks
-	onMount(async () => {
-		if (!browser) return;
-
-		// Initialize canvas context
-		ctx = canvas.getContext('2d')!;
-
-		// Set up resize listener
-		window.addEventListener('resize', handleResize);
-		handleResize();
-
-		// Add click event listener to the canvas
-		canvas.addEventListener('click', handleWaveformClick);
-
-		// Generate waveform data if already loaded
-		if ($audioBuffer) {
-			generateWaveformData();
-		}
-
-		// Mark as ready
-		isReady = true;
-
-		// Start animation
-		startProgressAnimation();
-	});
-
+	// Clean up when component is destroyed
 	onDestroy(() => {
 		if (!browser) return;
-
-		// Clean up event listeners and animation
-		window.removeEventListener('resize', handleResize);
-		if (canvas) {
-			canvas.removeEventListener('click', handleWaveformClick);
-		}
-		if (animationId) {
-			cancelAnimationFrame(animationId);
-		}
 		
 		// Clean up prerendered canvases
 		playedWaveformCanvas = null;
@@ -358,13 +391,13 @@
 </script>
 
 <div class="relative h-full w-full overflow-hidden">
-	<div
-		class="mx-auto flex h-full w-full flex-col {compactMode ? 'gap-0' : 'gap-2'}"
-		id="full-waveform"
-	>
-		<div class="w-full overflow-hidden ">
-			<canvas bind:this={canvas} {width} {height} class="block h-full w-full cursor-pointer"
-			></canvas>
-		</div>
-	</div>
+	<BaseVisualizer
+		on:ready={handleReady}
+		on:resize={handleResize}
+		on:mousemove={handleMouseMove}
+		on:mouseleave={handleMouseLeave}
+		on:click={handleClick}
+		draw={drawWaveform}
+		id="waveform-visualizer"
+	/>
 </div>

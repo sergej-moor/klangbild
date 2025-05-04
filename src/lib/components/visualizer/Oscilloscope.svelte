@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { waveform } from '$lib/audio/stores';
+	import { waveform, isPlaying } from '$lib/audio/stores';
 	import { theme } from '$lib/theme';
 	import BaseVisualizer from './BaseVisualizer.svelte';
 
@@ -36,6 +36,33 @@
 		// Get the current waveform data
 		let waveformData = $waveform;
 		if (!waveformData || waveformData.length === 0) {
+			return;
+		}
+		
+		// Helper function to detect if we have an active signal
+		function hasActiveSignal(data: Float32Array): boolean {
+			return $isPlaying && data.some(val => Math.abs(val) > 0.001);
+		}
+		
+		// Check if the audio is paused or waveform is flat (all zeros)
+		const hasSignal = hasActiveSignal(waveformData);
+		
+		// Draw a flat line if there's no signal
+		if (!hasSignal) {
+			ctx.strokeStyle = lineColor;
+			ctx.lineWidth = lineWidth;
+			
+			ctx.beginPath();
+			if (orientation === 'horizontal') {
+				const centerY = height / 2;
+				ctx.moveTo(0, centerY);
+				ctx.lineTo(width, centerY);
+			} else {
+				const centerX = width / 2;
+				ctx.moveTo(centerX, 0);
+				ctx.lineTo(centerX, height);
+			}
+			ctx.stroke();
 			return;
 		}
 

@@ -186,8 +186,32 @@
 		if ($isPlaying) {
 			startAnimation();
 		} else if (animationId) {
-			cancelAnimationFrame(animationId);
-			animationId = 0; // Reset to a valid number instead of undefined
+			// When stopping playback, don't immediately cancel animation
+			// Instead, let it run for a few more frames to properly reset visualizations
+			
+			// Store current animation ID to cancel it after delay
+			const currentAnimId = animationId;
+			
+			// After a short delay (200ms should be enough for ~12 frames @ 60fps)
+			setTimeout(() => {
+				// Only cancel if this is still the current animation
+				if (animationId === currentAnimId) {
+					cancelAnimationFrame(animationId);
+					animationId = 0;
+					
+					// Force a final redraw to ensure proper reset state
+					if (typeof draw === 'function') {
+						draw();
+					} else {
+						defaultDraw();
+					}
+					
+					// Draw debug info if enabled
+					if ($debugMode) {
+						drawDebugInfo();
+					}
+				}
+			}, 200);
 		}
 	});
 
@@ -208,6 +232,4 @@
 	on:click={handleClick}
 	scaleToFit={true} 
 	{id}
->
-	<slot />
-</VisualizerCanvas>
+/>

@@ -74,6 +74,4 @@
 	on:click={handleClick}
 	{draw}
 	{id}
->
-	<slot />
-</BaseVisualizer> 
+/> 

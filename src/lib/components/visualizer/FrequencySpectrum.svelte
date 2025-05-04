@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { spectrum, sampleRate } from '$lib/audio/stores';
+	import { spectrum, sampleRate, isPlaying } from '$lib/audio/stores';
 	import { theme } from '$lib/theme';
 	import BaseHoverableVisualizer from './BaseHoverableVisualizer.svelte';
 	import { 
@@ -134,6 +134,12 @@
 		return blendColors(lowColor, peakColor, factor, alpha);
 	}
 
+	// Check if the audio is paused or spectrum is all zeros
+	function hasActiveSignal(spectrumData: Uint8Array): boolean {
+		// Use the imported isPlaying store to check playback state
+		return $isPlaying && spectrumData.some(val => val > 0);
+	}
+
 	// Draw the frequency spectrum - this will be called by BaseVisualizer
 	function drawSpectrum() {
 		if (!ctx) return;
@@ -146,7 +152,22 @@
 		if (!spectrumData || spectrumData.length === 0) {
 			return;
 		}
+		
+		// Check if the audio is paused or spectrum is all zeros
+		const hasSignal = hasActiveSignal(spectrumData);
+		
+		// If no signal, draw a flat line and return
+		if (!hasSignal) {
+			ctx.strokeStyle = theme.primary;
+			ctx.lineWidth = 1;
+			ctx.beginPath();
+			ctx.moveTo(0, height);
+			ctx.lineTo(width, height);
+			ctx.stroke();
+			return;
+		}
 
+		// Rest of the drawing code for when there is a signal
 		// Calculate how many points to draw
 		const pointCount = width;
 		const points: { x: number; y: number; amplitude: number }[] = [];
@@ -292,10 +313,7 @@
 			});
 			
 			// Draw a circle at the peak point for better visibility
-			ctx.fillStyle = theme.primary;
-			ctx.beginPath();
-			ctx.arc(peakX, peakY, 4, 0, Math.PI * 2);
-			ctx.fill();
+		
 		}
 	}
 

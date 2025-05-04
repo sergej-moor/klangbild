@@ -2,7 +2,6 @@
 import { get } from 'svelte/store';
 import {
 	isPlaying,
-	audioContext,
 	audioBuffer,
 	audioSource,
 	gainNode,
@@ -16,9 +15,9 @@ import {
 	eqSettings,
 	volume
 } from './stores';
-import { getAudioContext, createAudioSource, setupEqualizer } from './core';
+import { getAudioContext, setupEqualizer } from './core';
 import { setupAnalyzer } from './analyzer';
-import { startVisualizerUpdates } from './visualizer';
+import { startVisualizerUpdates, resetVisualizerData } from './visualizer';
 
 // Play audio from current position
 export function playAudio() {
@@ -32,7 +31,7 @@ export function playAudio() {
 	if (currentSource) {
 		try {
 			currentSource.stop();
-		} catch (e) {
+		} catch {
 			// Ignore errors if already stopped
 		}
 		audioSource.set(null);
@@ -125,7 +124,12 @@ export function pauseAudio() {
 	const position = Math.min(elapsed / buffer.duration, 1);
 	playbackPosition.set(position);
 	pauseTime.set(context.currentTime);
+	
+	// Set isPlaying to false
 	isPlaying.set(false);
+	
+	// Clear all visualizer data stores to force a fresh empty state
+	resetVisualizerData();
 }
 
 // Toggle play/pause

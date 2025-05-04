@@ -46,7 +46,7 @@
 	function drawMeter() {
 		if (!ctx) return;
 
-		// Make sure to update the levels
+		// Make sure to update the levels only if playing
 		if ($isPlaying) {
 			calculateLevels();
 		}
@@ -67,6 +67,12 @@
 			// Object format {left, right}
 			leftLevel = rmsValues.left || 0;
 			rightLevel = rmsValues.right || 0;
+		}
+
+		// If not playing, force levels to zero regardless of what's in the store
+		if (!$isPlaying) {
+			leftLevel = 0;
+			rightLevel = 0;
 		}
 
 		// Use average of left and right for mono display

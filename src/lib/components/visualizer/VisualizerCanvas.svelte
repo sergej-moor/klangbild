@@ -185,5 +185,4 @@
 		on:mouseenter={handleMouseEnter}
 		on:click={handleClick}
 	></canvas>
-	<slot />
 </div>
