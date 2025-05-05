@@ -15,6 +15,9 @@
 	// Theme colors
 	const lineColor = theme.primary;
 	const lineWidth = 1;
+	
+	// Add padding settings (percentage of width/height)
+	const xPadding = 0.05; // 5% padding on the x-axis
 
 	// Handle ready event from BaseVisualizer
 	function handleReady(event: CustomEvent) {
@@ -32,6 +35,9 @@
 
 		// Clear the canvas
 		ctx.clearRect(0, 0, width, height);
+		
+		// Calculate padding in pixels
+		const paddingX = Math.floor(width * xPadding);
 
 		// Get the current waveform data
 		let waveformData = $waveform;
@@ -55,8 +61,9 @@
 			ctx.beginPath();
 			if (orientation === 'horizontal') {
 				const centerY = height / 2;
-				ctx.moveTo(0, centerY);
-				ctx.lineTo(width, centerY);
+				// Apply padding to flat line
+				ctx.moveTo(paddingX, centerY);
+				ctx.lineTo(width - paddingX, centerY);
 			} else {
 				const centerX = width / 2;
 				ctx.moveTo(centerX, 0);
@@ -97,11 +104,14 @@
 			// Auto-scale amplitude based on available height and current scale factor
 			const scaleFactor = ((height * 0.8) / 2) * scale;
 
-			// Always stretch the waveform to fill the entire canvas width
-			const step = waveformData.length / width;
+			// Calculate draw area width with padding
+			const drawWidth = width - (paddingX * 2);
+			
+			// Always stretch the waveform to fill the draw area (not the entire canvas)
+			const step = waveformData.length / drawWidth;
 
-			// Plot each point in the waveform
-			for (let i = 0; i < width; i++) {
+			// Plot each point in the waveform (with padding)
+			for (let i = 0; i < drawWidth; i++) {
 				// Calculate the data index for this x position
 				const dataIndex = Math.min(waveformData.length - 1, Math.floor(i * step));
 
@@ -110,12 +120,15 @@
 
 				// Calculate y position (invert and scale)
 				const y = centerY - value * scaleFactor;
+				
+				// Calculate x position with padding
+				const x = i + paddingX;
 
 				// Plot the point
 				if (i === 0) {
-					ctx.moveTo(i, y);
+					ctx.moveTo(x, y);
 				} else {
-					ctx.lineTo(i, y);
+					ctx.lineTo(x, y);
 				}
 			}
 		} else {
@@ -158,5 +171,7 @@
 	on:ready={handleReady}
 	on:resize={handleResize}
 	id="oscilloscope"
+	title="Oscilloscope"
+	titlePosition="top"
 	draw={drawOscilloscope}
 />

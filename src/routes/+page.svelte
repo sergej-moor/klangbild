@@ -130,7 +130,7 @@ import CdVisualizer from '$lib/components/visualizer/CDVisualizer.svelte';
 		>
 			<!-- Oscilloscope -->
 			<div
-				class="col-span-3 col-start-1 row-span-3 row-start-1 overflow-hidden border border-current md:col-span-2 md:row-span-5 px-4"
+				class="col-span-3 col-start-1 row-span-3 row-start-1 overflow-hidden border border-current md:col-span-2 md:row-span-5 "
 			>
 				<Oscilloscope orientation="vertical" />
 			</div>

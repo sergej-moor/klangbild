@@ -232,5 +232,7 @@
 	on:mousemove={handleMouseMove}
 	on:mouseleave={handleMouseLeave}
 	id="spectrogram"
+	title="Spectrogram"
+	titlePosition="right"
 	draw={drawSpectrogram}
 />

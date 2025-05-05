@@ -124,7 +124,14 @@
 	}
 </script>
 
-<BaseVisualizer on:ready={handleReady} on:resize={handleResize} id="peak-meter" draw={drawMeter} />
+<BaseVisualizer 
+	on:ready={handleReady} 
+	on:resize={handleResize} 
+	id="peak-meter" 
+	title="RMS Meter" 
+	titlePosition="left"
+	draw={drawMeter} 
+/>
 
 <style>
 	/* Add some styles to ensure the canvas parent takes full space */

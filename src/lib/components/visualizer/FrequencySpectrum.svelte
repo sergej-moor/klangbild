@@ -222,7 +222,7 @@
 			const amplitude = value / 255;
 
 			// Calculate y position with height scaling
-			const y = height - amplitude * height * 0.8 * scale * heightScaleFactor;
+			const y = height - amplitude * height * 0.7 * scale * heightScaleFactor;
 
 			// Store the point
 			points.push({ x: i, y, amplitude });
@@ -329,5 +329,7 @@
 	on:mousemove={handleMouseMove}
 	on:mouseleave={handleMouseLeave}
 	id="frequency-spectrum"
+	title="Frequency Spectrum"
+	titlePosition="top"
 	draw={drawSpectrum}
 />

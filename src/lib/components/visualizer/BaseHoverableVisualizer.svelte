@@ -6,6 +6,8 @@
 	// Props that all hoverable visualizers should support
 	const {
 		id = 'hoverable-visualizer-' + Math.random().toString(36).substring(2, 9),
+		title = '', // Title to display for the visualizer
+		titlePosition = 'top', // 'top', 'bottom', 'left', or 'right'
 		draw = null // Accept the draw function from child component
 	} = $props();
 
@@ -74,4 +76,6 @@
 	on:click={handleClick}
 	{draw}
 	{id}
+	{title}
+	{titlePosition}
 /> 
