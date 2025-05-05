@@ -98,34 +98,34 @@
 	<div class="flex h-full flex-col gap-2 p-2 md:flex-row">
 		<!-- Controls Grid - takes full width on small screens, 1/3 on medium & large -->
 		<div class="grid h-[45vh] w-full grid-cols-4 grid-rows-8 gap-1 md:h-full md:w-1/3">
-			<div class="col-span-3 row-span-2 overflow-hidden border border-current md:row-span-1">
+			<div class="col-span-3 row-span-2 overflow-hidden border border-current md:row-span-1 hover:scale-[0.98] transition-transform duration-200">
 				<Equalizer on:change={handleEqChange} />
 			</div>
 
-			<div class="col-span-1 row-span-2 overflow-hidden border border-current md:row-span-1">
+			<div class="col-span-1 row-span-2 overflow-hidden border border-current md:row-span-1 hover:scale-[0.98] transition-transform duration-200">
 				<VolumeKnob on:change={handleVolumeChange} />
 			</div>
 
 			<div
-				class="col-span-3 row-span-1 row-start-3 overflow-hidden border border-current md:row-start-2"
+				class="col-span-3 row-span-1 row-start-3 overflow-hidden border border-current md:row-start-2 hover:scale-[0.98] transition-transform duration-200"
 			>
 				<SongInfo />
 			</div>
 
 			<div
-				class="col-span-3 row-span-1 row-start-4 overflow-hidden border border-current md:row-span-1 md:row-start-3"
+				class="col-span-3 row-span-1 row-start-4 overflow-hidden border border-current md:row-span-1 md:row-start-3 hover:scale-[0.98] transition-transform duration-200"
 			>
 				<PlaybackControls />
 			</div>
 
 			<div
-				class="col-span-3 col-start-1 row-span-4 row-start-5 overflow-auto border border-current md:row-span-5 md:row-start-4"
+				class="col-span-3 col-start-1 row-span-4 row-start-5 overflow-auto border border-current md:row-span-5 md:row-start-4 hover:scale-[0.98] transition-transform duration-200"
 			>
 				<Playlist />
 			</div>
 
 			<div
-				class="col-start-4 row-span-6 row-start-3 overflow-hidden border border-current md:row-span-7 md:row-start-2"
+				class="col-start-4 row-span-6 row-start-3 overflow-hidden border border-current md:row-span-7 md:row-start-2 hover:scale-[0.98] transition-transform duration-200"
 			>
 				<RmsMeter />
 			</div>
@@ -137,51 +137,51 @@
 		>
 			<!-- Oscilloscope -->
 			<div
-				class="col-span-3 col-start-1 row-span-3 row-start-1 overflow-hidden border border-current md:col-span-2 md:row-span-5 "
+				class="col-span-3 col-start-1 row-span-3 row-start-1 overflow-hidden border border-current md:col-span-2 md:row-span-5 hover:scale-[0.98] transition-transform duration-200"
 			>
 				<Oscilloscope orientation="vertical" />
 			</div>
 
 			<!-- Spectrogram -->
 			<div
-				class="col-span-5 col-start-4 row-span-3 row-start-1 overflow-hidden border border-current md:col-start-3"
+				class="col-span-5 col-start-4 row-span-3 row-start-1 overflow-hidden border border-current md:col-start-3 hover:scale-[0.98] transition-transform duration-200"
 			>
 				<Spectrogram />
 			</div>
 
 			<!-- Logo - desktop/tablet only (hidden on small screens) -->
-			<div class="col-span-1 col-start-8 row-span-3 row-start-1 hidden overflow-hidden md:block">
+			<div class="col-span-1 col-start-8 row-span-3 row-start-1 hidden overflow-hidden md:block hover:scale-[0.98] transition-transform duration-200">
 				<Logo vertical={true} />
 			</div>
 
 			<!-- Waveform -->
 			<div
-				class="col-span-8 col-start-1 row-span-2 row-start-4 overflow-hidden border border-current md:col-span-6 md:col-start-3"
+				class="col-span-8 col-start-1 row-span-2 row-start-4 overflow-hidden border border-current md:col-span-6 md:col-start-3 hover:scale-[0.98] transition-transform duration-200"
 			>
 				<Waveform />
 			</div>
 
 			<!-- Frequency Spectrum -->
 			<div
-				class="col-span-7 col-start-1 row-span-3 row-start-6 overflow-hidden border border-current"
+				class="col-span-7 col-start-1 row-span-3 row-start-6 overflow-hidden border border-current hover:scale-[0.98] transition-transform duration-200"
 			>
 				<FrequencySpectrum />
 			</div>
 
 			<!-- Data Display -->
 			<div
-				class="col-span-1 col-start-8 row-span-2 row-start-6 overflow-hidden border border-current"
+				class="col-span-1 col-start-8 row-span-2 row-start-6 overflow-hidden border border-current hover:scale-[0.98] transition-transform duration-200"
 			>
 				<RawDataDisplay  refreshRate={100} />
 			</div>
       <div
-      class="col-span-1 col-start-8 row-span-1 row-start-8 overflow-hidden "
+      class="col-span-1 col-start-8 row-span-1 row-start-8 overflow-hidden hover:scale-[0.98] transition-transform duration-200"
     >
       <CdVisualizer />
     </div>
 
 			<!-- Mobile Logo - only shown on small screens, below everything else -->
-			<div class="col-span-8 col-start-1 row-span-1 row-start-9 overflow-hidden md:hidden">
+			<div class="col-span-8 col-start-1 row-span-1 row-start-9 overflow-hidden md:hidden hover:scale-[0.98] transition-transform duration-200">
 				<Logo vertical={false} />
 			</div>
 		</div>

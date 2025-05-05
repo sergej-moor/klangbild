@@ -71,9 +71,12 @@
 	
 	// Handle mousemove event from BaseHoverableVisualizer
 	function handleMouseMove(event: CustomEvent) {
+		// Adjust coordinates based on the scale transformation (0.98 on hover)
+		const scaleAdjustment = 1 / 0.98; // ~1.0204
+		
 		// The BaseHoverableVisualizer now tracks mouse state for us
-		mouseX = event.detail.mouseX;
-		mouseY = event.detail.mouseY;
+		mouseX = event.detail.mouseX * scaleAdjustment;
+		mouseY = event.detail.mouseY * scaleAdjustment;
 		isHovering = event.detail.isHovering;
 		
 		// Calculate the frequency at the mouse position

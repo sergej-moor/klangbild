@@ -61,8 +61,11 @@
 
 	// Handle mouse events
 	function handleMouseMove(event: CustomEvent) {
-		mouseX = event.detail.x;
-		mouseY = event.detail.y;
+		// Adjust coordinates based on the scale transformation (0.98 on hover)
+		// Since we're scaling to 98%, we divide by 0.98 to get the original position
+		const scaleAdjustment = 1 / 0.98; // ~1.0204
+		mouseX = event.detail.x * scaleAdjustment;
+		mouseY = event.detail.y * scaleAdjustment;
 		isHovering = true;
 	}
 

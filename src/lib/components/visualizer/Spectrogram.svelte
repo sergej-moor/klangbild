@@ -8,6 +8,8 @@
 		formatFrequency
 	} from '$lib/audio/visualizer';
 	import { formatNote } from '$lib/audio/utils';
+	import { browser } from '$app/environment';
+	import { onMount, onDestroy } from 'svelte';
 
 	// Props - removed debug prop
 	const {} = $props();
@@ -26,35 +28,61 @@
 	let hoverFrequency = 0;
 
 	// Number of history frames to keep
-	const historyLength = 200;
+	const historyLength = 100;
 
 	// Number of frequency bands to display
-	const NUM_BANDS = 128;
+	const NUM_BANDS = 64;
 
 	// Frequency range constants - human hearing range
-	const MIN_FREQ = 20; // 20 Hz is typically the lower limit of human hearing
+	const MIN_FREQ = 10; // 20 Hz is typically the lower limit of human hearing
 	const MAX_FREQ_MULTIPLIER = 0.5; // Nyquist frequency (half sample rate)
 
 	// Pre-calculate band edge frequencies and mapping
 	let bandEdges: number[] = [];
 	let bandBinRanges: { start: number; end: number }[] = [];
+	
+	// Optimization: Cache band intensity calculations for each spectrum
+	let bandIntensityCache = new Map<Uint8Array, number[]>();
+	
+	// Optimization: Precomputed color cache - reduced to 128 levels for performance
+	let colorCache: string[] = [];
+	
+	// Number of color levels to use (128 instead of 256 for better performance)
+	const COLOR_LEVELS = 128;
 
 	// Handle ready event from BaseVisualizer
 	function handleReady(event: CustomEvent) {
 		({ ctx, width, height, scale } = event.detail);
 		initFrequencyBands();
+		initColorCache();
+		console.log('Spectrogram ready');
 	}
 
 	// Handle resize event from BaseVisualizer
 	function handleResize(event: CustomEvent) {
 		({ width, height, scale } = event.detail);
+		console.log('Spectrogram resize', width, height);
+	}
+	
+	// Initialize color cache for faster rendering with reduced color levels
+	function initColorCache() {
+		// Precompute colors for 128 intensity values instead of 256
+		colorCache = new Array(COLOR_LEVELS);
+		for (let i = 0; i < COLOR_LEVELS; i++) {
+			// Map 0-127 to 0-255 for calculating colors
+			const mappedValue = Math.floor((i / (COLOR_LEVELS - 1)) * 255);
+			colorCache[i] = getColor(mappedValue);
+		}
 	}
 	
 	// Handle mousemove event from BaseHoverableVisualizer
 	function handleMouseMove(event: CustomEvent) {
+		// Adjust coordinates based on the scale transformation (0.98 on hover)
+		const scaleAdjustment = 1 / 0.98; // ~1.0204
+		
 		// The BaseHoverableVisualizer now tracks mouse state for us
-		mouseX = event.detail.mouseX;
-		mouseY = event.detail.mouseY;
+		mouseX = event.detail.mouseX * scaleAdjustment;
+		mouseY = event.detail.mouseY * scaleAdjustment;
 		isHovering = event.detail.isHovering;
 		
 		// Calculate the frequency at the mouse position
@@ -114,22 +142,53 @@
 
 			bandBinRanges[bandIndex] = { start: lowBin, end: highBin };
 		}
+		
+		// Clear cache since bands changed
+		bandIntensityCache.clear();
 	}
 
-	// Function to get average intensity for a band
+	// Function to get average intensity for a band with caching
 	function getBandIntensity(spectrum: Uint8Array, bandIndex: number): number {
-		const range = bandBinRanges[bandIndex];
-		let sum = 0;
-		let count = 0;
-
-		// Sum up the values in this frequency range
-		for (let i = range.start; i <= range.end; i++) {
-			sum += spectrum[i];
-			count++;
+		// Check if we already have cached intensities for this spectrum
+		let bandIntensities = bandIntensityCache.get(spectrum);
+		
+		// If not cached, calculate all bands at once and cache them
+		if (!bandIntensities) {
+			bandIntensities = new Array(NUM_BANDS);
+			
+			// Calculate all band intensities for this spectrum
+			for (let band = 0; band < NUM_BANDS; band++) {
+				const range = bandBinRanges[band];
+				
+				// Optimization: For narrow bands, use max value instead of average
+				if (range.end - range.start <= 3) {
+					let max = 0;
+					for (let i = range.start; i <= range.end; i++) {
+						if (spectrum[i] > max) max = spectrum[i];
+					}
+					bandIntensities[band] = max;
+					continue;
+				}
+				
+				// For wider bands, use sampling
+				const step = Math.max(1, Math.ceil((range.end - range.start) / 8));
+				let sum = 0;
+				let count = 0;
+				
+				for (let i = range.start; i <= range.end; i += step) {
+					sum += spectrum[i];
+					count++;
+				}
+				
+				bandIntensities[band] = count > 0 ? Math.round(sum / count) : 0;
+			}
+			
+			// Store in cache
+			bandIntensityCache.set(spectrum, bandIntensities);
 		}
-
-		// Return the average intensity
-		return count > 0 ? Math.round(sum / count) : 0;
+		
+		// Return the cached value
+		return bandIntensities[bandIndex];
 	}
 
 	// Color gradient for intensity representation
@@ -144,64 +203,77 @@
 		return blendColors(theme.background, theme.primary, factor, 1.0);
 	}
 
-	// Draw function - no changes needed here as debug is handled by BaseVisualizer
+	// Main draw function - direct drawing to canvas without offscreen buffer 
 	function drawSpectrogram() {
 		if (!ctx) return;
-
+		
 		// Clear the canvas
 		ctx.clearRect(0, 0, width, height);
-
-		// Add the latest spectrum data if playing
+		
+		// Disable antialiasing for crisp pixel rendering
+		ctx.imageSmoothingEnabled = false;
+		
+		// Update the spectrogramData if playing
 		if ($isPlaying && $spectrum && $spectrum.length > 0) {
 			// Make a copy of the current spectrum
 			const currentSpectrum = new Uint8Array($spectrum);
-
+			
 			// Add to history
 			spectrogramData.push(currentSpectrum);
-
+			
 			// Limit history length
 			if (spectrogramData.length > historyLength) {
 				spectrogramData.shift();
 			}
 		}
-
-		// Draw the spectrogram
+		
+		// Draw the spectrogram history
 		if (spectrogramData.length > 0) {
 			// Calculate the vertical height of each frequency band
 			const bandHeight = height / NUM_BANDS;
-
+			
 			// Calculate the horizontal width of each time slice
 			const timeWidth = width / historyLength;
-
-			// Ensure at least 1 pixel width
-			const sliceWidth = Math.max(1, timeWidth);
-
+			
 			// Draw each time slice from oldest to newest (left to right)
 			for (let timeIndex = 0; timeIndex < spectrogramData.length; timeIndex++) {
 				// Calculate the x position for this time slice
 				const timeRatio = timeIndex / Math.min(historyLength, spectrogramData.length);
-				const x = width * timeRatio;
-
+				const x = Math.floor(width * timeRatio); // Floor to align with pixels
+				
+				// Calculate width to ensure no gaps between slices
+				const nextX = timeIndex < spectrogramData.length - 1 
+					? Math.floor(width * (timeIndex + 1) / Math.min(historyLength, spectrogramData.length))
+					: width;
+				const sliceWidth = Math.max(1, nextX - x);
+				
 				// Get the spectrum data for this time slice
 				const spectrumAtTime = spectrogramData[timeIndex];
-
+				
 				// Draw each frequency band for this time slice
 				for (let bandIndex = 0; bandIndex < NUM_BANDS; bandIndex++) {
 					// Calculate the y position (invert to put low frequencies at the bottom)
-					const yPos = height - (bandIndex + 1) * bandHeight;
-
+					const yPos = Math.floor(height - (bandIndex + 1) * bandHeight); // Floor for pixel alignment
+					
+					// Calculate height to ensure no gaps between bands
+					const nextY = bandIndex < NUM_BANDS - 1 
+						? Math.floor(height - (bandIndex + 2) * bandHeight)
+						: 0;
+					const actualBandHeight = yPos - nextY;
+					
 					// Get the intensity value for this band
 					const intensity = getBandIntensity(spectrumAtTime, bandIndex);
-
-					// Get the color based on intensity
-					ctx.fillStyle = getColor(intensity);
-
-					// Draw the rectangle for this band
-					ctx.fillRect(x, yPos, sliceWidth, bandHeight);
+					
+					// Get the color from cache - map 0-255 intensity to 0-127 color index
+					const colorIndex = intensity >> 1; // Bit shift right by 1 is the same as dividing by 2
+					ctx.fillStyle = colorCache[colorIndex];
+					
+					// Draw the rectangle for this band with adjusted dimensions to prevent gaps
+					ctx.fillRect(x, nextY, sliceWidth, actualBandHeight);
 				}
 			}
 		}
-
+		
 		// Draw crosshair lines when hovering
 		if (isHovering && mouseX >= 0 && mouseY >= 0) {
 			// Draw horizontal line
@@ -210,7 +282,7 @@
 			// Draw vertical line
 			drawCrosshairLine(mouseX, 0, mouseX, height);
 		}
-
+		
 		// Draw hover label if mouse is over the canvas
 		if (isHovering) {
 			// Save canvas state to preserve drawing
@@ -237,17 +309,7 @@
 	function drawCrosshairLine(x1: number, y1: number, x2: number, y2: number) {
 		if (!ctx) return;
 		
-		// Draw a subtle shadow for better contrast
-		ctx.globalCompositeOperation = 'difference';
-		ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-		ctx.lineWidth = 3;
-		ctx.beginPath();
-		ctx.moveTo(x1, y1);
-		ctx.lineTo(x2, y2);
-		ctx.stroke();
-		ctx.globalCompositeOperation = 'source-over';
-		
-		// Draw a solid line with primary color
+		// Draw simple line with primary color without shadow
 		ctx.strokeStyle = theme.primary;
 		ctx.lineWidth = 1;
 		ctx.beginPath();
@@ -274,6 +336,21 @@
 		if ($sampleRate) {
 			initFrequencyBands();
 		}
+	});
+	
+	// Listen for theme changes to reinitialize color cache
+	$effect(() => {
+		if (theme.primary || theme.background) {
+			// Theme changed, reinitialize color cache
+			initColorCache();
+		}
+	});
+	
+	// Clean up when component is destroyed
+	onDestroy(() => {
+		// Clear caches
+		bandIntensityCache.clear();
+		colorCache = [];
 	});
 </script>
 
