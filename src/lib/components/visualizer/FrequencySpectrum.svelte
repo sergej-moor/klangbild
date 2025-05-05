@@ -164,6 +164,30 @@
 			ctx.moveTo(0, height);
 			ctx.lineTo(width, height);
 			ctx.stroke();
+			
+			// Even if paused, we still draw the crosshair and tooltip if hovering
+			if (isHovering) {
+				// Draw crosshair lines
+				drawCrosshairLine(0, mouseY, width, mouseY);
+				drawCrosshairLine(mouseX, 0, mouseX, height);
+				
+				// Draw tooltip
+				drawFrequencyTooltip({
+					ctx,
+					x: mouseX,
+					y: mouseY,
+					width,
+					frequency: hoverFrequency,
+					backgroundColor: theme.primary,
+					textColor: theme.background,
+					showNote: true,
+					formatNote
+				});
+				
+				// Draw a vertical reference line
+				drawReferenceLine(ctx, mouseX, height, theme.primary, 0.5);
+			}
+			
 			return;
 		}
 
@@ -277,6 +301,13 @@
 		// Stroke the line
 		ctx.stroke();
 		
+		// Draw crosshair lines when hovering
+		if (isHovering) {
+			// Draw horizontal and vertical lines
+			drawCrosshairLine(0, mouseY, width, mouseY);
+			drawCrosshairLine(mouseX, 0, mouseX, height);
+		}
+		
 		// If hovering, show tooltip at mouse position
 		if (isHovering) {
 			// Draw tooltip
@@ -315,6 +346,29 @@
 			// Draw a circle at the peak point for better visibility
 		
 		}
+	}
+
+	// Function to draw a solid crosshair line
+	function drawCrosshairLine(x1: number, y1: number, x2: number, y2: number) {
+		if (!ctx) return;
+		
+		// Draw a subtle shadow for better contrast
+		ctx.globalCompositeOperation = 'difference';
+		ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+		ctx.lineWidth = 3;
+		ctx.beginPath();
+		ctx.moveTo(x1, y1);
+		ctx.lineTo(x2, y2);
+		ctx.stroke();
+		ctx.globalCompositeOperation = 'source-over';
+		
+		// Draw a solid line with primary color
+		ctx.strokeStyle = theme.primary;
+		ctx.lineWidth = 1;
+		ctx.beginPath();
+		ctx.moveTo(x1, y1);
+		ctx.lineTo(x2, y2);
+		ctx.stroke();
 	}
 
 	// Add event listener for window resize

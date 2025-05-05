@@ -22,7 +22,7 @@
 
 	import Logo from '$lib/components/Logo.svelte';
 	import RawDataDisplay from '$lib/components/visualizer/RawDataDisplay.svelte';
-import CdVisualizer from '$lib/components/visualizer/CDVisualizer.svelte';
+	import CdVisualizer from '$lib/components/visualizer/CDVisualizer.svelte';
 	// Preload audio when the page loads
 	onMount(async () => {
 		console.log('Main page mounted, preloading audio...');
@@ -52,6 +52,13 @@ import CdVisualizer from '$lib/components/visualizer/CDVisualizer.svelte';
 
 	// Set CSS variables for scrollbars when the component mounts
 	onMount(() => {
+		// Add data-interactive attribute to all interactive elements
+		// This will help our custom cursor identify interactive elements
+		const interactiveElements = document.querySelectorAll('button, a, input, select, textarea, .slider, [role="button"]');
+		interactiveElements.forEach((element) => {
+			element.setAttribute('data-interactive', 'true');
+		});
+
 		// Set primary color for scrollbars (with 40% opacity for translucent version)
 		document.documentElement.style.setProperty('--theme-primary', theme.primary);
 		document.documentElement.style.setProperty('--theme-primary-translucent', theme.primary + '66'); // 66 is hex for 40% opacity

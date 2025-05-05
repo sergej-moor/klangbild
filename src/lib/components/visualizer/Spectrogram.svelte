@@ -202,8 +202,20 @@
 			}
 		}
 
+		// Draw crosshair lines when hovering
+		if (isHovering && mouseX >= 0 && mouseY >= 0) {
+			// Draw horizontal line
+			drawCrosshairLine(0, mouseY, width, mouseY);
+			
+			// Draw vertical line
+			drawCrosshairLine(mouseX, 0, mouseX, height);
+		}
+
 		// Draw hover label if mouse is over the canvas
 		if (isHovering) {
+			// Save canvas state to preserve drawing
+			ctx.save();
+			
 			drawFrequencyTooltip({
 				ctx,
 				x: mouseX,
@@ -215,7 +227,46 @@
 				showNote: true,
 				formatNote
 			});
+			
+			// Restore canvas state
+			ctx.restore();
 		}
+	}
+	
+	// Function to draw a solid crosshair line
+	function drawCrosshairLine(x1: number, y1: number, x2: number, y2: number) {
+		if (!ctx) return;
+		
+		// Draw a subtle shadow for better contrast
+		ctx.globalCompositeOperation = 'difference';
+		ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+		ctx.lineWidth = 3;
+		ctx.beginPath();
+		ctx.moveTo(x1, y1);
+		ctx.lineTo(x2, y2);
+		ctx.stroke();
+		ctx.globalCompositeOperation = 'source-over';
+		
+		// Draw a solid line with primary color
+		ctx.strokeStyle = theme.primary;
+		ctx.lineWidth = 1;
+		ctx.beginPath();
+		ctx.moveTo(x1, y1);
+		ctx.lineTo(x2, y2);
+		ctx.stroke();
+	}
+
+	// Helper function to convert hex color to RGB components
+	function hexToRgb(hex: string): string {
+		// Remove # if present
+		hex = hex.replace(/^#/, '');
+		
+		// Parse hex values
+		const r = parseInt(hex.substring(0, 2), 16);
+		const g = parseInt(hex.substring(2, 4), 16);
+		const b = parseInt(hex.substring(4, 6), 16);
+		
+		return `${r}, ${g}, ${b}`;
 	}
 
 	// Listen for sample rate changes to reinitialize bands
