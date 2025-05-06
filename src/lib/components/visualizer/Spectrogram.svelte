@@ -11,14 +11,12 @@
 	import { browser } from '$app/environment';
 	import { onMount, onDestroy } from 'svelte';
 
-	// Props - removed debug prop
-	const {} = $props();
 
 	// References to canvas context
 	let ctx: CanvasRenderingContext2D;
 	let width = 0;
 	let height = 0;
-	let scale = 1;
+
 	let spectrogramData: Uint8Array[] = [];
 
 	// Mouse position tracking
