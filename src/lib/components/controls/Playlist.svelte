@@ -38,6 +38,12 @@
 		dispatch('select', { track, index });
 	}
 
+	function handleTrackKeyPress(event: KeyboardEvent, track: PlaylistTrack, index: number) {
+		if (event.key === 'Enter' || event.key === ' ') {
+			handleTrackSelect(track, index);
+		}
+	}
+
 	// Add function to handle track deletion
 	function handleDeleteTrack(event: Event, trackId: string) {
 		// Stop event from bubbling to parent (which would select the track)
@@ -81,46 +87,48 @@
 		<ul class="m-0 list-none p-0">
 			{#each tracks as track, index}
 				<li
-					class="relative mx-0  flex min-w-0 cursor-pointer items-center justify-between  px-[0.25rem] py-[0.15rem] text-[0.8rem] transition-all duration-150 hover:opacity-90  md:px-[0.5rem] md:py-[0.35rem]"
+					class="relative mx-0 flex min-w-0 items-center justify-between text-[0.8rem] transition-all duration-150"
 					class:active={activeTrackId === track.id}
 					class:playing={activeTrackId === track.id && playing}
-					on:click={() => handleTrackSelect(track, index)}
 					style="
             color: {activeTrackId === track.id ? theme.background : theme.primary}; 
             background-color: {activeTrackId === track.id ? theme.primary : 'transparent'};
             --indicator-color: {theme.primary};
           "
 				>
-					<div class="mr-1 flex min-w-0 flex-1 items-center">
+					<button
+						class="flex flex-1 cursor-pointer items-center justify-between border-none bg-transparent p-0 px-[0.25rem] py-[0.15rem] text-inherit hover:opacity-90 md:px-[0.5rem] md:py-[0.35rem]"
+						onclick={() => handleTrackSelect(track, index)}
+					>
 						<span
-							class="overflow-wrap-anywhere min-w-0 flex-1 pr-2 break-words md:text-[0.9rem]"
+							class="overflow-wrap-anywhere min-w-0 flex-1 break-words pr-2 text-left md:text-[0.9rem]"
 							title={track.title}>{track.title}</span
 						>
-					</div>
-					<div class="flex items-center gap-2">
 						<span
 							class="min-w-[2.5rem] flex-shrink-0 text-right text-[0.75rem]  md:text-[0.8rem]"
 							>{formatTime(track.duration)}</span
 						>
-						<button
-							class="flex h-4 w-4 cursor-pointer items-center justify-center rounded-[2px] border-none bg-transparent p-[0.1rem]  transition-all duration-150 hover:bg-white/10 hover:opacity-100 md:h-[18px] md:w-[18px]"
-							on:click={(e) => handleDeleteTrack(e, track.id)}
-							title="Remove from playlist"
+					</button>
+
+					<button
+						aria-label="Remove from playlist"
+						class="z-10 mr-1 flex h-4 w-4 flex-shrink-0 cursor-pointer items-center justify-center rounded-[2px] border-none bg-transparent p-[0.1rem] transition-all duration-150 hover:bg-white/10 hover:opacity-100 md:h-[18px] md:w-[18px]"
+						onclick={(e) => handleDeleteTrack(e, track.id)}
+						title="Remove from playlist"
+					>
+						<svg
+							width="10"
+							height="10"
+							viewBox="0 0 24 24"
+							fill="none"
+							xmlns="http://www.w3.org/2000/svg"
 						>
-							<svg
-								width="10"
-								height="10"
-								viewBox="0 0 24 24"
-								fill="none"
-								xmlns="http://www.w3.org/2000/svg"
-							>
-								<path
-									d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
-									fill="currentColor"
-								/>
-							</svg>
-						</button>
-					</div>
+							<path
+								d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+								fill="currentColor"
+							/>
+						</svg>
+					</button>
 				</li>
 			{/each}
 		</ul>
@@ -138,8 +146,9 @@
 		<div class="flex gap-1">
 			<!-- File upload icon button with tooltip -->
 			<button
+				aria-label="Upload Audio Files"
 				class="flex cursor-pointer items-center justify-center rounded border-none bg-transparent p-1 text-inherit transition-colors duration-200 hover:bg-white/10"
-				on:click={handleFilesUpload}
+				onclick={handleFilesUpload}
 				title="Upload Audio Files"
 			>
 				<svg
@@ -161,8 +170,9 @@
 
 			<!-- Folder upload icon button with tooltip -->
 			<button
+				aria-label="Upload Folder"
 				class="flex cursor-pointer items-center justify-center rounded border-none bg-transparent p-1 text-inherit transition-colors duration-200 hover:bg-white/10"
-				on:click={handleFolderUpload}
+				onclick={handleFolderUpload}
 				title="Upload Folder"
 			>
 				<svg

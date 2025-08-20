@@ -124,24 +124,20 @@
 	}
 </script>
 
-<BaseVisualizer 
-	on:ready={handleReady} 
-	on:resize={handleResize} 
-	id="peak-meter" 
-	title="RMS Meter" 
-	titlePosition="left"
-	draw={drawMeter} 
-/>
+<div class="rms-meter-container">
+	<BaseVisualizer
+		on:ready={handleReady}
+		on:resize={handleResize}
+		id="peak-meter"
+		title="RMS Meter"
+		titlePosition="left"
+		draw={drawMeter}
+	/>
+</div>
 
 <style>
-	/* Add some styles to ensure the canvas parent takes full space */
-	:global(#peak-meter) {
+	.rms-meter-container {
 		height: 100%;
 		width: 100%;
-	}
-
-	:global(#peak-meter canvas) {
-		width: 100%;
-		height: 100%;
 	}
 </style>

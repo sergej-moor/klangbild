@@ -107,11 +107,11 @@
 	
 	<!-- Title - at bottom on small screens, left side on xl screens -->
 	<div 
-		class="equalizer-title w-full xl:w-auto xl:h-full flex items-center justify-center py-1 xl:px-1 xl:py-0
-               text-center text-xs sm:text-sm order-last xl:order-first"
+		class="equalizer-title w-full xl:w-auto xl:h-full md:flex items-center justify-center py-0.5  xl:px-1 xl:py-0
+               text-center  order-last xl:order-first hidden "
 		style="background-color: {titleBgColor}; color: {titleTextColor};"
 	>
-		<span class="xl:rotate-180">EQ</span>
+		<span class="xl:rotate-180 text-xs">EQ</span>
 	</div>
 </div>
 

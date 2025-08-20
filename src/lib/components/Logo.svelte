@@ -14,16 +14,16 @@
 	>
 		<h1 class="logo-text vertical" style="color: {theme.primary};">klangbild</h1>
 
-		<div class="copyright copyright-vertical w-full" style="color: {theme.primary};">
-			©2025 oddful
-		</div>
+		<a href="https://www.sergej-moor.com/" target="_blank" class="copyright copyright-vertical w-full" style="color: {theme.primary};">
+			©2025 sergej
+		</a>
 	</div>
 {:else}
 	<!-- Horizontal layout with justify-between -->
 	<div class="logo-container flex h-full w-full items-center justify-between overflow-hidden">
-		<h1 class="logo-text" style="color: {theme.primary};">Klangbild</h1>
+		<h1 class="logo-text" style="color: {theme.primary};">klangbild</h1>
 
-		<div class="copyright-horizontal" style="color: {theme.primary};">©2025 oddful</div>
+		<a href="https://www.sergej-moor.com/" target="_blank" class="copyright-horizontal" style="color: {theme.primary};">©2025 sergej</a>
 	</div>
 {/if}
 

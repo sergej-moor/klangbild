@@ -9,7 +9,6 @@
 	export let max = 12;
 	export let label = '';
 	export let unit = 'dB';
-	export let showZeroIndicator = false;
 	export let numTicks = 9; // Changed back to 9 tick marks
 	export let snapStrength = 0.3; // How strong the "lock in" effect is (0-1)
 	export let snapThreshold = 0.8; // Size of the snap zone (in value units)
@@ -203,7 +202,7 @@
 	<div class="relative flex flex-col items-center w-[70px] h-[70px] touch-none">
 		<div
 			class="absolute w-[54px] h-[54px] flex items-center justify-center z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 cursor-ns-resize {dragging ? 'opacity-90' : ''}"
-			on:pointerdown={pointerDown}
+			onpointerdown={pointerDown}
 			bind:this={knobElement}
 			data-label={label}
 		>
@@ -278,27 +277,5 @@
 	
 	.ring-arc {
 		transition: stroke-width 0.1s ease-in-out;
-	}
-	
-	/* Remove outer-ticks styles */
-	.tick, .tick-zero {
-		display: none;
-	}
-
-	@media (max-width: 796px) {
-		.default-marker {
-			width: 55px;
-			height: 55px;
-		}
-		
-		.indicator-dot {
-			r: 2.5;
-		}
-	}
-
-	@media (max-width: 640px) {
-		.knob-group {
-			min-width: 45px;
-		}
 	}
 </style>

@@ -180,9 +180,9 @@
 	<canvas 
 		bind:this={canvas} 
 		class="absolute top-0 left-0 h-full w-full"
-		on:mousemove={handleMouseMove}
-		on:mouseleave={handleMouseLeave}
-		on:mouseenter={handleMouseEnter}
-		on:click={handleClick}
+		onmousemove={handleMouseMove}
+		onmouseleave={handleMouseLeave}
+		onmouseenter={handleMouseEnter}
+		onclick={handleClick}
 	></canvas>
 </div>

@@ -9,10 +9,9 @@ interface PlaylistStore extends Array<PlaylistTrack> {
 	isRepeatMode: boolean;
 }
 
-// Initial playlist with two demo tracks
+// Initial playlist with demo track
 const initialTracks: PlaylistTrack[] = [
-	{ id: '1', title: 'demo.wav', path: '/demo.wav', duration: 120 },
-	{ id: '2', title: 'demo2.mp3', path: '/demo2.mp3', duration: 180 }
+	{ id: '1', title: 'demo.mp3', path: '/demo.mp3', duration: 120 }
 ];
 
 // Create a proper integrated playlist store

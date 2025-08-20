@@ -103,8 +103,9 @@
 	<div class="mx-auto flex items-center justify-center gap-2 md:gap-2 lg:gap-3 xl:gap-5">
 		<!-- Repeat mode button -->
 		<button
+			aria-label="Repeat track"
 			class="flex h-[24px] w-[24px] min-w-[24px] cursor-pointer items-center justify-center rounded-full border-[1.5px] border-solid bg-transparent p-0 transition-colors duration-200 hover:bg-white/10 focus:shadow-[0_0_0_2px_rgba(255,255,255,0.3)] focus:outline-none md:h-[28px] md:w-[28px] md:min-w-[28px] lg:h-[38px] lg:w-[38px] lg:min-w-[38px] lg:border-[1.8px]"
-			on:click={toggleRepeatMode}
+			onclick={toggleRepeatMode}
 			title="Repeat track"
 			style="border-color: {theme.primary}; background-color: {$playlist.isRepeatMode ? theme.primary : theme.background};"
 		>
@@ -125,8 +126,9 @@
 
 		<!-- Shuffle mode button -->
 		<button
+			aria-label="Shuffle playlist"
 			class="flex h-[24px] w-[24px] min-w-[24px] cursor-pointer items-center justify-center rounded-full border-[1.5px] border-solid bg-transparent p-0 transition-colors duration-200 hover:bg-white/10 focus:shadow-[0_0_0_2px_rgba(255,255,255,0.3)] focus:outline-none md:h-[28px] md:w-[28px] md:min-w-[28px] lg:h-[38px] lg:w-[38px] lg:min-w-[38px] lg:border-[1.8px]"
-			on:click={toggleShuffleMode}
+			onclick={toggleShuffleMode}
 			title="Shuffle playlist"
 			style="border-color: {theme.primary}; background-color: {$playlist.isShuffleMode ? theme.primary : theme.background};"
 		>
@@ -147,8 +149,9 @@
 
 		<!-- Play/Pause button -->
 		<button
+			aria-label={$isPlaying ? 'Pause' : 'Play'}
 			class="flex h-[30px] w-[30px] min-w-[30px] cursor-pointer items-center justify-center rounded-full border-[1.5px] border-solid p-0 transition-colors duration-200 hover:bg-white/10 focus:shadow-[0_0_0_2px_rgba(255,255,255,0.3)] focus:outline-none md:h-[34px] md:w-[34px] md:min-w-[34px] lg:h-[46px] lg:w-[46px] lg:min-w-[46px] lg:border-[2px]"
-			on:click={togglePlayPause}
+			onclick={togglePlayPause}
 			title={$isPlaying ? 'Pause' : 'Play'}
 			style="border-color: {theme.primary}; background-color: {theme.primary};"
 		>
@@ -183,8 +186,9 @@
 
 		<!-- Previous track button -->
 		<button
+			aria-label="Previous track"
 			class="flex h-[24px] w-[24px] min-w-[24px] cursor-pointer items-center justify-center rounded-full border-[1.5px] border-solid bg-transparent p-0 transition-colors duration-200 hover:bg-white/10 focus:shadow-[0_0_0_2px_rgba(255,255,255,0.3)] focus:outline-none md:h-[28px] md:w-[28px] md:min-w-[28px] lg:h-[38px] lg:w-[38px] lg:min-w-[38px] lg:border-[1.8px]"
-			on:click={goToPreviousTrack}
+			onclick={goToPreviousTrack}
 			title="Previous track"
 			style="border-color: {theme.primary};"
 		>
@@ -202,8 +206,9 @@
 
 		<!-- Next track button -->
 		<button
+			aria-label="Next track"
 			class="flex h-[24px] w-[24px] min-w-[24px] cursor-pointer items-center justify-center rounded-full border-[1.5px] border-solid bg-transparent p-0 transition-colors duration-200 hover:bg-white/10 focus:shadow-[0_0_0_2px_rgba(255,255,255,0.3)] focus:outline-none md:h-[28px] md:w-[28px] md:min-w-[28px] lg:h-[38px] lg:w-[38px] lg:min-w-[38px] lg:border-[1.8px]"
-			on:click={goToNextTrack}
+			onclick={goToNextTrack}
 			title="Next track"
 			style="border-color: {theme.primary};"
 		>
