@@ -11,6 +11,8 @@ export const analyzerNode = writable<AnalyserNode | null>(null);
 // State
 export const isInitialized = writable(false);
 export const isPlaying = writable(false);
+export const isLoading = writable(false);
+export const loadingError = writable<string | null>(null);
 export const fftSize = writable(2048);
 export const sampleRate = writable(44100);
 

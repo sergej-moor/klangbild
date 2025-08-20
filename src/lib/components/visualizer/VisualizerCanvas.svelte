@@ -169,7 +169,7 @@
 	// Exported functions and properties
 	export function getDimensions() {
 		if (!uiScale) {
-			console.warn(`${id} - getDimensions called before initialization`);
+
 			return { width: 0, height: 0 };
 		}
 		return { width, height };

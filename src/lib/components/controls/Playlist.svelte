@@ -4,7 +4,7 @@
 	import { playlist } from '$lib/stores/playlist';
 	import { loadAudio } from '$lib/audio/index';
 	import UploadButton from '$lib/components/controls/UploadButton.svelte';
-	import { playbackPosition, isPlaying } from '$lib/audio/stores';
+	import { playbackPosition, isPlaying, isLoading } from '$lib/audio/stores';
 	import type { PlaylistTrack } from '$lib/audio/types';
 
 	const dispatch = createEventDispatcher<{
@@ -16,23 +16,24 @@
 	const activeTrackId = $derived($playlist.activeTrackId);
 	const playing = $derived($isPlaying);
 
-	// Log the current active ID for debugging
-	$effect(() => {
-		console.log('Playlist component - activeTrackId:', activeTrackId);
-	});
-
-	function formatTime(seconds: number): string {
+	function formatTime(seconds: number, trackId: string): string {
+		// Show placeholder for tracks with no duration
+		if (seconds <= 0) return '--:--';
+		
 		const mins = Math.floor(seconds / 60);
 		const secs = Math.floor(seconds % 60);
 		return `${mins}:${secs.toString().padStart(2, '0')}`;
 	}
 
 	async function handleTrackSelect(track: PlaylistTrack, index: number) {
-		console.log(`Selecting track: ${track.id} - ${track.title}`);
 		playlist.setActiveTrack(track.id);
 
 		// Load the selected audio file using the audio system
-		await loadAudio(track.path);
+		const success = await loadAudio(track.path);
+		
+		if (!success) {
+			// Could implement user notification here
+		}
 
 		// Dispatch select event
 		dispatch('select', { track, index });
@@ -45,7 +46,7 @@
 	}
 
 	// Add function to handle track deletion
-	function handleDeleteTrack(event: Event, trackId: string) {
+	async function handleDeleteTrack(event: Event, trackId: string) {
 		// Stop event from bubbling to parent (which would select the track)
 		event.stopPropagation();
 
@@ -61,7 +62,10 @@
 
 				// Set the new active track and load it
 				playlist.setActiveTrack(nextTrack.id);
-				loadAudio(nextTrack.path);
+				const success = await loadAudio(nextTrack.path);
+				if (!success) {
+					// Silent error handling
+				}
 			}
 		}
 
@@ -106,7 +110,13 @@
 						>
 						<span
 							class="min-w-[2.5rem] flex-shrink-0 text-right text-[0.75rem]  md:text-[0.8rem]"
-							>{formatTime(track.duration)}</span
+						>
+							{#if track.duration <= 0 && activeTrackId === track.id && $isLoading}
+								<div class="loading-spinner"></div>
+							{:else}
+								{formatTime(track.duration, track.id)}
+							{/if}
+						</span
 						>
 					</button>
 
@@ -214,5 +224,24 @@
 		height: 100%;
 		width: 2px;
 		background-color: var(--indicator-color);
+	}
+
+	.loading-spinner {
+		width: 12px;
+		height: 12px;
+		border: 2px solid transparent;
+		border-top: 2px solid currentColor;
+		border-radius: 50%;
+		animation: spin 1s linear infinite;
+		margin: 0 auto;
+	}
+
+	@keyframes spin {
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
 	}
 </style>

@@ -70,8 +70,6 @@
 	
 	// Handle automatic track progression
 	const handleTrackEnded = () => {
-		console.log('Track ended, handling based on modes');
-		
 		// If repeat mode is enabled, reload the current track
 		if ($playlist.isRepeatMode) {
 			if ($playlist.activeTrack) {

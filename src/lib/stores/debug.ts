@@ -10,7 +10,6 @@ if (browser) {
 		// Toggle debug mode when 'o' key is pressed
 		if (event.key.toLowerCase() === 'o') {
 			debugMode.update((value) => !value);
-			console.log('Debug mode toggled:', !debugMode);
 		}
 	});
 }

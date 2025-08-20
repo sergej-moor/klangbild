@@ -92,7 +92,7 @@
 			
 			dataValues = values;
 		} catch (err) {
-			console.error('Error updating data display:', err);
+			// Silent error handling
 		}
 	}
 

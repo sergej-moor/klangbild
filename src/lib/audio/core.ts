@@ -25,7 +25,6 @@ export function initAudioContext() {
 		isInitialized.set(true);
 		return context;
 	} catch (error) {
-		console.error('Failed to initialize AudioContext:', error);
 		return null;
 	}
 }
@@ -33,17 +32,28 @@ export function initAudioContext() {
 // Load audio file and decode into buffer
 export async function loadAudioFile(url: string) {
 	const context = get(audioContext) || initAudioContext();
-	if (!context) return null;
+	if (!context) {
+		throw new Error('Failed to initialize AudioContext');
+	}
 
 	try {
 		const response = await fetch(url);
+		
+		if (!response.ok) {
+			throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+		}
+		
 		const arrayBuffer = await response.arrayBuffer();
+		
+		if (arrayBuffer.byteLength === 0) {
+			throw new Error('Empty audio file');
+		}
+		
 		const decodedData = await context.decodeAudioData(arrayBuffer);
 		audioBuffer.set(decodedData);
 		return decodedData;
 	} catch (error) {
-		console.error('Error loading audio file:', error);
-		return null;
+		throw error;
 	}
 }
 

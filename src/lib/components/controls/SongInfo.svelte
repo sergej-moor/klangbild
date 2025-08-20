@@ -1,14 +1,18 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
-	import { playbackPosition, duration } from '$lib/audio/stores';
+	import { playbackPosition, duration, isLoading, loadingError } from '$lib/audio/stores';
 	import { getAudioDuration } from '$lib/audio/controls';
 	import { formatTime } from '$lib/audio/utils';
 	import { theme } from '$lib/theme';
 	import { playlist } from '$lib/stores/playlist';
 	import { onMount } from 'svelte';
 
-	// Get active track title from playlist
-	const activeTrackTitle = $derived($playlist.activeTrack?.title || 'Untitled');
+	// Get active track title from playlist or show loading state
+	const activeTrackTitle = $derived(
+		$isLoading 
+			? 'Loading...' 
+			: $playlist.activeTrack?.title || ($loadingError ? 'Error loading audio' : 'No audio loaded')
+	);
 	
 	// Format title with repeats for continuous scrolling - 10 copies with space between
 	const repeatedTitle = $derived(Array(10).fill(activeTrackTitle).join(' '));
@@ -35,7 +39,7 @@
 				currentTime = totalDuration * $playbackPosition;
 			}
 		} catch (error) {
-			console.error('Error getting audio duration:', error);
+			// Silent error handling
 		}
 	}
 
@@ -96,7 +100,15 @@
 	<!-- Bottom half for time - keeps original color -->
 	<div class="flex h-1/2 w-full items-center justify-center" style="color: {theme.primary};">
 		<div class="text-center text-[0.75rem] md:text-[0.85rem] lg:text-[0.95rem] xl:text-[1.1rem]">
-			{formatTime(currentTime)} / {formatTime(totalDuration)}
+			{#if $isLoading}
+				Loading audio...
+			{:else if totalDuration > 0}
+				{formatTime(currentTime)} / {formatTime(totalDuration)}
+			{:else if $loadingError}
+				{$loadingError}
+			{:else}
+				0:00 / 0:00
+			{/if}
 		</div>
 	</div>
 </div>

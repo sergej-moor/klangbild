@@ -9,9 +9,9 @@ interface PlaylistStore extends Array<PlaylistTrack> {
 	isRepeatMode: boolean;
 }
 
-// Initial playlist with demo track
+// Initial playlist with demo track (duration will be updated when loaded)
 const initialTracks: PlaylistTrack[] = [
-	{ id: '1', title: 'demo.mp3', path: '/demo.mp3', duration: 120 }
+	{ id: '1', title: 'demo.mp3', path: '/demo.mp3', duration: 0 }
 ];
 
 // Create a proper integrated playlist store
@@ -52,7 +52,6 @@ function createPlaylistStore() {
 		clear: () => tracks.set([]),
 		reset: () => tracks.set(initialTracks),
 		setActiveTrack: (id: string) => {
-			console.log(`Setting active track ID to: ${id}`);
 			activeTrackId.set(id);
 		},
 		toggleShuffleMode: () => {
@@ -60,6 +59,13 @@ function createPlaylistStore() {
 		},
 		toggleRepeatMode: () => {
 			isRepeatMode.update(value => !value);
+		},
+		updateTrackDuration: (trackId: string, duration: number) => {
+			tracks.update((list) => 
+				list.map((track) => 
+					track.id === trackId ? { ...track, duration } : track
+				)
+			);
 		}
 	};
 

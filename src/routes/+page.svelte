@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { loadAudio } from '$lib/audio/index';
+	import { loadAudio, loadDemoAudio } from '$lib/audio/index';
 	import { isPlaying } from '$lib/audio/stores';
 	import { theme } from '$lib/theme';
 	import { debugMode } from '$lib/stores/debug';
@@ -25,29 +25,32 @@
 	import CdVisualizer from '$lib/components/visualizer/CDVisualizer.svelte';
 	// Preload audio when the page loads
 	onMount(async () => {
-		console.log('Main page mounted, preloading audio...');
+		try {
+			// If we have tracks in the playlist, load the active one or first one
+			if ($playlist.length > 0) {
+				if (!$playlist.activeTrackId) {
+					// If no active track yet, set the first one
+					playlist.setActiveTrack($playlist[0].id);
+				}
 
-		// If we have tracks in the playlist, load the active one or first one
-		if ($playlist.length > 0) {
-			if (!$playlist.activeTrackId) {
-				// If no active track yet, set the first one
-				playlist.setActiveTrack($playlist[0].id);
-			}
-
-			// Get the active track and load it
-			const activeTrack = $playlist.activeTrack;
-			if (activeTrack) {
-				await loadAudio(activeTrack.path);
+				// Get the active track and load it
+				const activeTrack = $playlist.activeTrack;
+				if (activeTrack) {
+					const success = await loadAudio(activeTrack.path);
+					if (!success) {
+						await loadDemoAudio();
+					}
+				} else {
+					// Fallback to demo file
+					await loadDemoAudio();
+				}
 			} else {
-				// Fallback to demo file
-				await loadAudio('/demo.wav');
+				// Fallback to demo file if playlist is empty
+				await loadDemoAudio();
 			}
-		} else {
-			// Fallback to demo file if playlist is empty
-			await loadAudio('/demo.wav');
+		} catch (error) {
+			// Silent error handling
 		}
-
-		console.log('Audio preloaded in main page');
 	});
 
 	// Set CSS variables for scrollbars when the component mounts
@@ -64,27 +67,16 @@
 		document.documentElement.style.setProperty('--theme-primary-translucent', theme.primary + '66'); // 66 is hex for 40% opacity
 	});
 
-	// Add debug mode indicator
-	$effect(() => {
-		if ($debugMode) {
-			console.log('Debug mode: ON - Press O to toggle');
-		} else {
-			console.log('Debug mode: OFF - Press O to toggle');
-		}
-	});
-
 	// Handle equalizer changes
 	function handleEqChange(event: CustomEvent<{ low: number; mid: number; high: number }>) {
 		const { low, mid, high } = event.detail;
-		console.log('Equalizer settings changed:', { low, mid, high });
-		// Here you would apply the EQ settings to your audio processing
+		// Apply the EQ settings to your audio processing
 	}
 
 	// Handle volume change
 	function handleVolumeChange(event: CustomEvent<number>) {
 		const volume = event.detail;
-		console.log('Volume changed:', volume);
-		// Now actually apply the volume change
+		// Apply the volume change
 		setVolume(volume);
 	}
 </script>

@@ -17,21 +17,23 @@ import {
 	toggleMute
 } from './controls';
 import { startVisualizerUpdates } from './visualizer';
-import { isPlaying, audioBuffer, playbackPosition, eqSettings, volume } from './stores';
+import { isPlaying, audioBuffer, playbackPosition, eqSettings, volume, isLoading, loadingError } from './stores';
+import { playlist } from '$lib/stores/playlist';
 import { get } from 'svelte/store';
 
 /**
- * Loads an audio file and prepares it for playback
+ * Loads an audio file and prepares it for playback with proper error handling
  */
-export async function loadAudio(audioSrc: string): Promise<void> {
+export async function loadAudio(audioSrc: string): Promise<boolean> {
 	try {
-		console.log(`Loading audio from: ${audioSrc}`);
-
-		// Check if we have a valid URL
+		// Validate input
 		if (!audioSrc) {
-			console.error('Invalid audio source provided');
-			return;
+			throw new Error('No audio source provided');
 		}
+
+		// Set loading state
+		isLoading.set(true);
+		loadingError.set(null);
 
 		// Check if we need to pause current playback
 		const wasPlaying = get(isPlaying);
@@ -44,10 +46,16 @@ export async function loadAudio(audioSrc: string): Promise<void> {
 
 		// Load the audio file using the core function
 		const buffer = await loadAudioFile(audioSrc);
-
+		
 		if (!buffer) {
-			console.error('Failed to load audio buffer');
-			return;
+			throw new Error('Failed to load audio buffer');
+		}
+
+		// Update playlist duration if this is the active track
+		const currentPlaylist = get(playlist);
+		const activeTrack = currentPlaylist.activeTrack;
+		if (activeTrack && activeTrack.path === audioSrc) {
+			playlist.updateTrackDuration(activeTrack.id, buffer.duration);
 		}
 
 		// Start visualizer updates if not already running
@@ -58,9 +66,21 @@ export async function loadAudio(audioSrc: string): Promise<void> {
 			togglePlayPause(); // Resume playback with new track
 		}
 
-		console.log('Audio loaded successfully');
+		isLoading.set(false);
+		// Explicitly clear any error state on successful load
+		loadingError.set(null);
+		return true;
 	} catch (error) {
-		console.error('Error loading audio:', error);
+		const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+		
+		// Set error state
+		loadingError.set(errorMessage);
+		isLoading.set(false);
+		
+		// Reset audio buffer on error
+		audioBuffer.set(null);
+		
+		return false;
 	}
 }
 
@@ -86,3 +106,27 @@ export function setEqualizerValues(values: { low: number; mid: number; high: num
 
 // Re-export volume-related functions and stores
 export { setVolume, getVolume, toggleMute, volume };
+
+// Re-export loading state stores
+export { isLoading, loadingError };
+
+/**
+ * Safely loads the demo audio file with fallback handling
+ */
+export async function loadDemoAudio(): Promise<boolean> {
+	const demoFiles = ['/demo.mp3', '/demo.wav'];
+	
+	// Clear any previous error state at the start
+	loadingError.set(null);
+	
+	for (const demoFile of demoFiles) {
+		const success = await loadAudio(demoFile);
+		if (success) {
+			// Ensure error state is cleared on success
+			loadingError.set(null);
+			return true;
+		}
+	}
+	
+	return false;
+}

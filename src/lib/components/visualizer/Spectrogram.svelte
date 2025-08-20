@@ -55,13 +55,13 @@
 		({ ctx, width, height, scale } = event.detail);
 		initFrequencyBands();
 		initColorCache();
-		console.log('Spectrogram ready');
+
 	}
 
 	// Handle resize event from BaseVisualizer
 	function handleResize(event: CustomEvent) {
 		({ width, height, scale } = event.detail);
-		console.log('Spectrogram resize', width, height);
+
 	}
 	
 	// Initialize color cache for faster rendering with reduced color levels

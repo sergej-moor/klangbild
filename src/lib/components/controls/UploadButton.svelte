@@ -25,7 +25,6 @@
 		try {
 			// Skip non-audio files
 			if (!file.type.startsWith('audio/')) {
-				console.log(`Skipping non-audio file: ${file.name}`);
 				return null;
 			}
 
@@ -51,7 +50,6 @@
 
 			return id;
 		} catch (error) {
-			console.error(`Error processing file ${file.name}:`, error);
 			return null;
 		}
 	}
@@ -90,7 +88,7 @@
 				}
 			}
 		} catch (error) {
-			console.error('Error processing audio files:', error);
+			// Silent error handling
 		} finally {
 			uploading = false;
 			uploadingCount = 0;
